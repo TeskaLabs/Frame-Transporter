@@ -97,6 +97,10 @@ void logging_flush();
 void logging_open_file(void);
 void logging_finish(void);
 
+static inline bool logging_get_verbose(void)
+{
+	return libsccmn_config.log_verbose;
+}
 
 ///
 
