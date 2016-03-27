@@ -99,6 +99,14 @@ static inline void _log_openssl_err(char level, const char * format, ...)
  */
 bool logging_reopen(void);
 void logging_finish(void);
+void logging_flush(void);
+
+/*
+ * Specify location of the log file.
+ * Implicitly manages logging_reopen().
+ * Can be called also with fname set to NULL to remove filename and switch back to stderr 
+ */
+bool logging_set_filename(const char * fname);
 
 
 static inline bool logging_get_verbose(void)
@@ -111,21 +119,6 @@ static inline void logging_set_verbose(bool v)
 	libsccmn_config.log_verbose = v;
 }
 
-
-static inline bool logging_set_filename(const char * fname)
-{
-	if (libsccmn_config.log_filename != NULL)
-	{
-		logging_finish();
-		free((void *)libsccmn_config.log_filename);
-		libsccmn_config.log_filename = NULL;
-	}
-
-	libsccmn_config.log_filename = (fname != NULL) ? strdup(fname) : NULL;
-	return logging_reopen();
-}
-
-void logging_flush(void);
 
 ///
 

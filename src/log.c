@@ -144,6 +144,20 @@ void logging_flush()
 }
 
 
+bool logging_set_filename(const char * fname)
+{
+	if (libsccmn_config.log_filename != NULL)
+	{
+		logging_finish();
+		free((void *)libsccmn_config.log_filename);
+		libsccmn_config.log_filename = NULL;
+	}
+
+	libsccmn_config.log_filename = (fname != NULL) ? strdup(fname) : NULL;
+	return logging_reopen();
+}
+
+
 bool logging_reopen()
 {
 	if ((libsccmn_config.log_filename == NULL) && (libsccmn_config.log_f == NULL))
