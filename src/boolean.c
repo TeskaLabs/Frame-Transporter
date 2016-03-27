@@ -1,4 +1,4 @@
-#include <libsccmn.h>
+#include "all.h"
 
 bool parse_boolean(const char * value)
 {
