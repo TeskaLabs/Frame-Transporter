@@ -36,6 +36,14 @@
 #include <libsccmn/ini.h>
 
 
+// Daemonise functions
+pid_t daemonise(void);
+
+void pidfile_set_filename(const char * fname);
+bool pidfile_create(void);
+bool pidfile_remove(void);
+pid_t pidfile_is_running(void);
+
 
 // File descriptor related functions
 bool set_socket_nonblocking(int fd);

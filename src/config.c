@@ -13,6 +13,8 @@ struct libsccmn_config libsccmn_config =
 	.log_flush_interval = 5.0, //Seconds
 
 	.ev_loop = NULL,
+
+	.pid_file = NULL,
 };
 
 

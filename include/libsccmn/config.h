@@ -14,6 +14,8 @@ struct libsccmn_config
 	double log_flush_interval;
 
 	struct ev_loop * ev_loop;
+
+	char * pid_file;
 };
 
 extern struct libsccmn_config libsccmn_config;
