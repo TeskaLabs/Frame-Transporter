@@ -165,10 +165,15 @@ bool logging_reopen()
 		return false;
 	}
 
-	if (libsccmn_config.log_f != NULL)
+	bool reopen = (libsccmn_config.log_f != NULL);
+	if (reopen)
+	{
+		L_INFO("Log file is closed");
 		fclose(libsccmn_config.log_f);
+	}
 
 	libsccmn_config.log_f = f;
+	L_INFO("Log file is %s", reopen ? "reopen" : "open");
 
 	return true;
 }

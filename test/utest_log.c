@@ -205,6 +205,9 @@ START_TEST(log_reopen_wfile_utest)
 
 	L_INFO_ERRNO(EAGAIN, "Log message test!");
 
+	ok = logging_reopen();
+	ck_assert_int_eq(ok, true);
+
 	ok = logging_set_filename(NULL);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);

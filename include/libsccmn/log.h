@@ -100,6 +100,7 @@ static inline void _log_openssl_err(char level, const char * format, ...)
 bool logging_reopen(void);
 void logging_finish(void);
 
+
 static inline bool logging_get_verbose(void)
 {
 	return libsccmn_config.log_verbose;

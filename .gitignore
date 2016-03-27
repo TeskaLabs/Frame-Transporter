@@ -1,5 +1,6 @@
 /rules.site
 /test/unittest
+/test/log.txt
 
 # Object files
 *.o
