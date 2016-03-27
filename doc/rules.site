@@ -1,0 +1,10 @@
+# This is rules.site file example, it should sit at the root of the repository
+
+EVINCPATH=/opt/libev/include/
+EVLIBPATH=/opt/libev/lib/
+
+OPENSSLINCPATH=/opt/openssl/include
+OPENSSLLIBPATH=/opt/openssl/lib/
+
+LDLIBS+=-L/opt/local/lib
+CFLAGS+=-I/opt/local/include
