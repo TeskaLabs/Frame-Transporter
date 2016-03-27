@@ -2,16 +2,6 @@
 
 ///
 
-struct log_entry
-{
-	double timestamp;
-	pid_t pid;
-	char level;
-	char message[4096];
-};
-
-///
-
 static inline const char * loglevelname(char level)
 {
 	static const char * lln_DEBUG = "DEBUG";
@@ -35,7 +25,7 @@ static inline const char * loglevelname(char level)
 	return lln_UNKNOWN;
 }
 
-static void log_process(struct log_entry * le, int le_message_length)
+void log_entry_process(struct log_entry * le, int le_message_length)
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
@@ -55,7 +45,7 @@ static void log_process(struct log_entry * le, int le_message_length)
 	libsccmn_config.log_flush_counter += 1;
 }
 
-static inline int log_format(struct log_entry * le, char level,const char * format, va_list args)
+static inline int log_entry_format(struct log_entry * le, char level,const char * format, va_list args)
 {
 	le->timestamp = (libsccmn_config.ev_loop == NULL) ? ev_time() : ev_now(libsccmn_config.ev_loop);
 	le->pid = getpid();
@@ -72,14 +62,14 @@ static inline int log_format(struct log_entry * le, char level,const char * form
 void _log_v(char level, const char * format, va_list args)
 {
 	static struct log_entry le;
-	int le_message_length = log_format(&le, level, format, args);
-	log_process(&le, le_message_length);
+	int le_message_length = log_entry_format(&le, level, format, args);
+	log_entry_process(&le, le_message_length);
 }
 
 void _log_errno_v(int errnum, char level, const char * format, va_list args)
 {
 	static struct log_entry le;
-	int le_message_length = log_format(&le, level, format, args);
+	int le_message_length = log_entry_format(&le, level, format, args);
 
 	if (le_message_length > 0)
 	{
@@ -100,7 +90,7 @@ void _log_errno_v(int errnum, char level, const char * format, va_list args)
 
 	le_message_length += snprintf(le.message + le_message_length, sizeof(le.message)-le_message_length, " (%d)", errnum);
 
-	log_process(&le, le_message_length);
+	log_entry_process(&le, le_message_length);
 }
 
 /* TODO: OpenSSL logging integration ...
@@ -116,7 +106,7 @@ static int log_openssl_err_print(const char *str, size_t len, void *le_raw)
 void _log_openssl_err_v(char level, const char * format, va_list args)
 {
 	static struct log_entry le;
-	int le_message_length = log_format(&le, level, format, args);
+	int le_message_length = log_entry_format(&le, level, format, args);
 
 	if (le_message_length > 0) le.message[le_message_length++] = '\n';
 	le.message[le_message_length++] = '\0';
@@ -124,7 +114,7 @@ void _log_openssl_err_v(char level, const char * format, va_list args)
 	ERR_print_errors_cb(log_openssl_err_print, &le);
 	le_message_length = strlen(le.message);
 	while (le.message[le_message_length] == '\0') le_message_length -= 1;
-	log_process(&le, le_message_length);
+	log_entry_process(&le, le_message_length);
 }
 */
 

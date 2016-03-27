@@ -97,4 +97,17 @@ void logging_flush();
 void logging_open_file(void);
 void logging_finish(void);
 
+
+///
+
+struct log_entry
+{
+	double timestamp;
+	pid_t pid;
+	char level;
+	char message[4096];
+};
+
+void log_entry_process(struct log_entry * le, int le_message_length);
+
 #endif //__LIBSCCMN_LOG_H__
