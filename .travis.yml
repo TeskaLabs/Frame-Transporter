@@ -1,0 +1,7 @@
+language: c
+script:
+	- make clean all
+	- make test
+
+before_script:
+	- cp doc/travis.rules.site rules.site
