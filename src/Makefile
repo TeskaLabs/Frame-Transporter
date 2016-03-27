@@ -1,6 +1,6 @@
 LIB=libsccmn.a
 
-OBJS=boolean.o base32.o
+OBJS=boolean.o base32.o fd.o
 
 all: $(LIB)
 

@@ -28,6 +28,10 @@
 #include <sys/wait.h>
 
 
+bool set_socket_nonblocking(int fd);
+bool set_tcp_keepalive(int fd);
+bool set_close_on_exec(int fd);
+
 bool parse_boolean(const char * value);
 
 /*

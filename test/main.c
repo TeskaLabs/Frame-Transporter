@@ -29,6 +29,8 @@ int main()
 	srand(time(NULL) + getpid());
 	SRunner *sr = srunner_create(sanity_tsuite());
 
+	srunner_add_suite(sr, base32_tsuite());
+	srunner_add_suite(sr, fd_tsuite());
 	srunner_add_suite(sr, boolean_tsuite());
 
 	srunner_run_all(sr, CK_VERBOSE /*CK_NORMAL*/);
