@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
@@ -31,6 +32,7 @@
 #include <ev.h>
 
 #include <libsccmn/config.h>
+#include <libsccmn/log.h>
 #include <libsccmn/ini.h>
 
 

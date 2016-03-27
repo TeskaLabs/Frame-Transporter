@@ -14,6 +14,7 @@ Suite * base32_tsuite(void);
 Suite * fd_tsuite(void);
 Suite * boolean_tsuite(void);
 Suite * config_tsuite(void);
+Suite * log_tsuite(void);
 
 ///
 
@@ -34,6 +35,7 @@ int main()
 	srunner_add_suite(sr, base32_tsuite());
 	srunner_add_suite(sr, fd_tsuite());
 	srunner_add_suite(sr, boolean_tsuite());
+	srunner_add_suite(sr, log_tsuite());
 
 	srunner_run_all(sr, CK_VERBOSE /*CK_NORMAL*/);
 	number_failed = srunner_ntests_failed(sr);
