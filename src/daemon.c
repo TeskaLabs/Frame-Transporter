@@ -482,10 +482,7 @@ finish:
 bool pidfile_remove(void)
 {
 	if (libsccmn_config.pid_file == NULL)
-	{
-		L_ERROR("Pid file location is not specified.");
-		return false;
-	}
+		return true;
 
 	int rc = unlink(libsccmn_config.pid_file);
 	if (rc != 0)
