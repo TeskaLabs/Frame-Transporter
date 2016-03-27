@@ -4,6 +4,8 @@
 struct libsccmn_config
 {
 	bool initialized;
+
+	struct ev_loop * ev_loop;
 };
 
 extern struct libsccmn_config libsccmn_config;

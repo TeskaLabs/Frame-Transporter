@@ -3,6 +3,8 @@
 struct libsccmn_config libsccmn_config =
 {
 	.initialized = false, // Will be changed to true when initialized
+
+	.ev_loop = NULL,
 };
 
 
