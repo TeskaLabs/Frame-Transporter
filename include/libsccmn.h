@@ -27,6 +27,7 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 
+#include <libsccmn/config.h>
 #include <libsccmn/ini.h>
 
 

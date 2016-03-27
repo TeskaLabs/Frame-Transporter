@@ -13,6 +13,7 @@ CK_RUN_SUITE="base32" make test
 Suite * base32_tsuite(void);
 Suite * fd_tsuite(void);
 Suite * boolean_tsuite(void);
+Suite * config_tsuite(void);
 
 ///
 
@@ -29,6 +30,7 @@ int main()
 	srand(time(NULL) + getpid());
 	SRunner *sr = srunner_create(sanity_tsuite());
 
+	srunner_add_suite(sr, config_tsuite());
 	srunner_add_suite(sr, base32_tsuite());
 	srunner_add_suite(sr, fd_tsuite());
 	srunner_add_suite(sr, boolean_tsuite());
