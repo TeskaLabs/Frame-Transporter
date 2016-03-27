@@ -3,5 +3,8 @@ script:
 	- make clean all
 	- make test
 
+before_install:
+	- sudo apt-get update -qq
+	
 before_script:
 	- cp doc/travis.rules.site rules.site
