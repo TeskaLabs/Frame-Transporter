@@ -27,4 +27,6 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 
+
+bool parse_boolean(const char * value);
 #endif // __LIBSCCMN_H__

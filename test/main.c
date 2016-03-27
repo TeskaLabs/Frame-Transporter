@@ -10,6 +10,8 @@ CK_RUN_SUITE="base32" make test
 
 */
 
+Suite * boolean_tsuite(void);
+
 ///
 
 Suite * sanity_tsuite(void)
@@ -24,6 +26,8 @@ int main()
 	
 	srand(time(NULL) + getpid());
 	SRunner *sr = srunner_create(sanity_tsuite());
+
+	srunner_add_suite(sr, boolean_tsuite());
 
 	srunner_run_all(sr, CK_VERBOSE /*CK_NORMAL*/);
 	number_failed = srunner_ntests_failed(sr);
