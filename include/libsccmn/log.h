@@ -105,6 +105,12 @@ static inline bool logging_get_verbose(void)
 	return libsccmn_config.log_verbose;
 }
 
+static inline void logging_set_verbose(bool v)
+{
+	libsccmn_config.log_verbose = v;
+}
+
+
 static inline bool logging_set_filename(const char * fname)
 {
 	if (libsccmn_config.log_filename != NULL)
