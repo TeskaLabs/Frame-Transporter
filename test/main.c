@@ -10,6 +10,8 @@ CK_RUN_SUITE="base32" make test
 
 */
 
+Suite * base32_tsuite(void);
+Suite * fd_tsuite(void);
 Suite * boolean_tsuite(void);
 
 ///
