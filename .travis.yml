@@ -5,7 +5,7 @@ script:
 
 before_install:
     - sudo apt-get update -qq
-    - sudo apt-get install check openssl openssl-dev libev libev-dev -qq
+    - sudo apt-get install check openssl libev-dev -qq
     
 before_script:
     - cp doc/travis.rules.site rules.site
