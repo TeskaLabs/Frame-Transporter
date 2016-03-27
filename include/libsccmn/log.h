@@ -93,14 +93,32 @@ static inline void _log_openssl_err(char level, const char * format, ...)
 #define L_AUDIT_OPENSSL_P(fmt, args...) _log_openssl_err('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 */
 
-void logging_flush();
-void logging_open_file(void);
+/*
+ * Call this to open or reopen log file.
+ * Used during initial switch from stderr a log file and eventually to rotate a log file
+ */
+bool logging_reopen(void);
 void logging_finish(void);
 
 static inline bool logging_get_verbose(void)
 {
 	return libsccmn_config.log_verbose;
 }
+
+static inline bool logging_set_filename(const char * fname)
+{
+	if (libsccmn_config.log_filename != NULL)
+	{
+		logging_finish();
+		free((void *)libsccmn_config.log_filename);
+		libsccmn_config.log_filename = NULL;
+	}
+
+	libsccmn_config.log_filename = (fname != NULL) ? strdup(fname) : NULL;
+	return logging_reopen();
+}
+
+void logging_flush(void);
 
 ///
 

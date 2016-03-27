@@ -178,6 +178,43 @@ START_TEST(log_errno_audit_utest)
 }
 END_TEST
 
+
+START_TEST(log_reopen_nofile_utest)
+{
+	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
+	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
+
+	bool ok = logging_reopen();
+	ck_assert_int_eq(ok, true);
+
+	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
+	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
+}
+END_TEST
+
+
+START_TEST(log_reopen_wfile_utest)
+{
+	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
+	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
+
+	bool ok = logging_set_filename("./log.txt");
+	ck_assert_int_eq(ok, true);
+	ck_assert_ptr_ne(libsccmn_config.log_f, NULL);
+	ck_assert_ptr_ne(libsccmn_config.log_filename, NULL);
+
+	L_INFO_ERRNO(EAGAIN, "Log message test!");
+
+	ok = logging_set_filename(NULL);
+	ck_assert_int_eq(ok, true);
+	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
+	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
+
+	int rc = unlink("./log.txt");
+	ck_assert_int_eq(rc, 0);
+}
+END_TEST
+
 ///
 
 Suite * log_tsuite(void)
@@ -200,6 +237,11 @@ Suite * log_tsuite(void)
 	tcase_add_test(tc, log_errno_error_utest);
 	tcase_add_test(tc, log_errno_fatal_utest);
 	tcase_add_test(tc, log_errno_audit_utest);
+
+	tc = tcase_create("log-reopen");
+	suite_add_tcase(s, tc);
+	tcase_add_test(tc, log_reopen_nofile_utest);
+	tcase_add_test(tc, log_reopen_wfile_utest);
 
 	return s;
 }

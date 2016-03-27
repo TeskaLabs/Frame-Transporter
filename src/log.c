@@ -144,27 +144,33 @@ void logging_flush()
 }
 
 
-void logging_open_file()
+bool logging_reopen()
 {
+	if ((libsccmn_config.log_filename == NULL) && (libsccmn_config.log_f == NULL))
+	{
+		// No-op when filename and file is not specified 
+		return true;
+	}
+
 	if (libsccmn_config.log_filename == NULL)
 	{
 		L_WARN("Log file name is not specified");
-		return;
+		return false;
 	}
 
 	FILE * f = fopen(libsccmn_config.log_filename, "a");
 	if (f == NULL)
 	{
 		L_ERROR_ERRNO(errno, "Error when opening log file '%s'", libsccmn_config.log_filename);
+		return false;
 	}
 
-	else
-	{
-		if (libsccmn_config.log_f != NULL)
-			fclose(libsccmn_config.log_f);
+	if (libsccmn_config.log_f != NULL)
+		fclose(libsccmn_config.log_f);
 
-		libsccmn_config.log_f = f;
-	}
+	libsccmn_config.log_f = f;
+
+	return true;
 }
 
 
