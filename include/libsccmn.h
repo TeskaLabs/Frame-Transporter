@@ -27,6 +27,8 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 
+#include <libsccmn/ini.h>
+
 
 bool set_socket_nonblocking(int fd);
 bool set_tcp_keepalive(int fd);
