@@ -27,6 +27,9 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 
+// Include libev
+#include <ev.h>
+
 #include <libsccmn/config.h>
 #include <libsccmn/ini.h>
 
