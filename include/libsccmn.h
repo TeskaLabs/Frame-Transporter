@@ -31,11 +31,16 @@
 #include <libsccmn/ini.h>
 
 
+
+// File descriptor related functions
 bool set_socket_nonblocking(int fd);
 bool set_tcp_keepalive(int fd);
 bool set_close_on_exec(int fd);
 
+
+// Boolean parser
 bool parse_boolean(const char * value);
+
 
 /*
  * Fills *buf with max. *buflen characters, encoding size bytes of *data.
