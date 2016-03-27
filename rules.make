@@ -1,5 +1,10 @@
-# Optional include of machine-specific configuration
+# Optional include of site specific configuration
 -include $(ROOTDIR)/rules.site
+
+# Optional include of site specific configuration that is propagated from main module
+ifdef TOPDIR
+-include ${TOPDIR}/rules.site
+endif
 
 VERSION=$(shell git describe --abbrev=7 --tags --dirty --always)
 
