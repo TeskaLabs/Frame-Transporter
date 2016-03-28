@@ -34,13 +34,18 @@ bool listening_socket_stop(struct ev_loop * loop, struct listening_socket *);
 
 void listening_socket_close(struct listening_socket *);
 
-/*
-struct listening_socket * listening_socket_create(struct addrinfo * listen_addrinfos);
+///
 
+struct listening_socket_chain
+{
+	struct listening_socket_chain * next;
+	struct listening_socket listening_socket;
+};
 
-void listening_socket_start_all(struct listening_socket * list, int backlog);
-void listening_socket_stop_all(struct listening_socket * list);
-void listening_socket_del_all(struct listening_socket * list);
-*/
+int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct addrinfo * addrinfo, listening_socket_cb cb, int backlog);
+void listening_socket_chain_del(struct listening_socket_chain *);
+
+void listening_socket_chain_start(struct ev_loop * loop, struct listening_socket_chain *);
+void listening_socket_chain_stop(struct ev_loop * loop, struct listening_socket_chain *);
 
 #endif //__LIBSCCMN_LISTENING_H__

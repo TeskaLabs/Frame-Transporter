@@ -186,80 +186,59 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 
 ///
 
-/*
-void listening_socket_start_all(struct listening_socket * list, int backlog)
+int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct addrinfo * addrinfo, listening_socket_cb cb, int backlog)
 {
-	for (struct listening_socket * sock = list; sock != NULL; sock = sock->next)
-		listening_socket_start(sock, backlog);
-}
-
-void listening_socket_stop_all(struct listening_socket * list)
-{
-	for (struct listening_socket * sock = list; sock != NULL; sock = sock->next)
-		listening_socket_stop(sock);	
-}
-
-void listening_socket_del_all(struct listening_socket * list)
-{
-	while (list != NULL)
+	int count = 0;
+	struct listening_socket_chain ** p = chain;
+	
+	// Iterate to the end of the chain
+	while (*p != NULL)
 	{
-		struct listening_socket * sock = list; 
-		list = sock->next;
-
-		listening_socket_close(sock);
-		listening_socket_del(sock);
+		p = &((*p)->next);
 	}
-}
 
-
-
-///
-
-struct listening_socket * listening_socket_create(struct addrinfo * listen_addrinfos)
-{
-	bool failure = false;
-
-	struct listening_socket * socks = NULL;
-	for (struct addrinfo *rp = listen_addrinfos; rp != NULL; rp = rp->ai_next)
+	for (struct addrinfo * rp = addrinfo; rp != NULL; rp = rp->ai_next)
 	{
-		bool prev_record_found = false;
-		// Check all previous records if not already bounds
-		for (struct addrinfo *rpx = listen_addrinfos; rpx != rp; rpx = rpx->ai_next)
+		struct listening_socket_chain * chitem = malloc(sizeof(struct listening_socket_chain));
+		bool ok = listening_socket_init(&chitem->listening_socket, rp, cb, backlog);
+		if (!ok)
 		{
-			if (
-				(rpx->ai_family != rp->ai_family) ||
-				(rpx->ai_socktype != rp->ai_socktype) ||
-				(rpx->ai_protocol != rp->ai_protocol) ||
-				(rpx->ai_addrlen != rp->ai_addrlen)
-			) continue;
-
-			if (memcmp(rpx->ai_addr, rp->ai_addr, rp->ai_addrlen) != 0)
-				continue;
-
-			prev_record_found = true;
-			break;
+			free(chitem);
+			continue;
 		}
 
-		if (prev_record_found) continue;
-
-		struct listening_socket * new_sock = listening_socket_new(rp, &failure);
-		if (new_sock == NULL) continue;
-
-		new_sock->next = socks;
-		socks = new_sock;
+		*p = chitem;
+		chitem->next = NULL;
+		p = &chitem->next;
+		count += 1;
 	}
 
-	if (failure)
-	{
-		L_ERROR("Critical failure during listen sockets initialization");
-		while (socks != NULL)
-		{
-			struct listening_socket * x = socks;
-			socks = x->next;
-			free(x);
-		}
-	}
-
-	return socks;
+	return count;
 }
-*/
+
+
+void listening_socket_chain_start(struct ev_loop * loop, struct listening_socket_chain * chain)
+{
+	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
+		listening_socket_start(loop, &i->listening_socket);
+}
+
+
+void listening_socket_chain_stop(struct ev_loop * loop, struct listening_socket_chain * chain)
+{
+	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
+		listening_socket_stop(loop, &i->listening_socket);
+}
+
+
+void listening_socket_chain_del(struct listening_socket_chain * chain)
+{
+	while (chain != NULL)
+	{
+		struct listening_socket_chain * i = chain; 
+		chain = i->next;
+		listening_socket_close(&i->listening_socket);
+		free(i);
+	}
+}
+
