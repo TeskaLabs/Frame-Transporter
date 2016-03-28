@@ -1,6 +1,5 @@
-#include <check.h>
-
 #include <libsccmn.h>
+#include <check.h>
 
 ////
 
