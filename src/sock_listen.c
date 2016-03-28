@@ -179,7 +179,7 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 		}
 */
 
-		this->cb(loop, this, client_socket, &client_addr, client_len);
+		this->cb(loop, this, client_socket, (const struct sockaddr *)&client_addr, client_len);
 	}
 
 }
@@ -228,6 +228,13 @@ void listening_socket_chain_stop(struct ev_loop * loop, struct listening_socket_
 {
 	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
 		listening_socket_stop(loop, &i->listening_socket);
+}
+
+
+void listening_socket_chain_set_data(struct listening_socket_chain * chain, void * data)
+{
+	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
+		i->listening_socket.data = data;
 }
 
 

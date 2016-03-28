@@ -3,7 +3,7 @@
 
 struct listening_socket;
 
-typedef void (* listening_socket_cb)(struct ev_loop * loop, struct listening_socket *, int fd, struct sockaddr_storage * client_addr, socklen_t client_addr_len);
+typedef void (* listening_socket_cb)(struct ev_loop * loop, struct listening_socket *, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len);
 
 struct listening_socket
 {
@@ -47,5 +47,7 @@ void listening_socket_chain_del(struct listening_socket_chain *);
 
 void listening_socket_chain_start(struct ev_loop * loop, struct listening_socket_chain *);
 void listening_socket_chain_stop(struct ev_loop * loop, struct listening_socket_chain *);
+
+void listening_socket_chain_set_data(struct listening_socket_chain *, void * data);
 
 #endif //__LIBSCCMN_LISTENING_H__
