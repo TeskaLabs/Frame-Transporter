@@ -92,7 +92,7 @@ START_TEST(sock_listen_utest)
 	fprintf(p, "1234\n");
 	fflush(p);
 
-	rc = ev_run(loop, 0);
+	ev_run(loop, 0);
 
 	rc = pclose(p);
 	ck_assert_int_eq(rc, 0);
