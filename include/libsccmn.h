@@ -35,6 +35,8 @@
 #include <libsccmn/log.h>
 #include <libsccmn/ini.h>
 
+#include <libsccmn/sock_listen.h>
+
 
 // Daemonise functions
 pid_t daemonise(void);
