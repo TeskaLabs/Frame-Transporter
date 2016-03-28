@@ -102,8 +102,9 @@ START_TEST(sock_listen_single_utest)
 	ok = listening_socket_stop(loop, &sock);
 	ck_assert_int_eq(ok, true);
 
-
 	listening_socket_close(&sock);
+
+	ev_loop_destroy(loop);
 }
 END_TEST
 
@@ -162,6 +163,8 @@ START_TEST(sock_listen_chain_utest)
 	ck_assert_int_eq(found, true);
 
 	listening_socket_chain_del(chain);
+
+	ev_loop_destroy(loop);
 }
 END_TEST
 
@@ -177,6 +180,7 @@ START_TEST(sock_listen_null_chain_utest)
 	listening_socket_chain_stop(loop, chain);
 	listening_socket_chain_del(chain);
 
+	ev_loop_destroy(loop);
 }
 END_TEST
 
