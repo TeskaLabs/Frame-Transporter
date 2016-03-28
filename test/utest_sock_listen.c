@@ -165,6 +165,21 @@ START_TEST(sock_listen_chain_utest)
 }
 END_TEST
 
+
+START_TEST(sock_listen_null_chain_utest)
+{
+	struct listening_socket_chain * chain = NULL;
+	
+	struct ev_loop * loop = ev_default_loop(0);
+	ck_assert_ptr_ne(loop, NULL);
+
+	listening_socket_chain_start(loop, chain);
+	listening_socket_chain_stop(loop, chain);
+	listening_socket_chain_del(chain);
+
+}
+END_TEST
+
 ///
 
 Suite * sock_listen_tsuite(void)
@@ -176,6 +191,7 @@ Suite * sock_listen_tsuite(void)
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, sock_listen_single_utest);
 	tcase_add_test(tc, sock_listen_chain_utest);
+	tcase_add_test(tc, sock_listen_null_chain_utest);
 
 	return s;
 }
