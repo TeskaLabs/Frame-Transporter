@@ -28,7 +28,7 @@ static bool resolve(struct addrinfo **res, const char * host)
 
 ////
 
-void sock_listen_utest_cb(struct ev_loop * loop, struct listening_socket * listening_socket, int fd, struct sockaddr_storage * client_addr, socklen_t client_addr_len)
+void sock_listen_utest_cb(struct ev_loop * loop, struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	flags &= ~O_NONBLOCK;
