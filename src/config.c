@@ -26,6 +26,7 @@ void libsccmn_initialize(void)
 	// Initialize logging
 	_logging_init();
 
+	// Initialize OpenSSL
 	SSL_library_init();
 
 
