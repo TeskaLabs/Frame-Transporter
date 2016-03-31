@@ -22,10 +22,6 @@ void libsccmn_initialize(void)
 {
 	assert(libsccmn_config.initialized == false);
 
-	// Check used version of libev
-	assert(ev_version_major() == EV_VERSION_MAJOR);
-	assert(ev_version_minor() >= EV_VERSION_MINOR);
-
 	// Initialize logging
 	_logging_init();
 
@@ -34,6 +30,7 @@ void libsccmn_initialize(void)
 
 	libsccmn_config.initialized = true;
 }
+
 
 void libsccmn_configure(void)
 {
@@ -44,6 +41,21 @@ void libsccmn_configure(void)
 	{
 		SSL_load_error_strings();
 		ERR_load_crypto_strings();
+	}
+
+	// Print and check versions
+	L_DEBUG("Using libev %d.%d", ev_version_major(), ev_version_minor());
+	if ((ev_version_major() != EV_VERSION_MAJOR) || (ev_version_minor() < EV_VERSION_MINOR))
+	{
+		L_ERROR("Incompatible version of libev used (%d.%d != %d.%d)", ev_version_major(), ev_version_minor(), EV_VERSION_MAJOR, EV_VERSION_MINOR);
+		exit(EXIT_FAILURE);
+	}
+
+	L_DEBUG("Using %s", SSLeay_version(SSLEAY_VERSION));
+	if ((SSLeay() ^ OPENSSL_VERSION_NUMBER) & ~0xff0L)
+	{
+		L_ERROR("Incompatible version of OpenSSL used (%lX [present] != %lX [expected])", SSLeay(), SSLEAY_VERSION_NUMBER);
+		exit(EXIT_FAILURE);
 	}
 
 }
