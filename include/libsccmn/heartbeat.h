@@ -21,6 +21,7 @@ bool heartbeat_start(struct ev_loop * loop, struct heartbeat *);
 bool heartbeat_stop(struct ev_loop * loop, struct heartbeat *);
 
 bool heartbeat_add(struct heartbeat *, heartbeat_cb cb);
+bool heartbeat_remove(struct heartbeat *, heartbeat_cb cb);
 
 #endif //__LIBSCCMN_HEARTBEAT_H__
 

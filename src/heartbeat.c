@@ -6,6 +6,8 @@ static void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 
 bool heartbeat_init(struct heartbeat * this, size_t size, ev_tstamp repeat)
 {
+	assert(this != NULL);
+
 	this->cbs = NULL;
 	this->size = size;
 	this->top = 0;
@@ -45,12 +47,20 @@ bool heartbeat_fini(struct heartbeat * this)
 
 bool heartbeat_start(struct ev_loop * loop, struct heartbeat * this)
 {
+	assert(loop != NULL);
+	assert(this != NULL);
+
 	ev_timer_start(loop, &this->timer_w);
+	ev_unref(loop);
 	return true;
 }
 
 bool heartbeat_stop(struct ev_loop * loop, struct heartbeat * this)
 {
+	assert(loop != NULL);
+	assert(this != NULL);
+
+	ev_ref(loop);
 	ev_timer_stop(loop, &this->timer_w);
 	return true;
 }
@@ -58,6 +68,8 @@ bool heartbeat_stop(struct ev_loop * loop, struct heartbeat * this)
 
 bool heartbeat_add(struct heartbeat * this, heartbeat_cb cb)
 {
+	assert(this != NULL);
+
 retry:
 	for (int i=0; i<this->size; i++)
 	{
@@ -86,6 +98,20 @@ retry:
 	goto retry;
 }
 
+bool heartbeat_remove(struct heartbeat * this, heartbeat_cb cb)
+{
+	assert(this != NULL);
+
+	for (int i=0; i<this->size; i++)
+	{
+		if ((*this->cbs)[i] != cb) continue;
+		(*this->cbs)[i] = NULL;
+		return true;
+	}
+
+	return false;
+}
+
 
 void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 {
@@ -97,6 +123,9 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 		if ((*this->cbs)[i] == NULL) continue;
 		(*this->cbs)[i](loop, now);
 	}
+
+	// Flush logs
+	logging_flush();
 
 	//Lag detector
 	if (this->last_beat > 0.0)
