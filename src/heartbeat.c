@@ -9,6 +9,7 @@ bool heartbeat_init(struct heartbeat * this, size_t size, ev_tstamp repeat)
 	this->cbs = NULL;
 	this->size = size;
 	this->top = 0;
+	this->last_beat = 0.0;
 
 	this->cbs = realloc(this->cbs, sizeof(heartbeat_cb) * this->size);
 	if (this == NULL)
@@ -96,4 +97,16 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 		if ((*this->cbs)[i] == NULL) continue;
 		(*this->cbs)[i](loop, now);
 	}
+
+	//Lag detector
+	if (this->last_beat > 0.0)
+	{
+		double delta = (now - this->last_beat) - w->repeat;
+		if (delta > libsccmn_config.lag_detector_sensitivity)
+		{
+			L_WARN("Lag (~ %.2lf sec.) detected", delta);
+		}
+	}
+	this->last_beat = now;
+
 }

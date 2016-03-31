@@ -14,6 +14,7 @@ struct libsccmn_config
 	double log_flush_interval;
 
 	struct ev_loop * ev_loop;
+	double lag_detector_sensitivity;
 
 	char * pid_file;
 };

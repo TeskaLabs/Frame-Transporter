@@ -9,6 +9,8 @@ struct heartbeat
 	int top;
 	heartbeat_cb (*cbs)[];
 
+	ev_tstamp last_beat;
+
 	ev_timer timer_w;
 };
 
