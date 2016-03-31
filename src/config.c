@@ -59,4 +59,9 @@ void libsccmn_configure(void)
 		exit(EXIT_FAILURE);
 	}
 
+	// Re-seed OpenSSL random number generator
+	long long seed[4];
+	seed[0] = (long long)time(NULL);
+	seed[1] = (long long)getpid();
+	RAND_seed(seed, sizeof(seed));
 }
