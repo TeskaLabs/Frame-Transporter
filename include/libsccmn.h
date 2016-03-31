@@ -40,6 +40,7 @@
 #include <libsccmn/config.h>
 #include <libsccmn/log.h>
 #include <libsccmn/ini.h>
+#include <libsccmn/heartbeat.h>
 
 #include <libsccmn/sock_listen.h>
 
