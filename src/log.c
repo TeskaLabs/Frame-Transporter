@@ -93,27 +93,31 @@ void _log_errno_v(int errnum, char level, const char * format, va_list args)
 	log_entry_process(&le, le_message_length);
 }
 
-
-static int log_openssl_err_print(const char *str, size_t len, void *le_raw)
-{
-	struct log_entry * le = (struct log_entry *)le_raw;
-	int le_message_length = strlen(le->message);
-	memcpy(le->message+le_message_length, "                           OpenSSL: ", 36);
-	memcpy(le->message+le_message_length+36, str, len);
-	return 0;
-}
-
 void _log_openssl_err_v(char level, const char * format, va_list args)
 {
 	static struct log_entry le;
 	int le_message_length = log_entry_format(&le, level, format, args);
 
-	if (le_message_length > 0) le.message[le_message_length++] = '\n';
-	le.message[le_message_length++] = '\0';
+	unsigned long es = CRYPTO_thread_id();
+	while (true)
+	{
+		const char * file;
+		int line;
+		const char * data;
+		int flags;
+		unsigned long code = ERR_get_error_line_data(&file, &line, &data, &flags);
+		if (code == 0) break;
 
-	ERR_print_errors_cb(log_openssl_err_print, &le);
-	le_message_length = strlen(le.message);
-	while (le.message[le_message_length] == '\0') le_message_length -= 1;
+		char buf[256];
+		ERR_error_string_n(code, buf, sizeof(buf));
+
+		int len = snprintf(le.message+le_message_length, sizeof(le.message) - (le_message_length+1), 
+			"\n                               SSL: %lu:%s:%s:%d:%s",
+			es, buf, file, line, (flags & ERR_TXT_STRING) ? data : ""
+		);
+		le_message_length += len;
+	}
+
 	log_entry_process(&le, le_message_length);
 }
 

@@ -76,21 +76,17 @@ static inline void _log_openssl_err(char level, const char * format, ...)
 #define L_FATAL_ERRNO_P(errnum, fmt, args...) _log_errno(errnum, 'F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_AUDIT_ERRNO_P(errnum, fmt, args...) _log_errno(errnum, 'A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 
-/*
-#define L_DEBUG_OPENSSL(fmt, args...) _log_openssl_err('D', fmt, ## args)
 #define L_INFO_OPENSSL(fmt, args...)  _log_openssl_err('I', fmt, ## args)
 #define L_WARN_OPENSSL(fmt, args...)  _log_openssl_err('W', fmt, ## args)
 #define L_ERROR_OPENSSL(fmt, args...) _log_openssl_err('E', fmt, ## args)
 #define L_FATAL_OPENSSL(fmt, args...) _log_openssl_err('F', fmt, ## args)
 #define L_AUDIT_OPENSSL(fmt, args...) _log_openssl_err('A', fmt, ## args)
 
-#define L_DEBUG_OPENSSL_P(fmt, args...) _log_openssl_err('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_INFO_OPENSSL_P(fmt, args...)  _log_openssl_err('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_WARN_OPENSSL_P(fmt, args...)  _log_openssl_err('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_ERROR_OPENSSL_P(fmt, args...) _log_openssl_err('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_FATAL_OPENSSL_P(fmt, args...) _log_openssl_err('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_AUDIT_OPENSSL_P(fmt, args...) _log_openssl_err('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-*/
 
 /*
  * Call this to open or reopen log file.
@@ -117,7 +113,6 @@ static inline void logging_set_verbose(bool v)
 {
 	libsccmn_config.log_verbose = v;
 }
-
 
 ///
 
