@@ -29,6 +29,8 @@ void libsccmn_initialize(void)
 	// Initialize OpenSSL
 	SSL_library_init();
 
+	// Ignore SIGPIPE
+	signal(SIGPIPE, SIG_IGN);
 
 	libsccmn_config.initialized = true;
 }
