@@ -218,3 +218,17 @@ void logging_finish()
 
 	fflush(stderr);
 }
+
+///
+
+static void logging_reopen_on_hup_signal(struct ev_loop * loop, ev_signal * w, int revents)
+{
+	logging_reopen();
+}
+
+void logging_install_sighup_reopen()
+{
+	ev_signal_init(&libsccmn_config.log_reopen_sighup_w, logging_reopen_on_hup_signal, SIGHUP);
+	ev_signal_start(libsccmn_config.ev_loop, &libsccmn_config.log_reopen_sighup_w);
+	ev_unref(libsccmn_config.ev_loop);
+}

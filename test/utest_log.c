@@ -264,6 +264,42 @@ START_TEST(log_reopen_wfile_utest)
 }
 END_TEST
 
+
+START_TEST(log_reopen_sighup_utest)
+{
+	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
+	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
+
+	bool ok = logging_set_filename("./log.txt");
+	ck_assert_int_eq(ok, true);
+	ck_assert_ptr_ne(libsccmn_config.log_f, NULL);
+	ck_assert_str_eq(libsccmn_config.log_filename, "./log.txt");
+
+	L_INFO("Log message test!");
+
+	libsccmn_config.ev_loop = ev_default_loop(0);
+	ck_assert_ptr_ne(libsccmn_config.ev_loop, NULL);
+
+	logging_install_sighup_reopen();
+
+	ev_feed_signal(SIGHUP);
+	ev_run(libsccmn_config.ev_loop, EVBREAK_ONE);
+
+	L_INFO("Log message test!");
+
+	ev_feed_signal(SIGHUP);
+	ev_run(libsccmn_config.ev_loop, EVBREAK_ONE);
+
+	int rc = system("grep \"Log file is reopen\" ./log.txt");
+	ck_assert_int_eq(rc, 0);
+
+	rc = unlink("./log.txt");
+	ck_assert_int_eq(rc, 0);
+
+	libsccmn_config.ev_loop = NULL;
+}
+END_TEST
+
 ///
 
 START_TEST(log_openssl_info_utest)
@@ -537,6 +573,7 @@ Suite * log_tsuite(void)
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, log_reopen_nofile_utest);
 	tcase_add_test(tc, log_reopen_wfile_utest);
+	tcase_add_test(tc, log_reopen_sighup_utest);
 
 	return s;
 }

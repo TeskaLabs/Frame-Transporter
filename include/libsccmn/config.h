@@ -12,6 +12,7 @@ struct libsccmn_config
 	unsigned int log_flush_counter_max;
 	ev_tstamp log_flush_last;
 	double log_flush_interval;
+	ev_signal log_reopen_sighup_w;
 
 	struct ev_loop * ev_loop;
 	double lag_detector_sensitivity;

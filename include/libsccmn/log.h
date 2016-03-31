@@ -102,7 +102,7 @@ void logging_flush(void);
  * Can be called also with fname set to NULL to remove filename and switch back to stderr 
  */
 bool logging_set_filename(const char * fname);
-
+void logging_install_sighup_reopen(void);
 
 static inline bool logging_get_verbose(void)
 {
@@ -125,5 +125,7 @@ struct log_entry
 };
 
 void log_entry_process(struct log_entry * le, int le_message_length);
+
+///
 
 #endif //__LIBSCCMN_LOG_H__
