@@ -35,7 +35,7 @@ static inline void _log_errno(int errnum, char level, const char *format, ...)
 	va_end(args);
 }
 
-/*
+
 void _log_openssl_err_v(char level, const char * format, va_list args);
 static inline void _log_openssl_err(char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 static inline void _log_openssl_err(char level, const char * format, ...)
@@ -47,7 +47,6 @@ static inline void _log_openssl_err(char level, const char * format, ...)
 	_log_openssl_err_v(level, format, args);
 	va_end(args);
 }
-*/
 
 #define L_DEBUG(fmt, args...) _log('D', fmt, ## args)
 #define L_INFO(fmt, args...)  _log('I', fmt, ## args)

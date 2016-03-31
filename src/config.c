@@ -18,10 +18,32 @@ struct libsccmn_config libsccmn_config =
 };
 
 
-void libsccmn_config_init()
+void libsccmn_initialize(void)
 {
 	assert(libsccmn_config.initialized == false);
 
+	// Check used version of libev
+	assert(ev_version_major() == EV_VERSION_MAJOR);
+	assert(ev_version_minor() >= EV_VERSION_MINOR);
+
+	// Initialize logging
+	_logging_init();
+
+	SSL_library_init();
+
 
 	libsccmn_config.initialized = true;
+}
+
+void libsccmn_configure(void)
+{
+	assert(libsccmn_config.initialized == true);
+
+	// Initialize OpenSSL
+	if (libsccmn_config.log_verbose)
+	{
+		SSL_load_error_strings();
+		ERR_load_crypto_strings();
+	}
+
 }

@@ -31,12 +31,21 @@
 // Include libev
 #include <ev.h>
 
+// Include OpenSSL
+#include <openssl/ssl.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+
+
 #include <libsccmn/config.h>
 #include <libsccmn/log.h>
 #include <libsccmn/ini.h>
 
 #include <libsccmn/sock_listen.h>
 
+// Global init function
+void libsccmn_initialize(void); // Call this at very beginning
+void libsccmn_configure(void); // Call this at the end of configuration phase
 
 // Daemonise functions
 pid_t daemonise(void);

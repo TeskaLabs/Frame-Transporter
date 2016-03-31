@@ -93,7 +93,7 @@ void _log_errno_v(int errnum, char level, const char * format, va_list args)
 	log_entry_process(&le, le_message_length);
 }
 
-/* TODO: OpenSSL logging integration ...
+
 static int log_openssl_err_print(const char *str, size_t len, void *le_raw)
 {
 	struct log_entry * le = (struct log_entry *)le_raw;
@@ -116,9 +116,19 @@ void _log_openssl_err_v(char level, const char * format, va_list args)
 	while (le.message[le_message_length] == '\0') le_message_length -= 1;
 	log_entry_process(&le, le_message_length);
 }
-*/
+
+
+static void logging_libev_on_syserr(const char * msg)
+{
+	L_WARN("LibEv: %s", msg);
+}
 
 ///
+
+void _logging_init()
+{
+	ev_set_syserr_cb(logging_libev_on_syserr);
+}
 
 
 void logging_flush()
