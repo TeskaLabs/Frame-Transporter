@@ -4,112 +4,102 @@ static void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 
 ///
 
-bool heartbeat_init(struct heartbeat * this, size_t size, ev_tstamp repeat)
+void heartbeat_init(struct heartbeat * this, ev_tstamp repeat)
 {
 	assert(this != NULL);
 
-	this->cbs = NULL;
-	this->size = size;
-	this->top = 0;
 	this->last_beat = 0.0;
-
-	this->cbs = realloc(this->cbs, sizeof(heartbeat_cb) * this->size);
-	if (this == NULL)
-	{
-		L_WARN_ERRNO(errno, "Failed to allocate memory for heartbeat object (size: %zu)", this->size);
-		free(this);
-		return false;
-	}
-
-	for (int i=0; i<this->size; i++)
-	{
-		(*this->cbs)[i] = NULL;
-	}
+	this->first_watcher = NULL;
+	this->last_watcher = NULL;
 
 	ev_timer_init(&this->timer_w, heartbeat_on_timer, 0.0, repeat);
 	this->timer_w.data = this;
-
-	return true;
 }
 
-
-bool heartbeat_fini(struct heartbeat * this)
-{
-	assert(this != NULL);
-	if (this->cbs != NULL)
-	{
-		free(this->cbs);
-		this->cbs = NULL;
-	}
-	return true;
-}
-
-
-bool heartbeat_start(struct ev_loop * loop, struct heartbeat * this)
+void heartbeat_start(struct ev_loop * loop, struct heartbeat * this)
 {
 	assert(loop != NULL);
 	assert(this != NULL);
 
 	ev_timer_start(loop, &this->timer_w);
 	ev_unref(loop);
-	return true;
 }
 
-bool heartbeat_stop(struct ev_loop * loop, struct heartbeat * this)
+void heartbeat_stop(struct ev_loop * loop, struct heartbeat * this)
 {
 	assert(loop != NULL);
 	assert(this != NULL);
 
 	ev_ref(loop);
 	ev_timer_stop(loop, &this->timer_w);
-	return true;
 }
 
 
-bool heartbeat_add(struct heartbeat * this, heartbeat_cb cb)
+void heartbeat_add(struct heartbeat * this, struct heartbeat_watcher * watcher, heartbeat_cb cb)
 {
 	assert(this != NULL);
+	assert(watcher != NULL);
 
-retry:
-	for (int i=0; i<this->size; i++)
+	watcher->cb = cb;
+
+	if (this->last_watcher == NULL)
 	{
-		if ((*this->cbs)[i] != NULL) continue;
-		(*this->cbs)[i] = cb;
-		if ((i+1) > this->top) this->top = i+1;
-		return true;
+		assert(this->first_watcher == NULL);
+
+		this->first_watcher = watcher;
+		this->last_watcher = watcher;
+		watcher->next = NULL;
+		watcher->prev = NULL;
 	}
-
-	size_t old_size = this->size;
-	this->size += 10;
-	L_DEBUG("Extending heartbeat list size to %zu", this->size);
-
-	this->cbs = realloc(this->cbs, sizeof(heartbeat_cb) * this->size);
-	if (this == NULL)
+	else
 	{
-		L_WARN_ERRNO(errno, "Failed to allocate memory for heartbeat object (size: %zu)", this->size);
-		free(this);
-		return false;
+		this->last_watcher->next = watcher;
+		watcher->next = NULL;
+		watcher->prev = this->last_watcher;
+		this->last_watcher = watcher;
 	}
-
-	for (int i=old_size; i<this->size; i++)
-	{
-		(*this->cbs)[i] = NULL;
-	}
-	goto retry;
 }
 
-bool heartbeat_remove(struct heartbeat * this, heartbeat_cb cb)
+void heartbeat_remove(struct heartbeat * this, struct heartbeat_watcher * watcher)
 {
 	assert(this != NULL);
+	assert(watcher != NULL);
 
-	for (int i=0; i<this->size; i++)
+	if ((watcher->prev == NULL) && (watcher->next == NULL))
 	{
-		if ((*this->cbs)[i] != cb) continue;
-		(*this->cbs)[i] = NULL;
-		return true;
+		assert(this->first_watcher == watcher);
+		assert(this->last_watcher == watcher);
+		this->first_watcher = NULL;
+		this->last_watcher = NULL;
+		return;
 	}
 
-	return false;
+	assert((this->first_watcher != NULL) || (this->last_watcher != NULL));
+
+	if (watcher->prev == NULL)
+	{
+		assert(this->first_watcher == watcher);
+		this->first_watcher = watcher->next;
+		if (this->first_watcher != NULL) this->first_watcher->prev = NULL;
+	}
+	else
+	{
+		watcher->prev->next = watcher->next;
+	}
+
+	if (watcher->next == NULL)
+	{
+		assert(this->last_watcher == watcher);
+		this->last_watcher = watcher->prev;
+		if (this->last_watcher != NULL) this->last_watcher->next = NULL;
+	}
+	else
+	{
+		watcher->next->prev = watcher->prev;
+	}
+
+	watcher->prev = NULL;
+	watcher->next = NULL;
 }
 
 
@@ -118,10 +108,10 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 	ev_tstamp now = ev_now(loop);
 	struct heartbeat * this = w->data;
 
-	for (int i=0; i<this->top; i++)
+	for (struct heartbeat_watcher * watcher = this->first_watcher; watcher != NULL; watcher = watcher->next)
 	{
-		if ((*this->cbs)[i] == NULL) continue;
-		(*this->cbs)[i](loop, now);
+		if (watcher->cb == NULL) continue;
+		watcher->cb(loop, watcher, now);
 	}
 
 	// Flush logs
