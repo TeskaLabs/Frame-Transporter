@@ -1,6 +1,6 @@
 LIB=libsccmn.a
 
-OBJS=boolean.o base32.o fd.o ini.o config.o log.o daemon.o sock_listen.o heartbeat.o fpool.o
+OBJS=boolean.o base32.o fd.o ini.o config.o log.o daemon.o sock_listen.o heartbeat.o
 
 all: $(LIB)
 
