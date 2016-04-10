@@ -11,6 +11,7 @@ struct libsccmn_config libsccmn_config =
 	.log_flush_counter_max = 100,
 	.log_flush_last = 0.0,
 	.log_flush_interval = 5.0, //Seconds
+	.log_use_utc = true,
 
 	.ev_loop = NULL,
 	.lag_detector_sensitivity = 1.0,

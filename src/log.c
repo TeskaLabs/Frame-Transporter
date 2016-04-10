@@ -2,6 +2,8 @@
 
 ///
 
+static char * log_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
 static inline const char * log_levelname(char level)
 {
 	static const char * lln_DEBUG = "DEBUG";
@@ -29,14 +31,17 @@ void log_entry_process(struct log_entry * le, int le_message_length)
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
-	localtime_r(&t, &tmp);
+	if (libsccmn_config.log_use_utc)
+		gmtime_r(&t, &tmp);
+	else
+		localtime_r(&t, &tmp);
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
-	char strftime_buf[20];
-	strftime(strftime_buf, sizeof(strftime_buf) - 1, "%d%b%y %H:%M:%S", &tmp);
 
 	fprintf(libsccmn_config.log_f != NULL ? libsccmn_config.log_f : stderr, 
-		"%s.%03d %7d %s: %.*s\n",
-		strftime_buf, frac100,
+		"%s %02d %04d %02d:%02d:%02d.%03d %s %7d %s: %.*s\n",
+		log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
+		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+		tmp.tm_zone,
 		le->pid,
 		log_levelname(le->level),
 		le_message_length, le->message
@@ -112,7 +117,7 @@ void _log_openssl_err_v(char level, const char * format, va_list args)
 		ERR_error_string_n(code, buf, sizeof(buf));
 
 		int len = snprintf(le.message+le_message_length, sizeof(le.message) - (le_message_length+1), 
-			"\n                               SSL: %lu:%s:%s:%d:%s",
+			"\n                                       SSL: %lu:%s:%s:%d:%s",
 			es, buf, file, line, (flags & ERR_TXT_STRING) ? data : ""
 		);
 		le_message_length += len;
