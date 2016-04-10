@@ -2,7 +2,7 @@
 
 ///
 
-static inline const char * loglevelname(char level)
+static inline const char * log_levelname(char level)
 {
 	static const char * lln_DEBUG = "DEBUG";
 	static const char * lln_INFO = " INFO";
@@ -38,7 +38,7 @@ void log_entry_process(struct log_entry * le, int le_message_length)
 		"%s.%03d %7d %s: %.*s\n",
 		strftime_buf, frac100,
 		le->pid,
-		loglevelname(le->level),
+		log_levelname(le->level),
 		le_message_length, le->message
 	);
 
