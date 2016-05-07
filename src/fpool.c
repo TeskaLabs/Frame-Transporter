@@ -24,7 +24,7 @@ static void frame_init(struct frame * this, uint8_t * data, struct frame_pool_zo
 
 //
 
-static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
+struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 {
 	assert(frame_count > 0);
 
@@ -48,12 +48,14 @@ static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool fre
 	this->mmap_size = mmap_size_frames+mmap_size_zone+mmap_size_fill;
 	this->next = NULL;
 
-	this->low_frame = &this->frames[0];
-	this->high_frame = &this->frames[frame_count-1];
+	this->frames_total = frame_count;
+	this->frames_used = 0;
 
-	
+	this->low_frame = &this->frames[0];
+	this->high_frame = &this->frames[this->frames_total-1];
+
 	uint8_t * frame_data = p + (mmap_size_zone + mmap_size_fill);
-	for(int i=0; i<frame_count; i+=1)
+	for(int i=0; i<this->frames_total; i+=1)
 	{
 		struct frame * frame = &this->frames[i];
 		frame_init(frame, frame_data + (i*FRAME_SIZE), this);
@@ -63,7 +65,7 @@ static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool fre
 
 	// Prepare stack (S-list) of available (aka all at this time) frames in this zone
 	this->available_frames = this->low_frame;
-	for(int i=1; i<frame_count; i+=1)
+	for(int i=1; i<this->frames_total; i+=1)
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
@@ -73,6 +75,20 @@ static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool fre
 
 static void frame_pool_zone_del(struct frame_pool_zone * this)
 {
+	assert(this->frames_used >= 0);
+	if (this->frames_used > 0)
+	{
+		L_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %zd)", this->frames_used);
+		for(int i=0; i<this->frames_total; i+=1)
+		{
+			if (this->frames[i].type != frame_type_FREE)
+			{
+				L_FATAL("Unreturned frame #%d allocated at %s:%d", i+1, this->frames[i].borrowed_by_file, this->frames[i].borrowed_by_line);
+			}
+		}
+		abort();
+	}
+
 	assert(this != NULL);
 	munmap(this, this->mmap_size);
 }
@@ -84,20 +100,34 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, cons
 	this->available_frames = frame->next;
 
 	// Reset frame
-	frame->type = frame_type_UNUSED;
+	frame->next = NULL;
+	frame->type = frame_type_UNKNOWN;
 	frame->borrowed_by_file = file;
 	frame->borrowed_by_line = line;
+	frame->zone->frames_used += 1;
 
 	return frame;
 }
 
 //
 
-bool frame_pool_init(struct frame_pool * this, size_t initial_frame_count)
+static struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this)
+{
+	if (this->zones == NULL) return frame_pool_zone_new(16, false); // Allocate first, low-memory zone
+	if (this->zones->next == NULL) return frame_pool_zone_new(2045, true); // Allocate second, high-memory zone
+	return NULL;
+}
+
+
+bool frame_pool_init(struct frame_pool * this, frame_pool_zone_alloc_advice alloc_advise)
 {
 	assert(this != NULL);
+	this->zones = NULL;
+	
+	if (alloc_advise == NULL) this->alloc_advise = frame_pool_zone_alloc_advice_default;
+	else this->alloc_advise = alloc_advise;
 
-	this->zones = frame_pool_zone_new(initial_frame_count, false);
+	this->zones = this->alloc_advise(this);
 	if (this->zones == NULL) return false;
 
 	return true;
@@ -119,14 +149,31 @@ void frame_pool_fini(struct frame_pool * this)
 struct frame * frame_pool_borrow_real(struct frame_pool * this, const char * file, unsigned int line)
 {
 	assert(this != NULL);
+	struct frame * frame =  NULL;
+	struct frame_pool_zone ** last_zone_next = &this->zones;
 
 	// Borrow from existing zone
 	for (struct frame_pool_zone * zone = this->zones; zone != NULL; zone = zone->next)
 	{
-		struct frame * frame = frame_pool_zone_borrow(zone, file, line);
+		frame = frame_pool_zone_borrow(zone, file, line);
 		if (frame != NULL) return frame;
+
+		last_zone_next = &zone->next;
 	}
 
-	//TODO: There is no frame available, consider creating a new zone and allocate frame from that
-	return NULL;
+	*last_zone_next = this->alloc_advise(this);
+	if (*last_zone_next == NULL)
+	{
+		L_WARN("Frame pool ran out of memory");
+		return NULL;
+	}
+
+	frame = frame_pool_zone_borrow(*last_zone_next, file, line);
+	if (frame == NULL)
+	{
+		L_WARN("Frame pool ran out of memory (2)");
+		return NULL;
+	}
+
+	return frame;
 }
