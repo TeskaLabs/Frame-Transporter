@@ -25,13 +25,17 @@ struct frame_dvec
 	size_t capacity;
 };
 
+enum frame_types
+{
+	frame_type_UNUSED = 0xFFFFFFFF
+};
 
 struct frame
 {
-	uint32_t type; // Type of frame: 0xFFFFFFFF = unknown, SPDY tags otherwise, 0 = DATA frame
+	struct frame * next; // This allows to chain frames in the list
 	struct frame_pool_zone * zone;
-	struct frame * next_available;
 
+	enum frame_types type;
 	struct frame_dvec * dvecs;
 
 	// Those two are used for tracing and debugging 
@@ -45,10 +49,8 @@ struct frame
 struct frame_pool_zone
 {
 	struct frame_pool_zone * next;
-	struct
-	{
-		unsigned extended:1;
-	} _flags;
+
+	bool freeable; // If true, then the zone can be returned (unmmaped) back to OS when all frames are returned
 
 	size_t mmap_size;
 
@@ -65,7 +67,7 @@ struct frame_pool
 	struct frame_pool_zone * zones;
 };
 
-bool frame_pool_init(struct frame_pool *, size_t initial_frame_count);
+bool frame_pool_init(struct frame_pool *, size_t minimal_frame_count);
 void frame_pool_fini(struct frame_pool *);
 
 struct frame * frame_pool_borrow_real(struct frame_pool *, const char * file, unsigned int line);

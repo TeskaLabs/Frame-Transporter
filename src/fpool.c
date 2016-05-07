@@ -10,7 +10,7 @@ static void frame_init(struct frame * this, uint8_t * data, struct frame_pool_zo
 	assert(this != NULL);
 	assert(((long)data % MEMPAGE_SIZE) == 0);
 
-	this->type =  0xFFFFFFFF;
+	this->type =  frame_type_UNUSED;
 	this->zone = zone;
 	this->data = data;
 
@@ -24,7 +24,7 @@ static void frame_init(struct frame * this, uint8_t * data, struct frame_pool_zo
 
 //
 
-static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool extended)
+static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 {
 	assert(frame_count > 0);
 
@@ -44,7 +44,7 @@ static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool ext
 	}
 
 	struct frame_pool_zone * this = p;
-	this->_flags.extended = extended;
+	this->freeable = freeable;
 	this->mmap_size = mmap_size_frames+mmap_size_zone+mmap_size_fill;
 	this->next = NULL;
 
@@ -64,8 +64,8 @@ static struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool ext
 	// Prepare stack (S-list) of available (aka all at this time) frames in this zone
 	this->available_frames = this->low_frame;
 	for(int i=1; i<frame_count; i+=1)
-		this->frames[i-1].next_available = &this->frames[i];
-	this->high_frame->next_available = NULL;
+		this->frames[i-1].next = &this->frames[i];
+	this->high_frame->next = NULL;
 
 	L_INFO("Allocated frame pool zone of %zu bytes", this->mmap_size);
 	return this;
@@ -81,7 +81,7 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, cons
 {
 	if (this->available_frames == NULL) return NULL; // Zone has no available frames
 	struct frame * frame = this->available_frames;
-	this->available_frames = frame->next_available;
+	this->available_frames = frame->next;
 
 	// Reset frame
 	frame->type = 0xFFFFFFFF;
