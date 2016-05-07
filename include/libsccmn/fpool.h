@@ -1,6 +1,11 @@
 #ifndef __LIBSCCMN_FPOOL_H__
 #define __LIBSCCMN_FPOOL_H__
 
+/*
+Fixed-size block memory pool.
+See https://en.wikipedia.org/wiki/Memory_pool
+*/
+
 struct frame_dvec
 {
 	uint8_t * base;
