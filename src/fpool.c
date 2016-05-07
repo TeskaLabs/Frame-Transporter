@@ -10,7 +10,7 @@ static void frame_init(struct frame * this, uint8_t * data, struct frame_pool_zo
 	assert(this != NULL);
 	assert(((long)data % MEMPAGE_SIZE) == 0);
 
-	this->type =  frame_type_UNUSED;
+	this->type = frame_type_UNUSED;
 	this->zone = zone;
 	this->data = data;
 
@@ -84,7 +84,7 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, cons
 	this->available_frames = frame->next;
 
 	// Reset frame
-	frame->type = 0xFFFFFFFF;
+	frame->type = frame_type_UNUSED;
 	frame->borrowed_by_file = file;
 	frame->borrowed_by_line = line;
 
