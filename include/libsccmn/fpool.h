@@ -34,6 +34,7 @@ struct frame
 
 	struct frame_dvec * dvecs;
 
+	// Those two are used for tracing and debugging 
 	const char * borrowed_by_file;
 	unsigned int borrowed_by_line;
 
