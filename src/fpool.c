@@ -10,7 +10,7 @@ static void frame_init(struct frame * this, uint8_t * data, struct frame_pool_zo
 	assert(this != NULL);
 	assert(((long)data % MEMPAGE_SIZE) == 0);
 
-	this->type = frame_type_UNUSED;
+	this->type = frame_type_FREE;
 	this->zone = zone;
 	this->data = data;
 

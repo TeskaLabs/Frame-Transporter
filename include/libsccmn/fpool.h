@@ -27,7 +27,8 @@ struct frame_dvec
 
 enum frame_types
 {
-	frame_type_UNUSED = 0xFFFFFFFF
+	frame_type_FREE    = 0xFFFFFFFF,
+	frame_type_UNKNOWN = 0xFFFFFFEE
 };
 
 struct frame
