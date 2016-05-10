@@ -57,6 +57,9 @@ struct frame_pool_zone
 	size_t frames_total;
 	size_t frames_used;
 
+	bool free_timeout_triggered;
+	ev_tstamp free_at;
+
 	size_t mmap_size;
 
 	struct frame * available_frames;
@@ -75,21 +78,26 @@ struct frame_pool
 {
 	struct frame_pool_zone * zones;
 	frame_pool_zone_alloc_advice alloc_advise;
+	struct heartbeat_watcher heartbeat_w;
 };
 
-bool frame_pool_init(struct frame_pool *, frame_pool_zone_alloc_advice alloc_advise);
-void frame_pool_fini(struct frame_pool *);
+bool frame_pool_init(struct frame_pool *, struct heartbeat * heartbeat, frame_pool_zone_alloc_advice alloc_advise);
+void frame_pool_fini(struct frame_pool *, struct heartbeat * heartbeat);
 
 struct frame * frame_pool_borrow_real(struct frame_pool *, const char * file, unsigned int line);
 #define frame_pool_borrow(pool) frame_pool_borrow_real(pool, __FILE__, __LINE__)
 
 static inline void frame_pool_return(struct frame * frame)
 {
-	frame->next = frame->zone->available_frames;
-	frame->zone->available_frames = frame;
-	frame->zone->frames_used -= 1;
+	struct frame_pool_zone * zone = frame->zone;
 
 	frame->type = frame_type_FREE;
+
+	frame->next = zone->available_frames;
+	zone->available_frames = frame;
+
+	zone->frames_used -= 1;
+	zone->free_timeout_triggered = (frame->zone->frames_used == 0);
 }
 
 #endif //__LIBSCCMN_FPOOL_H__

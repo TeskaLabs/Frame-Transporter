@@ -19,6 +19,8 @@ struct libsccmn_config
 	double lag_detector_sensitivity;
 
 	char * pid_file;
+
+	ev_tstamp fpool_zone_free_timeout;
 };
 
 extern struct libsccmn_config libsccmn_config;

@@ -8,7 +8,10 @@ START_TEST(fpool_alloc_up_utest)
 	struct frame_pool fpool;
 	bool ok;
 
-	ok = frame_pool_init(&fpool, NULL);
+	struct heartbeat hb;
+	heartbeat_init(&hb, 0.1);
+
+	ok = frame_pool_init(&fpool, &hb, NULL);
 	ck_assert_int_eq(ok, true);
 
 	const int frame_count = 32;
@@ -28,7 +31,7 @@ START_TEST(fpool_alloc_up_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	frame_pool_fini(&fpool);
+	frame_pool_fini(&fpool, &hb);
 }
 END_TEST
 
@@ -38,7 +41,10 @@ START_TEST(fpool_alloc_down_utest)
 	struct frame_pool fpool;
 	bool ok;
 
-	ok = frame_pool_init(&fpool, NULL);
+	struct heartbeat hb;
+	heartbeat_init(&hb, 0.1);
+
+	ok = frame_pool_init(&fpool, &hb, NULL);
 	ck_assert_int_eq(ok, true);
 
 	const int frame_count = 32;
@@ -86,7 +92,7 @@ START_TEST(fpool_alloc_down_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	frame_pool_fini(&fpool);
+	frame_pool_fini(&fpool, &hb);
 }
 END_TEST
 
@@ -104,7 +110,15 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	struct frame_pool fpool;
 	bool ok;
 
-	ok = frame_pool_init(&fpool, frame_pool_zone_alloc_advice_custom);
+	struct heartbeat hb;
+	heartbeat_init(&hb, 0.1);
+
+	struct ev_loop * loop = ev_default_loop(0);
+	ck_assert_ptr_ne(loop, NULL);
+
+	heartbeat_start(loop, &hb);
+
+	ok = frame_pool_init(&fpool, &hb, frame_pool_zone_alloc_advice_custom);
 	ck_assert_int_eq(ok, true);
 
 	const int frame_count = 32;
@@ -131,7 +145,18 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	ck_assert_int_eq(frame_pool_zone_alloc_advice_custom_counter, frame_count);
 
-	frame_pool_fini(&fpool);
+	// Simulate heartbeat
+	libsccmn_config.fpool_zone_free_timeout = 0.2;
+	ev_ref(loop);
+	while (fpool.zones != NULL)
+	{
+		ev_run(loop, EVRUN_ONCE);
+	}
+
+	frame_pool_fini(&fpool, &hb);
+
+	heartbeat_stop(loop, &hb);
+
 }
 END_TEST
 

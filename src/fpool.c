@@ -75,7 +75,9 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 
 static void frame_pool_zone_del(struct frame_pool_zone * this)
 {
+	assert(this != NULL);
 	assert(this->frames_used >= 0);
+
 	if (this->frames_used > 0)
 	{
 		L_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %zd)", this->frames_used);
@@ -89,9 +91,10 @@ static void frame_pool_zone_del(struct frame_pool_zone * this)
 		abort();
 	}
 
-	assert(this != NULL);
+	L_DEBUG("Deallocating frame pool zone of %zu bytes", this->mmap_size);
 	munmap(this, this->mmap_size);
 }
+
 
 static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, const char * file, unsigned int line)
 {
@@ -111,19 +114,18 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, cons
 
 //
 
-static struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this)
-{
-	if (this->zones == NULL) return frame_pool_zone_new(16, false); // Allocate first, low-memory zone
-	if (this->zones->next == NULL) return frame_pool_zone_new(2045, true); // Allocate second, high-memory zone
-	return NULL;
-}
+static void frame_pool_heartbeat_cb(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now);
+static struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this);
 
 
-bool frame_pool_init(struct frame_pool * this, frame_pool_zone_alloc_advice alloc_advise)
+bool frame_pool_init(struct frame_pool * this, struct heartbeat * heartbeat, frame_pool_zone_alloc_advice alloc_advise)
 {
 	assert(this != NULL);
 	this->zones = NULL;
 	
+	heartbeat_add(heartbeat, &this->heartbeat_w, frame_pool_heartbeat_cb);
+	this->heartbeat_w.data = this;
+
 	if (alloc_advise == NULL) this->alloc_advise = frame_pool_zone_alloc_advice_default;
 	else this->alloc_advise = alloc_advise;
 
@@ -133,7 +135,8 @@ bool frame_pool_init(struct frame_pool * this, frame_pool_zone_alloc_advice allo
 	return true;
 }
 
-void frame_pool_fini(struct frame_pool * this)
+
+void frame_pool_fini(struct frame_pool * this, struct heartbeat * heartbeat)
 {
 	assert(this != NULL);
 
@@ -144,7 +147,10 @@ void frame_pool_fini(struct frame_pool * this)
 
 		frame_pool_zone_del(zone);
 	}
+
+	heartbeat_remove(heartbeat, &this->heartbeat_w);
 }
+
 
 struct frame * frame_pool_borrow_real(struct frame_pool * this, const char * file, unsigned int line)
 {
@@ -176,4 +182,57 @@ struct frame * frame_pool_borrow_real(struct frame_pool * this, const char * fil
 	}
 
 	return frame;
+}
+
+
+struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this)
+{
+	if (this->zones == NULL) return frame_pool_zone_new(16, false); // Allocate first, low-memory zone
+	if (this->zones->next == NULL) return frame_pool_zone_new(2045, true); // Allocate second, high-memory zone
+	return NULL;
+}
+
+
+void frame_pool_heartbeat_cb(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now)
+{
+	struct frame_pool * this = watcher->data;
+	assert(this != NULL);
+
+	// Iterate via zones and find free-able ones with no used frames ...
+	struct frame_pool_zone ** last_zone_next = &this->zones;
+	struct frame_pool_zone * zone = this->zones;
+	while (zone != NULL)
+	{
+		if ((!zone->freeable) || (zone->frames_used > 0))
+		{
+			last_zone_next = &zone->next;
+			zone = zone->next;
+			continue;
+		}
+
+		if (zone->free_timeout_triggered)
+		{
+			zone->free_at = now + libsccmn_config.fpool_zone_free_timeout;
+			zone->free_timeout_triggered = false;
+
+			last_zone_next = &zone->next;
+			zone = zone->next;
+			continue;
+		}
+
+		if (zone->free_at >= now)
+		{
+			last_zone_next = &zone->next;
+			zone = zone->next;
+			continue;			
+		}
+
+		// Unchain the zone
+		struct frame_pool_zone * zone_free = zone;
+		zone = zone->next;
+		*last_zone_next = zone;
+
+		// Delete zone
+		frame_pool_zone_del(zone_free);
+	}
 }

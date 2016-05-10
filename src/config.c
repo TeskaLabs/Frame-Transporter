@@ -17,6 +17,8 @@ struct libsccmn_config libsccmn_config =
 	.lag_detector_sensitivity = 1.0,
 
 	.pid_file = NULL,
+
+	.fpool_zone_free_timeout = 2.0,
 };
 
 
