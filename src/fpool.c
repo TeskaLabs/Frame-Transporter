@@ -1,29 +1,5 @@
 #include "all.h"
 
-#define FRAME_SIZE (3*4096)
-#define MEMPAGE_SIZE (4096)
-
-///
-
-static void frame_init(struct frame * this, uint8_t * data, struct frame_pool_zone * zone)
-{
-	assert(this != NULL);
-	assert(((long)data % MEMPAGE_SIZE) == 0);
-
-	this->type = frame_type_FREE;
-	this->zone = zone;
-	this->data = data;
-
-	this->borrowed_by_file = NULL;
-	this->borrowed_by_line = 0;
-
-	this->dvecs = NULL; //TODO: this ...
-
-	bzero(this->data, FRAME_SIZE);
-}
-
-//
-
 struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 {
 	assert(frame_count > 0);
@@ -58,7 +34,7 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 	for(int i=0; i<this->frames_total; i+=1)
 	{
 		struct frame * frame = &this->frames[i];
-		frame_init(frame, frame_data + (i*FRAME_SIZE), this);
+		_frame_init(frame, frame_data + (i*FRAME_SIZE), this);
 		assert(frame >= this->low_frame);
 		assert(frame <= this->high_frame);
 	}
