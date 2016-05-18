@@ -13,10 +13,10 @@ START_TEST(frame_core_utest)
 	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
 	ck_assert_int_eq(rc, 0);
 
-	_frame_init(&frame, frame_data, NULL);
+	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
 
-	size_t cap = frame_capacity(&frame);
-	ck_assert_int_eq(cap, 0);
+	size_t pos = frame_total_position(&frame);
+	ck_assert_int_eq(pos, 0);
 
 	free(frame_data);
 }

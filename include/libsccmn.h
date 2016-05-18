@@ -45,6 +45,7 @@
 #include <libsccmn/fpool.h>
 
 #include <libsccmn/sock_listen.h>
+#include <libsccmn/sock_est.h>
 
 // Global init function
 void libsccmn_initialize(void); // Call this at very beginning

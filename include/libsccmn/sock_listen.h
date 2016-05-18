@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_LISTENING_H__
-#define __LIBSCCMN_LISTENING_H__
+#ifndef __LIBSCCMN_SOCK_LISTEN_H__
+#define __LIBSCCMN_SOCK_LISTEN_H__
 
 struct listening_socket;
 
@@ -50,4 +50,4 @@ void listening_socket_chain_stop(struct ev_loop * loop, struct listening_socket_
 
 void listening_socket_chain_set_data(struct listening_socket_chain *, void * data);
 
-#endif //__LIBSCCMN_LISTENING_H__
+#endif //__LIBSCCMN_SOCK_LISTEN_H__

@@ -34,7 +34,7 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 	for(int i=0; i<this->frames_total; i+=1)
 	{
 		struct frame * frame = &this->frames[i];
-		_frame_init(frame, frame_data + (i*FRAME_SIZE), this);
+		_frame_init(frame, frame_data + (i*FRAME_SIZE), FRAME_SIZE, this);
 		assert(frame >= this->low_frame);
 		assert(frame <= this->high_frame);
 	}

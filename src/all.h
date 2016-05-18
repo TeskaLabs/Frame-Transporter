@@ -7,4 +7,4 @@
 
 void _logging_init(void);
 
-void _frame_init(struct frame * this, uint8_t * data, struct frame_pool_zone * zone);
+void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct frame_pool_zone * zone);

@@ -127,7 +127,7 @@ bool listening_socket_stop(struct ev_loop * loop, struct listening_socket * this
 {
 	if (this->watcher.fd < 0)
 	{
-		L_WARN("Listening on socket that is not open!");
+		L_WARN("Listening (stop) on socket that is not open!");
 		return false;
 	}
 
@@ -139,6 +139,7 @@ bool listening_socket_stop(struct ev_loop * loop, struct listening_socket * this
 static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher, int revents)
 {
 	struct listening_socket * this = watcher->data;
+	assert(this != NULL);
 
 	if (revents & EV_ERROR)
 	{

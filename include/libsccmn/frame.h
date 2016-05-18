@@ -3,7 +3,7 @@
 
 struct frame_dvec
 {
-	uint8_t * base;
+	struct frame * frame;
 
 	// 0 <= position <= limit <= capacity
 
@@ -20,6 +20,16 @@ struct frame_dvec
 	size_t capacity;
 };
 
+static inline void frame_dvec_position_add(struct frame_dvec * this, size_t position_delta)
+{
+	assert((this->position + position_delta) > 0);
+	assert((this->position + position_delta) < this->limit);
+	assert((this->position + position_delta) < this->capacity);
+
+	this->position += position_delta;
+}
+
+
 enum frame_types
 {
 	frame_type_FREE    = 0xFFFFFFFF,
@@ -32,15 +42,20 @@ struct frame
 	struct frame_pool_zone * zone;
 
 	enum frame_types type;
-	struct frame_dvec * dvecs;
+	
+	//TODO: This is quite temporary
+	unsigned int dvec_count;
+	struct frame_dvec dvecs[2];
 
 	// Those two are used for tracing and debugging 
 	const char * borrowed_by_file;
 	unsigned int borrowed_by_line;
 
 	uint8_t * data;
+	size_t capacity;
 };
 
-size_t frame_capacity(struct frame *);
+size_t frame_total_position(struct frame *);
+void frame_format_simple(struct frame *);
 
 #endif //__LIBSCCMN_FRAME_H__
