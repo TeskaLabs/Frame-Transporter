@@ -4,7 +4,7 @@ static void established_socket_on_read(struct ev_loop *loop, struct ev_io *watch
 
 ///
 
-bool established_socket_init(struct established_socket * this, struct established_socket_cb * cbs, struct frame_pool * frame_pool, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+bool established_socket_init(struct established_socket * this, struct established_socket_cb * cbs, struct frame_pool * frame_pool, struct ev_loop * loop, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	assert(frame_pool != NULL);
 	assert(cbs != NULL);
@@ -13,6 +13,10 @@ bool established_socket_init(struct established_socket * this, struct establishe
 	this->cbs = cbs;
 	this->frame_pool = frame_pool;
 	this->read_frame = NULL;
+
+	this->establish_at = ev_now(loop);
+	this->shutdown_at = NAN;
+	this->close_at = NAN;
 
 	memcpy(&this->ai_addr, peer_addr, peer_addr_len);
 	this->ai_addrlen = peer_addr_len;
@@ -31,6 +35,44 @@ bool established_socket_init(struct established_socket * this, struct establishe
 	if (!res) L_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	return true;
+}
+
+// It is static for a reason
+// The close operation should be triggered by a graceful established_socket_shutdown with a timeout operation
+static void established_socket_close(struct established_socket * this, struct ev_loop * loop)
+{
+	assert(this->read_watcher.fd >= 0);
+	assert(this->write_watcher.fd == this->read_watcher.fd);
+
+	established_socket_read_stop(loop, this);
+
+	assert(this->cbs->close != NULL);
+	this->cbs->close(this, loop);
+
+	int rc = close(this->read_watcher.fd);
+	if (rc != 0) L_WARN_ERRNO_P(errno, "close()");
+
+	this->read_watcher.fd = -1;
+	this->write_watcher.fd = -1;
+
+	this->close_at = ev_now(loop);
+
+	if (this->read_frame != NULL)
+	{
+		size_t cap = frame_total_position(this->read_frame);
+		frame_pool_return(this->read_frame);
+		this->read_frame = NULL;
+
+		if (cap > 0) L_WARN("Lost %zu bytes in read buffer of the socket", cap);
+	}
+}
+
+void established_socket_fini(struct established_socket * this, struct ev_loop * loop)
+{
+	if (this->read_watcher.fd >= 0)
+	{
+		established_socket_close(this, loop);
+	}
 }
 
 
@@ -100,26 +142,33 @@ void established_socket_on_read(struct ev_loop *loop, struct ev_io *watcher, int
 		if (rc < 0)
 		{
 			L_ERROR_ERRNO(errno, "Reading for peer");
-			//TODO: established_socket_close(this);
+			established_socket_close(this, loop);
 			return;
 		}
 
 		else if (rc == 0)
 		{
-			//TODO: established_socket_close(this);
+			established_socket_close(this, loop);
 			return;		
 		}
 
 		frame_dvec_position_add(frame_dvec, rc);
-		bool upstreamed = this->cbs->read(loop, this, this->read_frame);
+		bool upstreamed = this->cbs->read(this, loop, this->read_frame);
 		if (upstreamed) this->read_frame = NULL;
 	}
 }
 
-bool established_socket_shutdown(struct established_socket * this)
+bool established_socket_shutdown(struct ev_loop * loop, struct established_socket * this)
 {
 	assert(this != NULL);
-	assert(this->write_watcher.fd >= 0);
+	
+	if (this->write_watcher.fd < 0)
+	{
+		L_WARN("Calling shutdown on closed socket");
+		return false;
+	}
+
+	ev_io_stop(loop, &this->write_watcher);
 
 	int rc = shutdown(this->write_watcher.fd, SHUT_WR);
 	if (rc != 0)
@@ -127,6 +176,8 @@ bool established_socket_shutdown(struct established_socket * this)
 		L_ERROR_ERRNO_P(errno, "shutdown()");
 		return false;
 	}
+
+	this->shutdown_at = ev_now(loop);
 
 	return true;
 }

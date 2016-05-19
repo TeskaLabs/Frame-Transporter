@@ -36,33 +36,40 @@ size_t sock_est_1_on_read_advise(struct established_socket * established_sock, s
 	return 5;
 }
 
-bool sock_est_1_on_read(struct ev_loop * loop, struct established_socket * established_sock, struct frame * frame)
+bool sock_est_1_on_read(struct established_socket * established_sock, struct ev_loop * loop, struct frame * frame)
 {
-	ck_assert_int_eq(frame->dvecs[0].position, 5);
 	ck_assert_int_ne(frame->type, frame_type_FREE);
 
-	ev_break (loop, EVBREAK_ALL);
+	size_t cap = frame_total_position(frame);
+	if (cap < 5) return false;
+
+	ck_assert_int_eq(memcmp(frame->data, "1234\n", 5), 0);
 
 	frame_pool_return(frame);
 
-	bool ok = established_socket_shutdown(established_sock);
+	bool ok = established_socket_shutdown(loop, established_sock);
 	ck_assert_int_eq(ok, true);
 
 	return true;
 }
 
+void sock_est_1_on_close(struct established_socket * established_sock, struct ev_loop * loop)
+{
+	ev_break(loop, EVBREAK_ALL);
+}
 
 struct established_socket_cb sock_est_1_sock_cb = 
 {
 	.read_advise = sock_est_1_on_read_advise,
-	.read = sock_est_1_on_read
+	.read = sock_est_1_on_read,
+	.close = sock_est_1_on_close
 };
 
-void sock_est_1_on_cb(struct ev_loop * loop, struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+void sock_est_1_on_accept(struct ev_loop * loop, struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	bool ok;
 
-	ok = established_socket_init(&established_sock, &sock_est_1_sock_cb, &fpool, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init(&established_sock, &sock_est_1_sock_cb, &fpool, loop, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
 	ok = established_socket_read_start(loop, &established_sock);
@@ -87,7 +94,7 @@ START_TEST(sock_est_1_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, rp, sock_est_1_on_cb, 10);
+	ok = listening_socket_init(&listen_sock, rp, sock_est_1_on_accept, 10);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -107,7 +114,7 @@ START_TEST(sock_est_1_utest)
 	ev_run(loop, 0);
 
 	rc = pclose(p);
-
+	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
 	ck_assert_int_eq(rc, 0);
 
 	ok = listening_socket_stop(loop, &listen_sock);
