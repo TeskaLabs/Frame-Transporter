@@ -1,6 +1,6 @@
 #include "all.h"
 
-static void established_socket_on_read(struct ev_loop *loop, struct ev_io *watcher, int revents);
+static void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 
 ///
 
@@ -108,7 +108,7 @@ bool established_socket_read_stop(struct ev_loop * loop, struct established_sock
 }
 
 
-void established_socket_on_read(struct ev_loop *loop, struct ev_io *watcher, int revents)
+void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
