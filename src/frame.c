@@ -55,23 +55,40 @@ void frame_format_simple(struct frame * this)
 	this->dvecs[0].capacity = this->capacity;
 }
 
+bool frame_dvec_vsprintf(struct frame_dvec * this, const char * format, va_list args)
+{
+	size_t max_size = (this->limit - this->position) - 1;
+	int rc = vsnprintf((char *)this->frame->data + this->position, max_size, format, args);
+
+	if (rc < 0) return false;
+	if (rc > max_size) return false;
+	this->position += rc;	
+
+	return true;
+}
 
 bool frame_dvec_sprintf(struct frame_dvec * this, const char * format, ...)
 {
-	return false;
-}
+	va_list ap;
 
-bool frame_dvec_vsprintf(struct frame_dvec * this, const char * format, va_list ap)
-{
-	return false;
-}
+	va_start(ap, format);
+	bool ok = frame_dvec_vsprintf(this, format, ap);
+	va_end(ap);
 
-bool frame_dvec_strcat(struct frame_dvec * this, const char * text)
-{
-	return false;
+	return ok;
 }
 
 bool frame_dvec_cat(struct frame_dvec * this, const void * data, size_t data_len)
 {
-	return false;
+	if ((this->position + data_len) > this->limit) return false;
+
+	memcpy(this->frame->data + this->position, data, data_len);
+	this->position += data_len;
+
+	return true;
+}
+
+bool frame_dvec_strcat(struct frame_dvec * this, const char * text)
+{
+	return frame_dvec_cat(this, text, strlen(text));
 }
