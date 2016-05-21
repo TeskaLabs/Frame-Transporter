@@ -9,6 +9,23 @@ bool established_socket_init(struct established_socket * this, struct establishe
 	assert(frame_pool != NULL);
 	assert(cbs != NULL);
 
+	// Disable Nagle
+#ifdef TCP_NODELAY
+	int flag = 1;
+	int rc_tcp_nodelay = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
+	if (rc_tcp_nodelay == -1) L_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_NODELAY)");
+#endif
+
+	// Set Congestion Window size
+#ifdef TCP_CWND
+	int cwnd = 10; // from SPDY best practicies
+	int rc_tcp_cwnd = setsockopt(fd, IPPROTO_TCP, TCP_CWND, &cwnd, sizeof(cwnd));
+	if (rc_tcp_cwnd == -1) L_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_CWND)");
+#endif
+
+	bool res = set_socket_nonblocking(fd);
+	if (!res) L_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
+
 	this->data = NULL;
 	this->cbs = cbs;
 	this->frame_pool = frame_pool;
@@ -30,9 +47,6 @@ bool established_socket_init(struct established_socket * this, struct establishe
 
 	ev_io_init(&this->write_watcher, NULL, fd, EV_WRITE);
 	this->write_watcher.data = this;
-
-	bool res = set_socket_nonblocking(fd);
-	if (!res) L_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	return true;
 }
