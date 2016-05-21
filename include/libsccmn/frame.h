@@ -29,9 +29,11 @@ static inline void frame_dvec_position_add(struct frame_dvec * this, size_t posi
 	this->position += position_delta;
 }
 
-static inline void frame_dvec_set_position(struct frame_dvec * this, size_t position)
+static inline bool frame_dvec_set_position(struct frame_dvec * this, size_t position)
 {
+	if (position > this->limit) return false;
 	this->position = position;
+	return true;
 }
 
 static inline void frame_dvec_flip(struct frame_dvec * this)
