@@ -29,19 +29,34 @@ static inline void frame_dvec_position_add(struct frame_dvec * this, size_t posi
 	this->position += position_delta;
 }
 
-
-enum frame_types
+static inline void frame_dvec_set_position(struct frame_dvec * this, size_t position)
 {
-	frame_type_FREE    = 0xFFFFFFFF,
-	frame_type_UNKNOWN = 0xFFFFFFEE
-};
+	this->position = position;
+}
+
+static inline void frame_dvec_flip(struct frame_dvec * this)
+{
+	this->limit = this->position;
+	this->position = 0;	
+}
+
+bool frame_dvec_sprintf(struct frame_dvec * , const char * format, ...);
+bool frame_dvec_vsprintf(struct frame_dvec * , const char * format, va_list ap);
+bool frame_dvec_strcat(struct frame_dvec * , const char * text);
+bool frame_dvec_cat(struct frame_dvec * , const void * data, size_t data_len);
+
+
+#define frame_type_FREE    	(0xFFFFFFFF)
+#define frame_type_UNKNOWN 	(0xFFFFFFEE)
+#define frame_type_RAW 	    (0xFFFFFFDD)
+
 
 struct frame
 {
 	struct frame * next; // This allows to chain frames in the list
 	struct frame_pool_zone * zone;
 
-	enum frame_types type;
+	uint64_t type;
 	
 	//TODO: This is quite temporary
 	unsigned int dvec_count;
