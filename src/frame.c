@@ -31,6 +31,19 @@ size_t frame_total_position(struct frame * this)
 	return length;
 }
 
+size_t frame_total_limit(struct frame * this)
+{
+	assert(this != NULL);
+
+	size_t length = 0;
+	for (unsigned int i=0; i<this->dvec_count; i += 1)
+	{
+		length += this->dvecs[i].limit;
+	}
+
+	return length;
+}
+
 void frame_format_simple(struct frame * this)
 {
 	assert(this != NULL);
