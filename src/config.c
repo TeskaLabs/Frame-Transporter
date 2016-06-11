@@ -13,16 +13,19 @@ struct libsccmn_config libsccmn_config =
 	.log_flush_interval = 5.0, //Seconds
 	.log_use_utc = true,
 
-	.ev_loop = NULL,
 	.lag_detector_sensitivity = 1.0,
 
 	.pid_file = NULL,
 
+	.libev_loop_flags = 0,
+
 	.fpool_zone_free_timeout = 2.0,
+
+	.heartbeat_interval = 0.1,
 };
 
 
-void libsccmn_initialize(void)
+void libsccmn_init(void)
 {
 	assert(libsccmn_config.initialized == false);
 

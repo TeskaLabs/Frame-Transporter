@@ -9,7 +9,7 @@ START_TEST(fpool_alloc_up_utest)
 	bool ok;
 
 	struct heartbeat hb;
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 
 	ok = frame_pool_init(&fpool, &hb, NULL);
 	ck_assert_int_eq(ok, true);
@@ -42,7 +42,7 @@ START_TEST(fpool_alloc_down_utest)
 	bool ok;
 
 	struct heartbeat hb;
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 
 	ok = frame_pool_init(&fpool, &hb, NULL);
 	ck_assert_int_eq(ok, true);
@@ -111,7 +111,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	bool ok;
 
 	struct heartbeat hb;
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 
 	struct ev_loop * loop = ev_default_loop(0);
 	ck_assert_ptr_ne(loop, NULL);

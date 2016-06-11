@@ -28,7 +28,7 @@ static bool resolve(struct addrinfo **res, const char * host)
 
 ////
 
-void sock_listen_utest_cb(struct ev_loop * loop, struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+void sock_listen_utest_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	flags &= ~O_NONBLOCK;
@@ -43,7 +43,7 @@ void sock_listen_utest_cb(struct ev_loop * loop, struct listening_socket * liste
 		listening_socket->data = strdup(buffer);
 	}
 	close(fd);
-	ev_break (loop, EVBREAK_ALL);
+	ev_break(listening_socket->context->ev_loop, EVBREAK_ALL);
 }
 
 
@@ -52,38 +52,41 @@ START_TEST(sock_listen_single_utest)
 	struct listening_socket sock;
 	int rc;
 
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
 	struct addrinfo * rp = NULL;
-	bool ok = resolve(&rp, "127.0.0.1");
+	ok = resolve(&rp, "127.0.0.1");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&sock, rp, sock_listen_utest_cb, 10);
+	ok = listening_socket_init(&sock, &context, rp, sock_listen_utest_cb, 10);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
 
-	struct ev_loop * loop = ev_default_loop(0);
-	ck_assert_ptr_ne(loop, NULL);
-
-	ok = listening_socket_start(loop, &sock);
+	ok = listening_socket_start(&sock);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_stop(loop, &sock);
+	ok = listening_socket_stop(&sock);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_start(loop, &sock);
+	ok = listening_socket_start(&sock);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_stop(loop, &sock);
+	ok = listening_socket_stop(&sock);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_stop(loop, &sock);
+	ok = listening_socket_stop(&sock);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_start(loop, &sock);
+	ok = listening_socket_start(&sock);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_start(loop, &sock);
+	ok = listening_socket_start(&sock);
 	ck_assert_int_eq(ok, true);
 
 	FILE * p = popen("nc localhost 12345", "w");
@@ -92,19 +95,19 @@ START_TEST(sock_listen_single_utest)
 	fprintf(p, "1234\n");
 	fflush(p);
 
-	ev_run(loop, 0);
+	ev_run(context.ev_loop, 0);
 
 	rc = pclose(p);
 	ck_assert_int_eq(rc, 0);
 
 	ck_assert_str_eq(sock.data, "1234\n");
 
-	ok = listening_socket_stop(loop, &sock);
+	ok = listening_socket_stop(&sock);
 	ck_assert_int_eq(ok, true);
 
 	listening_socket_close(&sock);
 
-	ev_loop_destroy(loop);
+	context_fini(&context);
 }
 END_TEST
 
@@ -112,14 +115,19 @@ END_TEST
 START_TEST(sock_listen_chain_utest)
 {
 	int rc;
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
-	bool ok = resolve(&rp, "localhost");
+	ok = resolve(&rp, "localhost");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
 	struct listening_socket_chain * chain = NULL;
-	rc = listening_socket_chain_extend(&chain, rp, sock_listen_utest_cb, 10);
+	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb, 10);
 	ck_assert_int_gt(rc, 0);
 
 	freeaddrinfo(rp);
@@ -129,16 +137,13 @@ START_TEST(sock_listen_chain_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	rc = listening_socket_chain_extend(&chain, rp, sock_listen_utest_cb, 10);
+	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb, 10);
 	ck_assert_int_gt(rc, 0);
 
 	freeaddrinfo(rp);
 
 
-	struct ev_loop * loop = ev_default_loop(0);
-	ck_assert_ptr_ne(loop, NULL);
-
-	listening_socket_chain_start(loop, chain);
+	listening_socket_chain_start(chain);
 
 	FILE * p = popen("nc localhost 12345", "w");
 	ck_assert_ptr_ne(p, NULL);
@@ -146,12 +151,12 @@ START_TEST(sock_listen_chain_utest)
 	fprintf(p, "1234\n");
 	fflush(p);
 
-	ev_run(loop, 0);
+	ev_run(context.ev_loop, 0);
 
 	rc = pclose(p);
 	ck_assert_int_eq(rc, 0);
 
-	listening_socket_chain_stop(loop, chain);
+	listening_socket_chain_stop(chain);
 
 	bool found = false;
 	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
@@ -164,7 +169,7 @@ START_TEST(sock_listen_chain_utest)
 
 	listening_socket_chain_del(chain);
 
-	ev_loop_destroy(loop);
+	context_fini(&context);
 }
 END_TEST
 
@@ -172,15 +177,10 @@ END_TEST
 START_TEST(sock_listen_null_chain_utest)
 {
 	struct listening_socket_chain * chain = NULL;
-	
-	struct ev_loop * loop = ev_default_loop(0);
-	ck_assert_ptr_ne(loop, NULL);
 
-	listening_socket_chain_start(loop, chain);
-	listening_socket_chain_stop(loop, chain);
+	listening_socket_chain_start(chain);
+	listening_socket_chain_stop(chain);
 	listening_socket_chain_del(chain);
-
-	ev_loop_destroy(loop);
 }
 END_TEST
 

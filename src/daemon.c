@@ -118,7 +118,7 @@ static void sigchld(int s)
 
 ///
 
-pid_t daemonise(void)
+pid_t daemonise(struct context * context)
 {
 	pid_t pid;
 	int pipe_fds[2] = {-1, -1};
@@ -364,8 +364,8 @@ pid_t daemonise(void)
 		L_DEBUG("Daemonised");
 		pidfile_set_filename(NULL); // Prevent removal od the PID file
 
-		if (libsccmn_config.ev_loop != NULL)
-			ev_loop_fork(libsccmn_config.ev_loop);
+		if ((context !=  NULL) && (context->ev_loop != NULL))
+			ev_loop_fork(context->ev_loop);
 
 		return dpid;
 	}

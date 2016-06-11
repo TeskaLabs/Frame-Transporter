@@ -4,10 +4,13 @@ static void listening_socket_on_io(struct ev_loop *loop, struct ev_io *watcher, 
 
 ///
 
-bool listening_socket_init(struct listening_socket * this, struct addrinfo * rp, listening_socket_cb cb, int backlog)
+bool listening_socket_init(struct listening_socket * this, struct context * context, struct addrinfo * rp, listening_socket_cb cb, int backlog)
 {
 	int rc;
 	int fd = -1;
+
+	assert(context != NULL);
+	this->context = context;
 
 	this->listening = false;
 	this->data = NULL;
@@ -89,7 +92,7 @@ void listening_socket_close(struct listening_socket * this)
 
 	if (this->watcher.fd >= 0)
 	{
-		ev_io_stop(libsccmn_config.ev_loop, &this->watcher);
+		ev_io_stop(this->context->ev_loop, &this->watcher);
 		rc = close(this->watcher.fd);
 		if (rc != 0) L_ERROR_ERRNO(errno, "close()");
 		this->watcher.fd = -1;
@@ -97,7 +100,7 @@ void listening_socket_close(struct listening_socket * this)
 }
 
 
-bool listening_socket_start(struct ev_loop * loop, struct listening_socket * this)
+bool listening_socket_start(struct listening_socket * this)
 {
 	int rc;
 
@@ -118,12 +121,12 @@ bool listening_socket_start(struct ev_loop * loop, struct listening_socket * thi
 		this->listening = true;
 	}
 
-	ev_io_start(loop, &this->watcher);
+	ev_io_start(this->context->ev_loop, &this->watcher);
 	return true;
 }
 
 
-bool listening_socket_stop(struct ev_loop * loop, struct listening_socket * this)
+bool listening_socket_stop(struct listening_socket * this)
 {
 	if (this->watcher.fd < 0)
 	{
@@ -131,7 +134,7 @@ bool listening_socket_stop(struct ev_loop * loop, struct listening_socket * this
 		return false;
 	}
 
-	ev_io_stop(loop, &this->watcher);
+	ev_io_stop(this->context->ev_loop, &this->watcher);
 	return true;
 }
 
@@ -180,14 +183,14 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 		}
 */
 
-		this->cb(loop, this, client_socket, (const struct sockaddr *)&client_addr, client_len);
+		this->cb(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
 	}
 
 }
 
 ///
 
-int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct addrinfo * addrinfo, listening_socket_cb cb, int backlog)
+int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct context * context, struct addrinfo * addrinfo, listening_socket_cb cb, int backlog)
 {
 	int count = 0;
 	struct listening_socket_chain ** p = chain;
@@ -201,7 +204,7 @@ int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct
 	for (struct addrinfo * rp = addrinfo; rp != NULL; rp = rp->ai_next)
 	{
 		struct listening_socket_chain * chitem = malloc(sizeof(struct listening_socket_chain));
-		bool ok = listening_socket_init(&chitem->listening_socket, rp, cb, backlog);
+		bool ok = listening_socket_init(&chitem->listening_socket, context, rp, cb, backlog);
 		if (!ok)
 		{
 			free(chitem);
@@ -218,17 +221,17 @@ int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct
 }
 
 
-void listening_socket_chain_start(struct ev_loop * loop, struct listening_socket_chain * chain)
+void listening_socket_chain_start(struct listening_socket_chain * chain)
 {
 	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-		listening_socket_start(loop, &i->listening_socket);
+		listening_socket_start(&i->listening_socket);
 }
 
 
-void listening_socket_chain_stop(struct ev_loop * loop, struct listening_socket_chain * chain)
+void listening_socket_chain_stop(struct listening_socket_chain * chain)
 {
 	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-		listening_socket_stop(loop, &i->listening_socket);
+		listening_socket_stop(&i->listening_socket);
 }
 
 

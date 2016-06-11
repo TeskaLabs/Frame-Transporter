@@ -23,7 +23,7 @@ START_TEST(heartbeat_core_utest)
 {
 	struct heartbeat hb;
 
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 
 	struct ev_loop * loop = ev_default_loop(0);
 	ck_assert_ptr_ne(loop, NULL);
@@ -78,7 +78,7 @@ START_TEST(heartbeat_list1_utest)
 	struct heartbeat hb;
 	struct heartbeat_watcher hbw1;
 
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 	assert_watcher_count(&hb, 0);
 
 	// Add one	
@@ -97,7 +97,7 @@ START_TEST(heartbeat_list2_utest)
 	struct heartbeat_watcher hbw1;
 	struct heartbeat_watcher hbw2;
 
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 	assert_watcher_count(&hb, 0);
 
 	// Add one	
@@ -124,7 +124,7 @@ START_TEST(heartbeat_list3_utest)
 	struct heartbeat_watcher hbw1;
 	struct heartbeat_watcher hbw2;
 
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 	assert_watcher_count(&hb, 0);
 
 	// Add one	
@@ -152,7 +152,7 @@ START_TEST(heartbeat_list4_utest)
 	struct heartbeat_watcher hbw2;
 	struct heartbeat_watcher hbw3;
 
-	heartbeat_init(&hb, 0.1);
+	heartbeat_init(&hb);
 	assert_watcher_count(&hb, 0);
 
 	// Add one	

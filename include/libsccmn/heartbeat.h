@@ -23,7 +23,7 @@ struct heartbeat
 	ev_tstamp last_beat;
 };
 
-void heartbeat_init(struct heartbeat * , ev_tstamp repeat);
+void heartbeat_init(struct heartbeat * );
 
 void heartbeat_start(struct ev_loop * loop, struct heartbeat *);
 void heartbeat_stop(struct ev_loop * loop, struct heartbeat *);
@@ -32,4 +32,3 @@ void heartbeat_add(struct heartbeat *, struct heartbeat_watcher * watcher, heart
 void heartbeat_remove(struct heartbeat *, struct heartbeat_watcher * watcher);
 
 #endif //__LIBSCCMN_HEARTBEAT_H__
-

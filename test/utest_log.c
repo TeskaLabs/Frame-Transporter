@@ -277,26 +277,23 @@ START_TEST(log_reopen_sighup_utest)
 
 	L_INFO("Log message test!");
 
-	libsccmn_config.ev_loop = ev_default_loop(0);
-	ck_assert_ptr_ne(libsccmn_config.ev_loop, NULL);
-
-	logging_install_sighup_reopen();
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
 
 	ev_feed_signal(SIGHUP);
-	ev_run(libsccmn_config.ev_loop, EVBREAK_ONE);
+	ev_run(context.ev_loop, EVBREAK_ONE);
 
 	L_INFO("Log message test!");
 
 	ev_feed_signal(SIGHUP);
-	ev_run(libsccmn_config.ev_loop, EVBREAK_ONE);
+	ev_run(context.ev_loop, EVBREAK_ONE);
 
 	int rc = system("grep \"Log file is reopen\" ./log.txt");
 	ck_assert_int_eq(rc, 0);
 
 	rc = unlink("./log.txt");
 	ck_assert_int_eq(rc, 0);
-
-	libsccmn_config.ev_loop = NULL;
 }
 END_TEST
 

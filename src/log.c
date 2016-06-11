@@ -2,7 +2,7 @@
 
 ///
 
-static char * log_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+static const char * log_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 static inline const char * log_levelname(char level)
 {
@@ -26,6 +26,17 @@ static inline const char * log_levelname(char level)
 
 	return lln_UNKNOWN;
 }
+
+///
+
+static struct context * logging_context = NULL;
+
+inline static ev_tstamp log_get_tstamp()
+{
+	return ((logging_context != NULL) && (logging_context->ev_loop != NULL)) ? ev_now(logging_context->ev_loop) : ev_time();
+}
+
+///
 
 void log_entry_process(struct log_entry * le, int le_message_length)
 {
@@ -52,7 +63,7 @@ void log_entry_process(struct log_entry * le, int le_message_length)
 
 static inline int log_entry_format(struct log_entry * le, char level,const char * format, va_list args)
 {
-	le->timestamp = (libsccmn_config.ev_loop == NULL) ? ev_time() : ev_now(libsccmn_config.ev_loop);
+	le->timestamp = log_get_tstamp();
 	le->pid = getpid();
 	le->level = level;
 
@@ -142,7 +153,7 @@ void _logging_init()
 
 void logging_flush()
 {
-	ev_tstamp now = (libsccmn_config.ev_loop == NULL) ? ev_time() : ev_now(libsccmn_config.ev_loop);
+	ev_tstamp now = log_get_tstamp();
 	bool do_flush = false;
 
 	if (libsccmn_config.log_flush_counter >= libsccmn_config.log_flush_counter_max)
@@ -231,9 +242,21 @@ static void logging_reopen_on_hup_signal(struct ev_loop * loop, ev_signal * w, i
 	logging_reopen();
 }
 
-void logging_install_sighup_reopen()
+void logging_set_context(struct context * context)
 {
-	ev_signal_init(&libsccmn_config.log_reopen_sighup_w, logging_reopen_on_hup_signal, SIGHUP);
-	ev_signal_start(libsccmn_config.ev_loop, &libsccmn_config.log_reopen_sighup_w);
-	ev_unref(libsccmn_config.ev_loop);
+	if (context == NULL)
+	{
+		//TODO: Uninstall SIGHUP handler ...
+
+		assert(logging_context != NULL);
+		logging_context = NULL;
+		return;
+	}
+
+	assert(logging_context == NULL);
+	logging_context = context;
+
+	ev_signal_init(&logging_context->log_reopen_sighup_w, logging_reopen_on_hup_signal, SIGHUP);
+	ev_signal_start(logging_context->ev_loop, &logging_context->log_reopen_sighup_w);
+	ev_unref(logging_context->ev_loop);
 }

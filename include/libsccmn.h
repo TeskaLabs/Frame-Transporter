@@ -37,22 +37,27 @@
 #include <openssl/err.h>
 
 
+
+struct context;
+
 #include <libsccmn/config.h>
 #include <libsccmn/log.h>
 #include <libsccmn/ini.h>
 #include <libsccmn/heartbeat.h>
 #include <libsccmn/frame.h>
 #include <libsccmn/fpool.h>
+#include <libsccmn/context.h>
 
 #include <libsccmn/sock_listen.h>
 #include <libsccmn/sock_est.h>
 
 // Global init function
-void libsccmn_initialize(void); // Call this at very beginning
+void libsccmn_init(void); // Call this at very beginning
 void libsccmn_configure(void); // Call this at the end of configuration phase
 
 // Daemonise functions
-pid_t daemonise(void);
+// context can be NULL
+pid_t daemonise(struct context * context);
 
 void pidfile_set_filename(const char * fname);
 bool pidfile_create(void);

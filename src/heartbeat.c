@@ -4,7 +4,7 @@ static void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 
 ///
 
-void heartbeat_init(struct heartbeat * this, ev_tstamp repeat)
+void heartbeat_init(struct heartbeat * this)
 {
 	assert(this != NULL);
 
@@ -12,7 +12,7 @@ void heartbeat_init(struct heartbeat * this, ev_tstamp repeat)
 	this->first_watcher = NULL;
 	this->last_watcher = NULL;
 
-	ev_timer_init(&this->timer_w, heartbeat_on_timer, 0.0, repeat);
+	ev_timer_init(&this->timer_w, heartbeat_on_timer, 0.0, libsccmn_config.heartbeat_interval);
 	this->timer_w.data = this;
 }
 

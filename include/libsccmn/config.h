@@ -12,15 +12,17 @@ struct libsccmn_config
 	unsigned int log_flush_counter_max;
 	ev_tstamp log_flush_last;
 	double log_flush_interval;
-	ev_signal log_reopen_sighup_w;
 	bool log_use_utc;
 
-	struct ev_loop * ev_loop;
 	double lag_detector_sensitivity;
 
 	char * pid_file;
 
+	unsigned int libev_loop_flags; // See EVFLAG_* in libev
+
 	ev_tstamp fpool_zone_free_timeout;
+
+	ev_tstamp heartbeat_interval;
 };
 
 extern struct libsccmn_config libsccmn_config;

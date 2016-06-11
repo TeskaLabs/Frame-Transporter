@@ -96,13 +96,14 @@ bool logging_reopen(void);
 void logging_finish(void);
 void logging_flush(void);
 
+void logging_set_context(struct context * context);
+
 /*
  * Specify location of the log file.
  * Implicitly manages logging_reopen().
  * Can be called also with fname set to NULL to remove filename and switch back to stderr 
  */
 bool logging_set_filename(const char * fname);
-void logging_install_sighup_reopen(void);
 
 static inline bool logging_get_verbose(void)
 {
