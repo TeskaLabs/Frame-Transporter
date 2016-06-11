@@ -13,4 +13,6 @@ struct context
 bool context_init(struct context * );
 void context_fini(struct context * );
 
+void context_evloop_run(struct context * );
+
 #endif //__LIBSCCMN_CONTEXT_H__

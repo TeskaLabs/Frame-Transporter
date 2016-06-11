@@ -31,3 +31,14 @@ void context_fini(struct context * this)
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;
 }
+
+void context_evloop_run(struct context * this)
+{
+	assert(this != NULL);
+
+	bool run=true;
+	while (run)
+	{
+		run = ev_run(this->ev_loop, 0);
+	}
+}
