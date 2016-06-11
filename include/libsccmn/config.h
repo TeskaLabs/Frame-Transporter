@@ -23,6 +23,8 @@ struct libsccmn_config
 	ev_tstamp fpool_zone_free_timeout;
 
 	ev_tstamp heartbeat_interval;
+
+	int sock_listen_backlog;
 };
 
 extern struct libsccmn_config libsccmn_config;

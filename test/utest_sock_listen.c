@@ -63,7 +63,7 @@ START_TEST(sock_listen_single_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&sock, &context, rp, sock_listen_utest_cb, 10);
+	ok = listening_socket_init(&sock, &context, rp, sock_listen_utest_cb);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -127,7 +127,7 @@ START_TEST(sock_listen_chain_utest)
 	ck_assert_ptr_ne(rp, NULL);
 
 	struct listening_socket_chain * chain = NULL;
-	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb, 10);
+	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb);
 	ck_assert_int_gt(rc, 0);
 
 	freeaddrinfo(rp);
@@ -137,7 +137,7 @@ START_TEST(sock_listen_chain_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb, 10);
+	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb);
 	ck_assert_int_gt(rc, 0);
 
 	freeaddrinfo(rp);

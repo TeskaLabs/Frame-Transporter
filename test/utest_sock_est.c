@@ -91,7 +91,7 @@ START_TEST(sock_est_1_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &context, rp, sock_est_1_on_accept, 10);
+	ok = listening_socket_init(&listen_sock, &context, rp, sock_est_1_on_accept);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
