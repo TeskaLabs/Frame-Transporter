@@ -53,7 +53,6 @@ struct context;
 
 // Global init function
 void libsccmn_init(void); // Call this at very beginning
-void libsccmn_configure(void); // Call this at the end of configuration phase
 
 // Daemonise functions
 // context can be NULL

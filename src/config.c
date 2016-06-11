@@ -39,12 +39,6 @@ void libsccmn_init(void)
 	signal(SIGPIPE, SIG_IGN);
 
 	libsccmn_config.initialized = true;
-}
-
-
-void libsccmn_configure(void)
-{
-	assert(libsccmn_config.initialized == true);
 
 	// Initialize OpenSSL
 	if (libsccmn_config.log_verbose)
