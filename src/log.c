@@ -237,17 +237,11 @@ void logging_finish()
 
 ///
 
-static void logging_reopen_on_hup_signal(struct ev_loop * loop, ev_signal * w, int revents)
-{
-	logging_reopen();
-}
 
 void logging_set_context(struct context * context)
 {
 	if (context == NULL)
 	{
-		//TODO: Uninstall SIGHUP handler ...
-
 		assert(logging_context != NULL);
 		logging_context = NULL;
 		return;
@@ -255,8 +249,4 @@ void logging_set_context(struct context * context)
 
 	assert(logging_context == NULL);
 	logging_context = context;
-
-	ev_signal_init(&logging_context->log_reopen_sighup_w, logging_reopen_on_hup_signal, SIGHUP);
-	ev_signal_start(logging_context->ev_loop, &logging_context->log_reopen_sighup_w);
-	ev_unref(logging_context->ev_loop);
 }
