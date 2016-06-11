@@ -220,6 +220,35 @@ int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct
 	return count;
 }
 
+int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** chain, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port, listening_socket_cb cb)
+{
+	int rc;
+	struct addrinfo hints;
+	struct addrinfo * res;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = ai_family; //AF_INET
+	hints.ai_socktype = ai_socktype; //SOCK_STREAM
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_protocol = 0;
+	hints.ai_canonname = NULL;
+	hints.ai_addr = NULL;
+	hints.ai_next = NULL;
+
+	rc = getaddrinfo(host, port, &hints, &res);
+	if (rc != 0)
+	{
+		return -1;
+		//fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rc));
+		//return false;
+    }
+
+	rc = listening_socket_chain_extend(chain, context, res, cb);
+
+	freeaddrinfo(res);
+	return rc;
+}
+
 
 void listening_socket_chain_start(struct listening_socket_chain * chain)
 {

@@ -43,6 +43,7 @@ struct listening_socket_chain
 	struct listening_socket listening_socket;
 };
 
+int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** chain, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port, listening_socket_cb cb);
 int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct context * context, struct addrinfo * addrinfo, listening_socket_cb cb);
 void listening_socket_chain_del(struct listening_socket_chain *);
 
