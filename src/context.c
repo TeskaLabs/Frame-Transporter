@@ -11,6 +11,9 @@ bool context_init(struct context * this)
 {
 	bool ok;
 
+	this->first_exiting_watcher = NULL;
+	this->last_exiting_watcher = NULL;
+
 	this->ev_loop = ev_default_loop(libsccmn_config.libev_loop_flags);
 	if (this->ev_loop == NULL) return false;
 
@@ -68,6 +71,12 @@ static void context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents
 
 	if (w->signum == SIGINT) putchar('\n');
 	
+	for (struct exiting_watcher * watcher = this->first_exiting_watcher; watcher != NULL; watcher = watcher->next)
+	{
+		if (watcher->cb == NULL) continue;
+		watcher->cb(watcher, this);
+	}
+
 	ev_ref(this->ev_loop);
 	ev_signal_stop(this->ev_loop, &this->sigint_w);
 
@@ -84,4 +93,73 @@ void context_evloop_run(struct context * this)
 	{
 		run = ev_run(this->ev_loop, 0);
 	}
+}
+
+///
+
+void context_exiting_watcher_add(struct context * this, struct exiting_watcher * watcher, exiting_cb cb)
+{
+	assert(this != NULL);
+	assert(watcher != NULL);
+
+	watcher->cb = cb;
+
+	if (this->last_exiting_watcher == NULL)
+	{
+		assert(this->first_exiting_watcher == NULL);
+
+		this->first_exiting_watcher = watcher;
+		this->last_exiting_watcher = watcher;
+		watcher->next = NULL;
+		watcher->prev = NULL;
+	}
+	else
+	{
+		this->last_exiting_watcher->next = watcher;
+		watcher->next = NULL;
+		watcher->prev = this->last_exiting_watcher;
+		this->last_exiting_watcher = watcher;
+	}
+}
+
+void context_exiting_watcher_remove(struct context * this, struct exiting_watcher * watcher)
+{
+	assert(this != NULL);
+	assert(watcher != NULL);
+
+	if ((watcher->prev == NULL) && (watcher->next == NULL))
+	{
+		assert(this->first_exiting_watcher == watcher);
+		assert(this->last_exiting_watcher == watcher);
+		this->first_exiting_watcher = NULL;
+		this->last_exiting_watcher = NULL;
+		return;
+	}
+
+	assert((this->first_exiting_watcher != NULL) || (this->last_exiting_watcher != NULL));
+
+	if (watcher->prev == NULL)
+	{
+		assert(this->first_exiting_watcher == watcher);
+		this->first_exiting_watcher = watcher->next;
+		if (this->first_exiting_watcher != NULL) this->first_exiting_watcher->prev = NULL;
+	}
+	else
+	{
+		watcher->prev->next = watcher->next;
+	}
+
+	if (watcher->next == NULL)
+	{
+		assert(this->last_exiting_watcher == watcher);
+		this->last_exiting_watcher = watcher->prev;
+		if (this->last_exiting_watcher != NULL) this->last_exiting_watcher->next = NULL;
+	}
+	else
+	{
+		watcher->next->prev = watcher->prev;
+	}
+
+	watcher->prev = NULL;
+	watcher->next = NULL;
 }
