@@ -183,8 +183,9 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 		}
 */
 
-		this->cb(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
-	}
+		bool ok = this->cb(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
+		if (!ok) close(client_socket);
+ 	}
 
 }
 

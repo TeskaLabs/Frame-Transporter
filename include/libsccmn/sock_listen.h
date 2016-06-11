@@ -3,7 +3,7 @@
 
 struct listening_socket;
 
-typedef void (* listening_socket_cb)(struct listening_socket *, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len);
+typedef bool (* listening_socket_cb)(struct listening_socket *, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len);
 
 struct listening_socket
 {

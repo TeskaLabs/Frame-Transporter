@@ -64,7 +64,7 @@ struct established_socket_cb sock_est_1_sock_cb =
 	.close = sock_est_1_on_close
 };
 
-void sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	bool ok;
 
@@ -73,6 +73,8 @@ void sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 
 	ok = established_socket_read_start(&established_sock);
 	ck_assert_int_eq(ok, true);
+
+	return true;
 }
 
 

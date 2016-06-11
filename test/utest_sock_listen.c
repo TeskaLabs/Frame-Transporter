@@ -28,7 +28,7 @@ static bool resolve(struct addrinfo **res, const char * host)
 
 ////
 
-void sock_listen_utest_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_listen_utest_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	flags &= ~O_NONBLOCK;
@@ -42,8 +42,10 @@ void sock_listen_utest_cb(struct listening_socket * listening_socket, int fd, co
 		buffer[rc] = '\0';
 		listening_socket->data = strdup(buffer);
 	}
-	close(fd);
+
 	ev_break(listening_socket->context->ev_loop, EVBREAK_ALL);
+	
+	return false;
 }
 
 
