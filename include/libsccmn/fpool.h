@@ -40,8 +40,11 @@ struct frame_pool
 	struct heartbeat_watcher heartbeat_w;
 };
 
-bool frame_pool_init(struct frame_pool *, struct heartbeat * heartbeat, frame_pool_zone_alloc_advice alloc_advise);
+bool frame_pool_init(struct frame_pool *, struct heartbeat * heartbeat);
 void frame_pool_fini(struct frame_pool *, struct heartbeat * heartbeat);
+
+void frame_pool_set_alloc_advise(struct frame_pool *, frame_pool_zone_alloc_advice alloc_advise);
+
 
 struct frame * frame_pool_borrow_real(struct frame_pool *, const char * file, unsigned int line);
 #define frame_pool_borrow(pool) frame_pool_borrow_real(pool, __FILE__, __LINE__)

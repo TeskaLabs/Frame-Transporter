@@ -5,13 +5,10 @@
 
 START_TEST(fpool_alloc_up_utest)
 {
-	struct frame_pool fpool;
 	bool ok;
 
-	struct heartbeat hb;
-	heartbeat_init(&hb);
-
-	ok = frame_pool_init(&fpool, &hb, NULL);
+	struct context context;
+	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	const int frame_count = 32;
@@ -19,7 +16,7 @@ START_TEST(fpool_alloc_up_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&fpool);
+		frames[i] = frame_pool_borrow(&context.frame_pool);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		for (int j = 0; j < i; j += 1)
@@ -31,20 +28,17 @@ START_TEST(fpool_alloc_up_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	frame_pool_fini(&fpool, &hb);
+	context_fini(&context);
 }
 END_TEST
 
 
 START_TEST(fpool_alloc_down_utest)
 {
-	struct frame_pool fpool;
 	bool ok;
 
-	struct heartbeat hb;
-	heartbeat_init(&hb);
-
-	ok = frame_pool_init(&fpool, &hb, NULL);
+	struct context context;
+	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	const int frame_count = 32;
@@ -54,7 +48,7 @@ START_TEST(fpool_alloc_down_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&fpool);
+		frames[i] = frame_pool_borrow(&context.frame_pool);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
@@ -75,7 +69,7 @@ START_TEST(fpool_alloc_down_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&fpool);
+		frames[i] = frame_pool_borrow(&context.frame_pool);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
@@ -92,7 +86,7 @@ START_TEST(fpool_alloc_down_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	frame_pool_fini(&fpool, &hb);
+	context_fini(&context);
 }
 END_TEST
 
@@ -107,26 +101,20 @@ static struct frame_pool_zone * frame_pool_zone_alloc_advice_custom(struct frame
 
 START_TEST(fpool_alloc_custom_advice_utest)
 {
-	struct frame_pool fpool;
 	bool ok;
 
-	struct heartbeat hb;
-	heartbeat_init(&hb);
-
-	struct ev_loop * loop = ev_default_loop(0);
-	ck_assert_ptr_ne(loop, NULL);
-
-	heartbeat_start(loop, &hb);
-
-	ok = frame_pool_init(&fpool, &hb, frame_pool_zone_alloc_advice_custom);
+	struct context context;
+	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
+
+	frame_pool_set_alloc_advise(&context.frame_pool, frame_pool_zone_alloc_advice_custom);
 
 	const int frame_count = 32;
 	struct frame * frames[frame_count];
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&fpool);
+		frames[i] = frame_pool_borrow(&context.frame_pool);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
@@ -147,16 +135,13 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	// Simulate heartbeat
 	libsccmn_config.fpool_zone_free_timeout = 0.2;
-	ev_ref(loop);
-	while (fpool.zones != NULL)
+	ev_ref(context.ev_loop);
+	while (context.frame_pool.zones != NULL)
 	{
-		ev_run(loop, EVRUN_ONCE);
+		ev_run(context.ev_loop, EVRUN_ONCE);
 	}
 
-	frame_pool_fini(&fpool, &hb);
-
-	heartbeat_stop(loop, &hb);
-
+	context_fini(&context);
 }
 END_TEST
 

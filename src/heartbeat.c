@@ -4,10 +4,12 @@ static void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 
 ///
 
-void heartbeat_init(struct heartbeat * this)
+void heartbeat_init(struct heartbeat * this, struct context * context)
 {
 	assert(this != NULL);
+	assert(context != NULL);
 
+	this->context = context;
 	this->last_beat = 0.0;
 	this->first_watcher = NULL;
 	this->last_watcher = NULL;
@@ -16,22 +18,20 @@ void heartbeat_init(struct heartbeat * this)
 	this->timer_w.data = this;
 }
 
-void heartbeat_start(struct ev_loop * loop, struct heartbeat * this)
+void heartbeat_start(struct heartbeat * this)
 {
-	assert(loop != NULL);
 	assert(this != NULL);
 
-	ev_timer_start(loop, &this->timer_w);
-	ev_unref(loop);
+	ev_timer_start(this->context->ev_loop, &this->timer_w);
+	ev_unref(this->context->ev_loop);
 }
 
-void heartbeat_stop(struct ev_loop * loop, struct heartbeat * this)
+void heartbeat_stop(struct heartbeat * this)
 {
-	assert(loop != NULL);
 	assert(this != NULL);
 
-	ev_ref(loop);
-	ev_timer_stop(loop, &this->timer_w);
+	ev_ref(this->context->ev_loop);
+	ev_timer_stop(this->context->ev_loop, &this->timer_w);
 }
 
 
@@ -111,7 +111,7 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 	for (struct heartbeat_watcher * watcher = this->first_watcher; watcher != NULL; watcher = watcher->next)
 	{
 		if (watcher->cb == NULL) continue;
-		watcher->cb(loop, watcher, now);
+		watcher->cb(watcher, this, now);
 	}
 
 	// Flush logs

@@ -1,9 +1,10 @@
 #ifndef __LIBSCCMN_HEARTBEAT_H__
 #define __LIBSCCMN_HEARTBEAT_H__
 
+struct heartbeat;
 struct heartbeat_watcher;
 
-typedef void (* heartbeat_cb)(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now);
+typedef void (* heartbeat_cb)(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now);
 
 struct heartbeat_watcher
 {
@@ -16,6 +17,8 @@ struct heartbeat_watcher
 
 struct heartbeat
 {
+	struct context * context;
+
 	struct heartbeat_watcher * first_watcher;
 	struct heartbeat_watcher * last_watcher;
 
@@ -23,10 +26,10 @@ struct heartbeat
 	ev_tstamp last_beat;
 };
 
-void heartbeat_init(struct heartbeat * );
+void heartbeat_init(struct heartbeat * , struct context * context);
 
-void heartbeat_start(struct ev_loop * loop, struct heartbeat *);
-void heartbeat_stop(struct ev_loop * loop, struct heartbeat *);
+void heartbeat_start(struct heartbeat *);
+void heartbeat_stop(struct heartbeat *);
 
 void heartbeat_add(struct heartbeat *, struct heartbeat_watcher * watcher, heartbeat_cb cb);
 void heartbeat_remove(struct heartbeat *, struct heartbeat_watcher * watcher);

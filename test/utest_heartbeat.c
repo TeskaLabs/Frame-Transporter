@@ -6,14 +6,14 @@
 static int heartbeat_core_utest_counter = 0;
 static int heartbeat_core_utest_counter2 = 0;
 
-void heartbeat_core_utest_cb(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now)
+void heartbeat_core_utest_cb(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now)
 {
 	heartbeat_core_utest_counter += 1;
 
-	if (heartbeat_core_utest_counter >= 3) ev_break(loop, EVBREAK_ALL);
+	if (heartbeat_core_utest_counter >= 3) ev_break(heartbeat->context->ev_loop, EVBREAK_ALL);
 }
 
-void heartbeat_core_utest_cb2(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now)
+void heartbeat_core_utest_cb2(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now)
 {
 	heartbeat_core_utest_counter2 += 1;
 }
@@ -21,36 +21,31 @@ void heartbeat_core_utest_cb2(struct ev_loop * loop, struct heartbeat_watcher * 
 
 START_TEST(heartbeat_core_utest)
 {
-	struct heartbeat hb;
+	bool ok;
 
-	heartbeat_init(&hb);
-
-	struct ev_loop * loop = ev_default_loop(0);
-	ck_assert_ptr_ne(loop, NULL);
-
-	heartbeat_start(loop, &hb);
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
 
 	struct heartbeat_watcher hbw1;
-	heartbeat_add(&hb, &hbw1, heartbeat_core_utest_cb);
+	heartbeat_add(&context.heartbeat, &hbw1, heartbeat_core_utest_cb);
 
 	struct heartbeat_watcher hbw2;
-	heartbeat_add(&hb, &hbw2, heartbeat_core_utest_cb2);
+	heartbeat_add(&context.heartbeat, &hbw2, heartbeat_core_utest_cb2);
 
 	struct heartbeat_watcher hbw3;
-	heartbeat_add(&hb, &hbw3, heartbeat_core_utest_cb2);
+	heartbeat_add(&context.heartbeat, &hbw3, heartbeat_core_utest_cb2);
 
 	struct heartbeat_watcher hbw4;
-	heartbeat_add(&hb, &hbw4, NULL); // Watcher with no callback
+	heartbeat_add(&context.heartbeat, &hbw4, NULL); // Watcher with no callback
 
-	ev_ref(loop);
-	ev_run(loop, 0);
-
-	heartbeat_stop(loop, &hb);
+	ev_ref(context.ev_loop);
+	ev_run(context.ev_loop, 0);
 
 	ck_assert_int_eq(heartbeat_core_utest_counter, 3);
 	ck_assert_int_eq(heartbeat_core_utest_counter2, 6);
 
-	ev_loop_destroy(loop);
+	context_fini(&context);
 }
 END_TEST
 
@@ -58,126 +53,149 @@ END_TEST
 
 static void assert_watcher_count(struct heartbeat * hb, int expected)
 {
+	const int system_hbs = 1; // Count of system heartbeats withing the context (1 for frame pool)
 	int fwd_cnt = 0;
 	for (struct heartbeat_watcher * watcher = hb->first_watcher; watcher != NULL; watcher = watcher->next)
 	{
 		fwd_cnt += 1;
 	}
-	ck_assert_int_eq(fwd_cnt, expected);
+	ck_assert_int_eq(fwd_cnt, expected+system_hbs);
 
 	int bwd_cnt = 0;
 	for (struct heartbeat_watcher * watcher = hb->last_watcher; watcher != NULL; watcher = watcher->prev)
 	{
 		bwd_cnt += 1;
 	}
-	ck_assert_int_eq(bwd_cnt, expected);
+	ck_assert_int_eq(bwd_cnt, expected+system_hbs);
 }
 
 START_TEST(heartbeat_list1_utest)
 {
-	struct heartbeat hb;
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
 	struct heartbeat_watcher hbw1;
 
-	heartbeat_init(&hb);
-	assert_watcher_count(&hb, 0);
+	assert_watcher_count(&context.heartbeat, 0);
 
 	// Add one	
-	heartbeat_add(&hb, &hbw1, NULL);
-	assert_watcher_count(&hb, 1);
+	heartbeat_add(&context.heartbeat, &hbw1, NULL);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Remove one
-	heartbeat_remove(&hb, &hbw1);
-	assert_watcher_count(&hb, 0);
+	heartbeat_remove(&context.heartbeat, &hbw1);
+	assert_watcher_count(&context.heartbeat, 0);
+
+	context_fini(&context);
 }
 END_TEST
 
 START_TEST(heartbeat_list2_utest)
 {
-	struct heartbeat hb;
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
 	struct heartbeat_watcher hbw1;
 	struct heartbeat_watcher hbw2;
 
-	heartbeat_init(&hb);
-	assert_watcher_count(&hb, 0);
+	assert_watcher_count(&context.heartbeat, 0);
 
 	// Add one	
-	heartbeat_add(&hb, &hbw1, NULL);
-	assert_watcher_count(&hb, 1);
+	heartbeat_add(&context.heartbeat, &hbw1, NULL);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Add second	
-	heartbeat_add(&hb, &hbw2, NULL);
-	assert_watcher_count(&hb, 2);
+	heartbeat_add(&context.heartbeat, &hbw2, NULL);
+	assert_watcher_count(&context.heartbeat, 2);
 
 	// Remove second
-	heartbeat_remove(&hb, &hbw2);
-	assert_watcher_count(&hb, 1);
+	heartbeat_remove(&context.heartbeat, &hbw2);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Remove first
-	heartbeat_remove(&hb, &hbw1);
-	assert_watcher_count(&hb, 0);
+	heartbeat_remove(&context.heartbeat, &hbw1);
+	assert_watcher_count(&context.heartbeat, 0);
+
+	context_fini(&context);
 }
 END_TEST
 
 START_TEST(heartbeat_list3_utest)
 {
-	struct heartbeat hb;
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
 	struct heartbeat_watcher hbw1;
 	struct heartbeat_watcher hbw2;
 
-	heartbeat_init(&hb);
-	assert_watcher_count(&hb, 0);
+	assert_watcher_count(&context.heartbeat, 0);
 
 	// Add one	
-	heartbeat_add(&hb, &hbw1, NULL);
-	assert_watcher_count(&hb, 1);
+	heartbeat_add(&context.heartbeat, &hbw1, NULL);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Add second	
-	heartbeat_add(&hb, &hbw2, NULL);
-	assert_watcher_count(&hb, 2);
+	heartbeat_add(&context.heartbeat, &hbw2, NULL);
+	assert_watcher_count(&context.heartbeat, 2);
 
 	// Remove first
-	heartbeat_remove(&hb, &hbw1);
-	assert_watcher_count(&hb, 1);
+	heartbeat_remove(&context.heartbeat, &hbw1);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Remove second
-	heartbeat_remove(&hb, &hbw2);
-	assert_watcher_count(&hb, 0);
+	heartbeat_remove(&context.heartbeat, &hbw2);
+	assert_watcher_count(&context.heartbeat, 0);
+
+	context_fini(&context);
 }
 END_TEST
 
 START_TEST(heartbeat_list4_utest)
 {
-	struct heartbeat hb;
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
 	struct heartbeat_watcher hbw1;
 	struct heartbeat_watcher hbw2;
 	struct heartbeat_watcher hbw3;
 
-	heartbeat_init(&hb);
-	assert_watcher_count(&hb, 0);
+	assert_watcher_count(&context.heartbeat, 0);
 
 	// Add one	
-	heartbeat_add(&hb, &hbw1, NULL);
-	assert_watcher_count(&hb, 1);
+	heartbeat_add(&context.heartbeat, &hbw1, NULL);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Add second	
-	heartbeat_add(&hb, &hbw2, NULL);
-	assert_watcher_count(&hb, 2);
+	heartbeat_add(&context.heartbeat, &hbw2, NULL);
+	assert_watcher_count(&context.heartbeat, 2);
 
 	// Add third	
-	heartbeat_add(&hb, &hbw3, NULL);
-	assert_watcher_count(&hb, 3);
+	heartbeat_add(&context.heartbeat, &hbw3, NULL);
+	assert_watcher_count(&context.heartbeat, 3);
 
 	// Remove second (middle)
-	heartbeat_remove(&hb, &hbw2);
-	assert_watcher_count(&hb, 2);
+	heartbeat_remove(&context.heartbeat, &hbw2);
+	assert_watcher_count(&context.heartbeat, 2);
 
 	// Remove third
-	heartbeat_remove(&hb, &hbw3);
-	assert_watcher_count(&hb, 1);
+	heartbeat_remove(&context.heartbeat, &hbw3);
+	assert_watcher_count(&context.heartbeat, 1);
 
 	// Remove first
-	heartbeat_remove(&hb, &hbw1);
-	assert_watcher_count(&hb, 0);
+	heartbeat_remove(&context.heartbeat, &hbw1);
+	assert_watcher_count(&context.heartbeat, 0);
 }
 END_TEST
 ///

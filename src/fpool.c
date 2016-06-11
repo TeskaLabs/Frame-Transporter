@@ -90,11 +90,11 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, cons
 
 //
 
-static void frame_pool_heartbeat_cb(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now);
+static void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now);
 static struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this);
 
 
-bool frame_pool_init(struct frame_pool * this, struct heartbeat * heartbeat, frame_pool_zone_alloc_advice alloc_advise)
+bool frame_pool_init(struct frame_pool * this, struct heartbeat * heartbeat)
 {
 	assert(this != NULL);
 	this->zones = NULL;
@@ -102,11 +102,7 @@ bool frame_pool_init(struct frame_pool * this, struct heartbeat * heartbeat, fra
 	heartbeat_add(heartbeat, &this->heartbeat_w, frame_pool_heartbeat_cb);
 	this->heartbeat_w.data = this;
 
-	if (alloc_advise == NULL) this->alloc_advise = frame_pool_zone_alloc_advice_default;
-	else this->alloc_advise = alloc_advise;
-
-	this->zones = this->alloc_advise(this);
-	if (this->zones == NULL) return false;
+	this->alloc_advise = frame_pool_zone_alloc_advice_default;
 
 	return true;
 }
@@ -169,7 +165,14 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool 
 }
 
 
-void frame_pool_heartbeat_cb(struct ev_loop * loop, struct heartbeat_watcher * watcher, ev_tstamp now)
+void frame_pool_set_alloc_advise(struct frame_pool * this, frame_pool_zone_alloc_advice alloc_advise)
+{
+	if (alloc_advise == NULL) this->alloc_advise = frame_pool_zone_alloc_advice_default;
+	else this->alloc_advise = alloc_advise;
+}
+
+
+void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now)
 {
 	struct frame_pool * this = watcher->data;
 	assert(this != NULL);
