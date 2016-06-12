@@ -76,4 +76,7 @@ size_t frame_total_position(struct frame *);
 size_t frame_total_limit(struct frame *);
 void frame_format_simple(struct frame *);
 
+//This is diagnostics function
+void frame_print(struct frame *);
+
 #endif //__LIBSCCMN_FRAME_H__

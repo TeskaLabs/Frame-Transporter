@@ -92,3 +92,9 @@ bool frame_dvec_strcat(struct frame_dvec * this, const char * text)
 {
 	return frame_dvec_cat(this, text, strlen(text));
 }
+
+void frame_print(struct frame * this)
+{
+	for (unsigned int i=0; i<this->dvec_count; i += 1)
+		write(STDOUT_FILENO, this->dvecs[i].frame->data, this->dvecs[i].limit);
+}
