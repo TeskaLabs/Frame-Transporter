@@ -17,7 +17,6 @@
 #include <time.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <netdb.h>
 #include <errno.h>
 #include <regex.h>
 #include <math.h>
@@ -27,6 +26,7 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+#include <netdb.h>
 
 // Include libev
 #include <ev.h>
