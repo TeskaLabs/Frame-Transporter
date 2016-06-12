@@ -9,7 +9,13 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 {
 //	frame_print(frame);	
 	frame_flip(frame);
-	established_socket_write(established_sock, frame);
+	bool ok = established_socket_write(established_sock, frame);
+	if (!ok)
+	{
+		L_ERROR("Cannot write a frame!");
+		frame_pool_return(frame);
+	}
+
 	return true;
 }
 
