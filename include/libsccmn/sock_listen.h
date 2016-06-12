@@ -24,6 +24,12 @@ struct listening_socket
 	// Callback
 	listening_socket_cb cb;
 
+	struct
+	{
+		unsigned int accept_events;
+	} stats;
+
+
 	// Custom data field
 	void * data;
 };

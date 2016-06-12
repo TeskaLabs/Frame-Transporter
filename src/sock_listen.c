@@ -24,6 +24,8 @@ bool listening_socket_init(struct listening_socket * this, struct context * cont
 	memcpy(&this->ai_addr, ai->ai_addr, ai->ai_addrlen);
 	this->ai_addrlen = ai->ai_addrlen;
 
+	this->stats.accept_events = 0;
+
 	char addrstr[NI_MAXHOST+NI_MAXSERV];
 
 	if (this->ai_family == AF_UNIX)
@@ -175,42 +177,43 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 		return;
 	}
 
-	if (revents & EV_READ)
+	if ((revents & EV_READ) == 0) return;
+
+	this->stats.accept_events += 1;
+
+	struct sockaddr_storage client_addr;
+	socklen_t client_len = sizeof(struct sockaddr_storage);
+
+	// Accept client request
+	int client_socket = accept(watcher->fd, (struct sockaddr *)&client_addr, &client_len);
+	if (client_socket < 0)
 	{
-		struct sockaddr_storage client_addr;
-		socklen_t client_len = sizeof(struct sockaddr_storage);
+		if ((errno == EAGAIN) || (errno==EWOULDBLOCK)) return;
+		L_ERROR_ERRNO(errno, "Accept on listening socket");
+		return;
+	}
 
-		// Accept client request
-		int client_socket = accept(watcher->fd, (struct sockaddr *)&client_addr, &client_len);
-		if (client_socket < 0)
-		{
-			if ((errno == EAGAIN) || (errno==EWOULDBLOCK)) return;
-			L_ERROR_ERRNO(errno, "Accept on listening socket");
-			return;
-		}
-
-		if (this->cb == NULL)
-		{
-			close(client_socket);
-			return;
-		}
+	if (this->cb == NULL)
+	{
+		close(client_socket);
+		return;
+	}
 
 /*
-		char host[NI_MAXHOST];
-		char port[NI_MAXSERV];
+	char host[NI_MAXHOST];
+	char port[NI_MAXSERV];
 
-		rc = getnameinfo((struct sockaddr *)&client_addr, client_len, host, sizeof(host), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
-		if (rc != 0)
-		{
-			L_WARN("Failed to resolve address of accepted connection: %s", gai_strerror(rc));
-			strcpy(host, "?");
-			strcpy(port, "?");
-		}
+	rc = getnameinfo((struct sockaddr *)&client_addr, client_len, host, sizeof(host), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
+	if (rc != 0)
+	{
+		L_WARN("Failed to resolve address of accepted connection: %s", gai_strerror(rc));
+		strcpy(host, "?");
+		strcpy(port, "?");
+	}
 */
 
-		bool ok = this->cb(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
-		if (!ok) close(client_socket);
- 	}
+	bool ok = this->cb(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
+	if (!ok) close(client_socket);
 
 }
 

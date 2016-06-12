@@ -67,6 +67,7 @@ START_TEST(sock_listen_single_utest)
 
 	ok = listening_socket_init(&sock, &context, rp, sock_listen_utest_cb);
 	ck_assert_int_eq(ok, true);
+	ck_assert_int_eq(sock.stats.accept_events, 0);
 
 	freeaddrinfo(rp);
 
@@ -106,6 +107,8 @@ START_TEST(sock_listen_single_utest)
 
 	ok = listening_socket_stop(&sock);
 	ck_assert_int_eq(ok, true);
+
+	ck_assert_int_eq(sock.stats.accept_events, 1);
 
 	listening_socket_close(&sock);
 
