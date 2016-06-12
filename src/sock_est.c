@@ -50,9 +50,11 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->ai_protocol = listening_socket->ai_protocol;
 
 	ev_io_init(&this->read_watcher, established_socket_on_read, fd, EV_READ);
+	ev_set_priority(&this->read_watcher, -1); // Read has always lower priority than writing
 	this->read_watcher.data = this;
 
 	ev_io_init(&this->write_watcher, established_socket_on_write, fd, EV_WRITE);
+	ev_set_priority(&this->write_watcher, 1);
 	this->write_watcher.data = this;
 	this->writeable = false;
 

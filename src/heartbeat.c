@@ -15,6 +15,7 @@ void heartbeat_init(struct heartbeat * this, struct context * context)
 	this->last_watcher = NULL;
 
 	ev_timer_init(&this->timer_w, heartbeat_on_timer, 0.0, libsccmn_config.heartbeat_interval);
+	ev_set_priority(&this->timer_w, -2);
 	this->timer_w.data = this;
 }
 
