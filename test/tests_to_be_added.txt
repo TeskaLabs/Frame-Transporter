@@ -1,0 +1,16 @@
+- exiting watchers
+- est_sockets (writing, use stats)
+- est_sockets (reading, use stats)
+- est_sockets (states)
+- established_socket_read_advise_max_frame
+- est_sockets: established_at, shutdown_at
+- context
+- listening sockets AF_UNIX
+- listening sockets: listening_socket_chain_extend_getaddrinfo
+- context_evloop_run
+- context SIGHUP (maybe done)
+- context SIGTERM
+- context SIGINT
+- frame_flip
+- frame_currect_dvec_size
+
