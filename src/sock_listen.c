@@ -228,8 +228,8 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 	struct addrinfo * res;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = ai_family; //AF_INET
-	hints.ai_socktype = ai_socktype; //SOCK_STREAM
+	hints.ai_family = ai_family;
+	hints.ai_socktype = ai_socktype;
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_protocol = 0;
 	hints.ai_canonname = NULL;
@@ -239,9 +239,8 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 	rc = getaddrinfo(host, port, &hints, &res);
 	if (rc != 0)
 	{
+		L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
 		return -1;
-		//fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rc));
-		//return false;
     }
 
 	rc = listening_socket_chain_extend(chain, context, res, cb);
