@@ -78,6 +78,11 @@ bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 	return true;
 }
 
+struct listening_socket_cb sock_est_1_listen_cb = 
+{
+	.accept = sock_est_1_on_accept,
+};
+
 
 START_TEST(sock_est_1_utest)
 {
@@ -94,7 +99,7 @@ START_TEST(sock_est_1_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &context, rp, sock_est_1_on_accept);
+	ok = listening_socket_init(&listen_sock, &sock_est_1_listen_cb, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);

@@ -28,7 +28,7 @@ static bool resolve(struct addrinfo **res, const char * host)
 
 ////
 
-bool sock_listen_utest_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_listen_utest_accept_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	flags &= ~O_NONBLOCK;
@@ -48,6 +48,12 @@ bool sock_listen_utest_cb(struct listening_socket * listening_socket, int fd, co
 	return false;
 }
 
+struct listening_socket_cb sock_listen_cb = 
+{
+	.accept = sock_listen_utest_accept_cb,
+};
+
+
 
 START_TEST(sock_listen_single_utest)
 {
@@ -65,7 +71,7 @@ START_TEST(sock_listen_single_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&sock, &context, rp, sock_listen_utest_cb);
+	ok = listening_socket_init(&sock, &sock_listen_cb, &context, rp);
 	ck_assert_int_eq(ok, true);
 	ck_assert_int_eq(sock.stats.accept_events, 0);
 
@@ -132,7 +138,7 @@ START_TEST(sock_listen_chain_utest)
 	ck_assert_ptr_ne(rp, NULL);
 
 	struct listening_socket_chain * chain = NULL;
-	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb);
+	rc = listening_socket_chain_extend(&chain, &sock_listen_cb, &context, rp);
 	ck_assert_int_gt(rc, 0);
 
 	freeaddrinfo(rp);
@@ -142,7 +148,7 @@ START_TEST(sock_listen_chain_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	rc = listening_socket_chain_extend(&chain, &context, rp, sock_listen_utest_cb);
+	rc = listening_socket_chain_extend(&chain, &sock_listen_cb, &context, rp);
 	ck_assert_int_gt(rc, 0);
 
 	freeaddrinfo(rp);
@@ -200,10 +206,10 @@ START_TEST(sock_listen_chain_resolve_utest)
 
 
 	struct listening_socket_chain * chain = NULL;
-	rc = listening_socket_chain_extend_getaddrinfo(&chain, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345", sock_listen_utest_cb);
+	rc = listening_socket_chain_extend_getaddrinfo(&chain, &sock_listen_cb, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
 	ck_assert_int_gt(rc, 0);
 
-	rc = listening_socket_chain_extend_getaddrinfo(&chain, &context, AF_INET, SOCK_STREAM, NULL, "12345", sock_listen_utest_cb);
+	rc = listening_socket_chain_extend_getaddrinfo(&chain, &sock_listen_cb, &context, AF_INET, SOCK_STREAM, NULL, "12345");
 	ck_assert_int_gt(rc, 0);
 
 	listening_socket_chain_start(chain);

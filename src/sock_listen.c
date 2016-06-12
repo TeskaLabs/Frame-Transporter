@@ -5,17 +5,18 @@ static void listening_socket_on_io(struct ev_loop *loop, struct ev_io *watcher, 
 
 ///
 
-bool listening_socket_init(struct listening_socket * this, struct context * context, struct addrinfo * ai, listening_socket_cb cb)
+bool listening_socket_init(struct listening_socket * this, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * ai)
 {
 	int rc;
 	int fd = -1;
 
+	assert(cbs != NULL);
 	assert(context != NULL);
 	this->context = context;
 
 	this->listening = false;
 	this->data = NULL;
-	this->cb = cb;
+	this->cbs = cbs;
 	this->backlog = libsccmn_config.sock_listen_backlog;
 
 	this->ai_family = ai->ai_family;
@@ -193,7 +194,7 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 		return;
 	}
 
-	if (this->cb == NULL)
+	if (this->cbs->accept == NULL)
 	{
 		close(client_socket);
 		return;
@@ -212,14 +213,14 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	}
 */
 
-	bool ok = this->cb(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
+	bool ok = this->cbs->accept(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
 	if (!ok) close(client_socket);
 
 }
 
 ///
 
-int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct context * context, struct addrinfo * addrinfo, listening_socket_cb cb)
+int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * addrinfo)
 {
 	int count = 0;
 	struct listening_socket_chain ** p = chain;
@@ -233,7 +234,7 @@ int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct
 	for (struct addrinfo * rp = addrinfo; rp != NULL; rp = rp->ai_next)
 	{
 		struct listening_socket_chain * chitem = malloc(sizeof(struct listening_socket_chain));
-		bool ok = listening_socket_init(&chitem->listening_socket, context, rp, cb);
+		bool ok = listening_socket_init(&chitem->listening_socket, cbs, context, rp);
 		if (!ok)
 		{
 			free(chitem);
@@ -249,7 +250,7 @@ int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct
 	return count;
 }
 
-int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** chain, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port, listening_socket_cb cb)
+int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** chain, struct listening_socket_cb * cbs, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
 {
 	int rc;
 	struct addrinfo hints;
@@ -272,7 +273,7 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 		hints.ai_addr = (struct sockaddr *)&un;
 		hints.ai_addrlen = sizeof(un);
 
-		rc = listening_socket_chain_extend(chain, context, &hints, cb);
+		rc = listening_socket_chain_extend(chain, cbs, context, &hints);
 	}
 
 	else
@@ -286,7 +287,7 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 			return -1;
 	    }
 
-		rc = listening_socket_chain_extend(chain, context, res, cb);
+		rc = listening_socket_chain_extend(chain, cbs, context, res);
 
 		freeaddrinfo(res);
 	}

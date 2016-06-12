@@ -61,6 +61,14 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	return true;
 }
 
+struct listening_socket_cb sock_listen_sock_cb =
+{
+	.accept = on_accept_cb,
+};
+
+
+///
+
 static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
 {
 	listening_socket_chain_stop(lsocks);
@@ -78,10 +86,10 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 	// Start listening
-	rc = listening_socket_chain_extend_getaddrinfo(&lsocks, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345", on_accept_cb);
+	rc = listening_socket_chain_extend_getaddrinfo(&lsocks, &sock_listen_sock_cb, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
 	if (rc < 0) return EXIT_FAILURE;
 
-	rc = listening_socket_chain_extend_getaddrinfo(&lsocks, &context, AF_UNIX, SOCK_STREAM, "/tmp/sctext.tmp", NULL, on_accept_cb);
+	rc = listening_socket_chain_extend_getaddrinfo(&lsocks, &sock_listen_sock_cb, &context, AF_UNIX, SOCK_STREAM, "/tmp/sctext.tmp", NULL);
 	if (rc < 0) return EXIT_FAILURE;
 
 	listening_socket_chain_start(lsocks);
