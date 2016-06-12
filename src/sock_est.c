@@ -38,6 +38,7 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->write_frame_last = &this->write_frames;
 	this->stats.read_events = 0;
 	this->stats.write_events = 0;
+	this->stats.direct_write_events = 0;
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
 
@@ -337,9 +338,10 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 	if (this->writeable == false)
 	{
 		ev_io_start(this->context->ev_loop, &this->write_watcher);
-		//TODO: Increment statistic about this 
 		return true;
 	}
+
+	this->stats.direct_write_events += 1;
 
 	bool start = established_socket_write_real(this);
 	if (start) ev_io_start(this->context->ev_loop, &this->write_watcher);
