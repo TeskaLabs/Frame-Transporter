@@ -14,9 +14,9 @@ else
 CFLAGS+=-O2 -fno-strict-aliasing
 endif
 
-CFLAGS+=-Wall -std=gnu99 -static -pthread
+CFLAGS+=-Wall -std=gnu99 -static
 CPPFLAGS+=-I $(ROOTDIR)/include
-LDLIBS+=-Wall -lpthread
+LDLIBS+=-Wall
 
 .PHONY: clean all test subdirs
 
