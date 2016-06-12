@@ -14,7 +14,7 @@ else
 CFLAGS+=-O2 -fno-strict-aliasing
 endif
 
-CFLAGS+=-Wall -std=c99 -static -pthread
+CFLAGS+=-Wall -std=gnu99 -static -pthread
 CPPFLAGS+=-I $(ROOTDIR)/include
 LDLIBS+=-Wall -lpthread
 

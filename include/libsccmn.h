@@ -37,7 +37,7 @@
 #include <openssl/err.h>
 
 
-
+// Forward declarations
 struct context;
 
 #include <libsccmn/config.h>
