@@ -2,6 +2,7 @@ language: c
 script:
     - make clean all
     - make test
+    - (cd examples && make clean all)
 
 before_install:
     - sudo apt-get update -qq
