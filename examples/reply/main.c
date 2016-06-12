@@ -5,11 +5,6 @@ struct exiting_watcher watcher;
 
 ///
 
-static size_t on_read_advise(struct established_socket * established_sock, struct frame * frame)
-{
-	return frame_currect_dvec_size(frame);
-}
-
 bool on_read(struct established_socket * established_sock, struct frame * frame)
 {
 //	frame_print(frame);	
@@ -18,19 +13,40 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 	return true;
 }
 
-void on_close(struct established_socket * established_sock)
+void on_state_changed(struct established_socket * established_sock)
 {
-	printf("on_close()\n");
+	printf("on_state_changed -> %c\n", established_sock->state);
+
+	if (established_sock->state == established_socket_state_CLOSED)
+	{
+		printf("Stats:\n - read: %lu\n - write: %lu\n - delta: %ld\n",
+			established_sock->stats.read_bytes,
+			established_sock->stats.write_bytes,
+			established_sock->stats.read_bytes - established_sock->stats.write_bytes
+		);
+
+		if (established_sock->write_frames != NULL)
+		{
+			size_t cap = 0;
+			for (struct frame * frame = established_sock->write_frames; frame != NULL; frame = frame->next)
+			{
+				cap += frame_total_limit(frame);
+				cap -= frame_total_position(frame);
+			}
+			printf("Lost write frame: %lu\n", cap);
+		}
+	}
 }
 
 struct established_socket_cb sock_est_sock_cb = 
 {
-	.read_advise = on_read_advise,
+	.read_advise = established_socket_read_advise_max_frame,
 	.read = on_read,
-	.close = on_close,
+	.state_changed = on_state_changed,
 };
 
 ///
+
 struct listening_socket_chain * lsocks = NULL;
 struct established_socket established_sock; //TODO: Replace by some kind of list
 

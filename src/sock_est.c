@@ -2,6 +2,7 @@
 
 static void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
+static inline void established_socket_set_state(struct established_socket * , enum established_socket_state state);
 
 ///
 
@@ -28,19 +29,22 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	bool res = set_socket_nonblocking(fd);
 	if (!res) L_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
+	this->state = established_socket_state_INIT;
 	this->data = NULL;
 	this->cbs = cbs;
 	this->context = listening_socket->context;
 	this->read_frame = NULL;
-
 	this->write_frames = NULL;
 	this->write_frame_last = &this->write_frames;
+	this->stats.read_events = 0;
+	this->stats.write_events = 0;
+	this->stats.read_bytes = 0;
+	this->stats.write_bytes = 0;
 
 	assert(this->context->ev_loop != NULL);
 	this->establish_at = ev_now(this->context->ev_loop);
 
 	this->shutdown_at = NAN;
-	this->close_at = NAN;
 
 	memcpy(&this->ai_addr, peer_addr, peer_addr_len);
 	this->ai_addrlen = peer_addr_len;
@@ -58,22 +62,20 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->write_watcher.data = this;
 	this->writeable = false;
 
+	established_socket_set_state(this, established_socket_state_ESTABLISHED);
 	established_socket_write_start(this);
 
 	return true;
 }
 
-// It is static for a reason
-// The close operation should be triggered by a graceful established_socket_shutdown with a timeout operation
-static void established_socket_close(struct established_socket * this)
+
+void established_socket_fini(struct established_socket * this)
 {
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
 
 	established_socket_read_stop(this);
-
-	assert(this->cbs->close != NULL);
-	this->cbs->close(this);
+	established_socket_write_stop(this);
 
 	int rc = close(this->read_watcher.fd);
 	if (rc != 0) L_WARN_ERRNO_P(errno, "close()");
@@ -81,28 +83,37 @@ static void established_socket_close(struct established_socket * this)
 	this->read_watcher.fd = -1;
 	this->write_watcher.fd = -1;
 
-	this->close_at = ev_now(this->context->ev_loop);
-
+	size_t cap;
 	if (this->read_frame != NULL)
 	{
-		size_t cap = frame_total_position(this->read_frame);
+		cap = frame_total_position(this->read_frame);
 		frame_pool_return(this->read_frame);
 		this->read_frame = NULL;
 
 		if (cap > 0) L_WARN("Lost %zu bytes in read buffer of the socket", cap);
 	}
-}
 
-void established_socket_fini(struct established_socket * this)
-{
-	//TODO: Return write frames ...
-
-	if (this->read_watcher.fd >= 0)
+	cap = 0;
+	while (this->write_frames != NULL)
 	{
-		established_socket_close(this);
+		struct frame * frame = this->write_frames;
+		this->write_frames = frame->next;
+
+		cap += frame_total_limit(frame);
+		frame_pool_return(frame);
 	}
+	if (cap > 0) L_WARN("Lost %zu bytes in write buffer of the socket", cap);
 }
 
+///
+
+void established_socket_set_state(struct established_socket * this, enum established_socket_state state)
+{
+	this->state = state;
+	if(this->cbs->state_changed != NULL) this->cbs->state_changed(this);
+}
+
+///
 
 bool established_socket_read_start(struct established_socket * this)
 {
@@ -139,6 +150,8 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
 
+	this->stats.read_events += 1;
+
 	if (revents & EV_ERROR)
 	{
 		L_ERROR("Established socket (read) got error event");
@@ -167,16 +180,26 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 	ssize_t rc = read(watcher->fd, frame_dvec->frame->data + frame_dvec->position, size_to_read);
 	if (rc < 0)
 	{
-		L_ERROR_ERRNO(errno, "Reading for peer");
-		established_socket_close(this);
+		if (errno == EAGAIN) return;
+
+		L_ERROR_ERRNO_P(errno, "read()");
+		established_socket_shutdown(this);
 		return;
 	}
 
 	else if (rc == 0)
 	{
-		established_socket_close(this);
+		if (this->state == established_socket_state_SHUTDOWN)
+		{
+			established_socket_set_state(this, established_socket_state_CLOSED);
+			ev_io_stop(this->context->ev_loop, &this->read_watcher);
+			return;
+		}
+		established_socket_shutdown(this);
 		return;		
 	}
+
+	this->stats.read_bytes += rc;
 
 	frame_dvec_position_add(frame_dvec, rc);
 	bool upstreamed = this->cbs->read(this, this->read_frame);
@@ -222,21 +245,29 @@ static bool established_socket_write_real(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->writeable == true);
 
+	this->stats.write_events += 1;
+
 	while (this->write_frames != NULL)
 	{
 		//TODO: Improve to support frames with more than one dvec
 		struct frame_dvec * frame_dvec = &this->write_frames->dvecs[0];
 
+		assert(frame_dvec->limit - frame_dvec->position > 0);
 		ssize_t rc = write(this->write_watcher.fd, frame_dvec->frame->data + frame_dvec->position, frame_dvec->limit - frame_dvec->position);
-		printf("write RC: %zd\n", rc);
 
 		if (rc < 0)
 		{
-			//ERROR !!!
-			L_ERROR_ERRNO(errno, "established_socket_write_real!");
+			if (errno == EAGAIN)
+			{
+				this->writeable = false;
+				return true; // OS buffer is full, wait for next write event
+			}
 
+			L_ERROR_ERRNO_P(errno, "write(%zd)", frame_dvec->limit - frame_dvec->position);
 			return false;
 		}
+
+		this->stats.write_bytes += rc;
 
 		frame_dvec->position += rc;
 		assert(frame_dvec->position <= frame_dvec->limit);
@@ -244,18 +275,23 @@ static bool established_socket_write_real(struct established_socket * this)
 		{
 			// Frame has been written completely, iterate to next one
 
-			this->write_frames = this->write_frames->next;
+			struct frame * frame = this->write_frames;
+
+			this->write_frames = frame->next;
 			if (this->write_frames == NULL)
 			{
 				// There are no more frames to write
 				this->write_frame_last = &this->write_frames;
 			}
+
+			frame_pool_return(frame);
 		}
 
 		else
 		{
-			L_WARN_P("Partial write");
-			return true; //We likely exceeded a size of OS output buffer, so now wait for next write event
+			//We likely exceeded a size of OS output buffer, so now wait for next write event
+			this->writeable = false;
+			return true; 
 		}
 	}
 
@@ -283,9 +319,15 @@ void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, 
 }
 
 
-void established_socket_write(struct established_socket * this, struct frame * frame)
+bool established_socket_write(struct established_socket * this, struct frame * frame)
 {
 	assert(this != NULL);
+
+	if (this->state != established_socket_state_ESTABLISHED)
+	{
+		L_WARN_P("Socket is not ready (state: %c)", this->state);
+		return false;
+	}
 
 	//Add frame to the write queue
 	*this->write_frame_last = frame;
@@ -296,11 +338,13 @@ void established_socket_write(struct established_socket * this, struct frame * f
 	{
 		ev_io_start(this->context->ev_loop, &this->write_watcher);
 		//TODO: Increment statistic about this 
-		return;
+		return true;
 	}
 
 	bool start = established_socket_write_real(this);
 	if (start) ev_io_start(this->context->ev_loop, &this->write_watcher);
+
+	return true;
 }
 
 ///
@@ -309,11 +353,16 @@ bool established_socket_shutdown(struct established_socket * this)
 {
 	assert(this != NULL);
 	
+	if (this->state == established_socket_state_SHUTDOWN) return true;
+
 	if (this->write_watcher.fd < 0)
 	{
 		L_WARN("Calling shutdown on closed socket");
 		return false;
 	}
+
+	established_socket_set_state(this,established_socket_state_SHUTDOWN);
+	this->shutdown_at = ev_now(this->context->ev_loop);
 
 	ev_io_stop(this->context->ev_loop, &this->write_watcher);
 
@@ -324,9 +373,14 @@ bool established_socket_shutdown(struct established_socket * this)
 		return false;
 	}
 
-	this->shutdown_at = ev_now(this->context->ev_loop);
 	//TODO: Close socket after some time ...
 
 	return true;
 }
 
+///
+
+size_t established_socket_read_advise_max_frame(struct established_socket * this, struct frame * frame)
+{
+	return frame_currect_dvec_size(frame);
+}

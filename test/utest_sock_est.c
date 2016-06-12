@@ -52,16 +52,17 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 	return true;
 }
 
-void sock_est_1_on_close(struct established_socket * established_sock)
+void sock_est_1_on_state_changed(struct established_socket * established_sock)
 {
-	ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
+	if (established_sock->state == established_socket_state_CLOSED)
+		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
 }
 
 struct established_socket_cb sock_est_1_sock_cb = 
 {
 	.read_advise = sock_est_1_on_read_advise,
 	.read = sock_est_1_on_read,
-	.close = sock_est_1_on_close
+	.state_changed = sock_est_1_on_state_changed
 };
 
 bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
