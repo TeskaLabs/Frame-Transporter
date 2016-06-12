@@ -79,4 +79,12 @@ void frame_format_simple(struct frame *);
 //This is diagnostics function
 void frame_print(struct frame *);
 
+static inline void frame_flip(struct frame * this)
+{
+	for (unsigned int i=0; i<this->dvec_count; i += 1)
+	{
+		frame_dvec_flip(&this->dvecs[i]);
+	}
+}
+
 #endif //__LIBSCCMN_FRAME_H__
