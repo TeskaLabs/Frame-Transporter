@@ -1,10 +1,11 @@
 #include "all.h"
+#include <sys/un.h>
 
 static void listening_socket_on_io(struct ev_loop *loop, struct ev_io *watcher, int revents);
 
 ///
 
-bool listening_socket_init(struct listening_socket * this, struct context * context, struct addrinfo * rp, listening_socket_cb cb)
+bool listening_socket_init(struct listening_socket * this, struct context * context, struct addrinfo * ai, listening_socket_cb cb)
 {
 	int rc;
 	int fd = -1;
@@ -17,30 +18,45 @@ bool listening_socket_init(struct listening_socket * this, struct context * cont
 	this->cb = cb;
 	this->backlog = libsccmn_config.sock_listen_backlog;
 
-	this->ai_family = rp->ai_family;
-	this->ai_socktype = rp->ai_socktype;
-	this->ai_protocol = rp->ai_protocol;
-	memcpy(&this->ai_addr, &rp->ai_addr, rp->ai_addrlen);
-	this->ai_addrlen = rp->ai_addrlen;
+	this->ai_family = ai->ai_family;
+	this->ai_socktype = ai->ai_socktype;
+	this->ai_protocol = ai->ai_protocol;
+	memcpy(&this->ai_addr, ai->ai_addr, ai->ai_addrlen);
+	this->ai_addrlen = ai->ai_addrlen;
 
-	char hoststr[NI_MAXHOST];
-	char portstr[NI_MAXSERV];
-	rc = getnameinfo(rp->ai_addr, sizeof(struct sockaddr), hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
-	if (rc != 0)
+	char addrstr[NI_MAXHOST+NI_MAXSERV];
+
+	if (this->ai_family == AF_UNIX)
 	{
-		if (rc == EAI_FAMILY)
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->ai_addr;
+		strcpy(addrstr, un->sun_path);
+	}
+
+	else
+	{
+		char hoststr[NI_MAXHOST];
+		char portstr[NI_MAXHOST];
+
+		rc = getnameinfo((const struct sockaddr *)&this->ai_addr, this->ai_addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
+		if (rc != 0)
 		{
-			// This is not a failure
-			return false;
+			if (rc == EAI_FAMILY)
+			{
+				L_WARN("Unsupported family: %d", this->ai_family);
+				// This is not a failure
+				return false;
+			}
+
+			L_WARN("Problem occured when resolving listen socket: %s", gai_strerror(rc));
+			snprintf(addrstr, sizeof(addrstr)-1, "? ?");
 		}
 
-		L_WARN("Problem occured when resolving listen socket: %s", gai_strerror(rc));
-		strcpy(hoststr, "?");
-		strcpy(portstr, "?");
+		else
+			snprintf(addrstr, sizeof(addrstr)-1, "%s %s", hoststr, portstr);
 	}
 
 	// Create socket
-	fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+	fd = socket(this->ai_family, this->ai_socktype, this->ai_protocol);
 	if (fd < 0)
 	{
 		L_ERROR_ERRNO(errno, "Failed creating listen socket");
@@ -67,17 +83,17 @@ bool listening_socket_init(struct listening_socket * this, struct context * cont
 #endif // TCP_DEFER_ACCEPT
 
 	// Bind socket
-	rc = bind(fd, rp->ai_addr, rp->ai_addrlen);
+	rc = bind(fd, (const struct sockaddr *)&this->ai_addr, this->ai_addrlen);
 	if (rc != 0)
 	{
-		L_ERROR_ERRNO(errno, "bind to %s %s", hoststr, portstr);
+		L_ERROR_ERRNO(errno, "bind to %s ", addrstr);
 		goto error_exit;
 	}
 
 	ev_io_init(&this->watcher, listening_socket_on_io, fd, EV_READ);
 	this->watcher.data = this;
 
-	L_DEBUG("Listening on %s %s", hoststr, portstr);
+	L_DEBUG("Listening on %s", addrstr);
 	return true;
 
 error_exit:
@@ -97,6 +113,15 @@ void listening_socket_close(struct listening_socket * this)
 		if (rc != 0) L_ERROR_ERRNO(errno, "close()");
 		this->watcher.fd = -1;
 	}
+
+	if (this->ai_family == AF_UNIX)
+	{
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->ai_addr;
+		
+		rc = unlink(un->sun_path);
+		if (rc != 0) L_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
+	}
+
 }
 
 
@@ -225,7 +250,6 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 {
 	int rc;
 	struct addrinfo hints;
-	struct addrinfo * res;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = ai_family;
@@ -236,16 +260,34 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 	hints.ai_addr = NULL;
 	hints.ai_next = NULL;
 
-	rc = getaddrinfo(host, port, &hints, &res);
-	if (rc != 0)
+	if (ai_family == AF_UNIX)
 	{
-		L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
-		return -1;
-    }
+		struct sockaddr_un un;
 
-	rc = listening_socket_chain_extend(chain, context, res, cb);
+		un.sun_family = AF_UNIX;
+		snprintf(un.sun_path, sizeof(un.sun_path)-1, "%s", host);
+		hints.ai_addr = (struct sockaddr *)&un;
+		hints.ai_addrlen = sizeof(un);
 
-	freeaddrinfo(res);
+		rc = listening_socket_chain_extend(chain, context, &hints, cb);
+	}
+
+	else
+	{
+		struct addrinfo * res;
+
+		rc = getaddrinfo(host, port, &hints, &res);
+		if (rc != 0)
+		{
+			L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
+			return -1;
+	    }
+
+		rc = listening_socket_chain_extend(chain, context, res, cb);
+
+		freeaddrinfo(res);
+	}
+
 	return rc;
 }
 
