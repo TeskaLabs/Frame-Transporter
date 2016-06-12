@@ -87,4 +87,9 @@ static inline void frame_flip(struct frame * this)
 	}
 }
 
+static inline size_t frame_currect_dvec_size(struct frame * this)
+{
+	return this->dvecs[this->dvec_count-1].limit - this->dvecs[this->dvec_count-1].position;
+}
+
 #endif //__LIBSCCMN_FRAME_H__
