@@ -88,11 +88,16 @@ void context_evloop_run(struct context * this)
 {
 	assert(this != NULL);
 
+#if ((EV_VERSION_MINOR > 11) && (EV_VERSION_MAJOR >= 4))
 	bool run=true;
 	while (run)
 	{
 		run = ev_run(this->ev_loop, 0);
 	}
+#else
+	ev_run(this->ev_loop, 0);
+#endif
+
 }
 
 ///
