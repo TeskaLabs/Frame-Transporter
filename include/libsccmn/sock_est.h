@@ -22,7 +22,10 @@ struct established_socket
 	struct frame * read_frame;
 
 	// Output
+	bool writeable;
 	struct ev_io write_watcher;
+	struct frame * write_frames; // Queue of write frames 
+	struct frame ** write_frame_last;
 
 	// Common fields
 	int ai_family;
@@ -47,6 +50,11 @@ void established_socket_fini(struct established_socket *);
 
 bool established_socket_read_start(struct established_socket *);
 bool established_socket_read_stop(struct established_socket *);
+
+bool established_socket_write_start(struct established_socket *);
+bool established_socket_write_stop(struct established_socket *);
+
+void established_socket_write(struct established_socket *, struct frame * frame);
 
 bool established_socket_shutdown(struct established_socket *);
 
