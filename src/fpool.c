@@ -72,7 +72,7 @@ static void frame_pool_zone_del(struct frame_pool_zone * this)
 }
 
 
-static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, const char * file, unsigned int line)
+static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint64_t frame_type, const char * file, unsigned int line)
 {
 	if (this->available_frames == NULL) return NULL; // Zone has no available frames
 	struct frame * frame = this->available_frames;
@@ -80,10 +80,13 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, cons
 
 	// Reset frame
 	frame->next = NULL;
-	frame->type = frame_type_UNKNOWN;
+	frame->type = frame_type;
 	frame->borrowed_by_file = file;
 	frame->borrowed_by_line = line;
 	frame->zone->frames_used += 1;
+
+	frame->dvec_position = 0;
+	frame->dvec_limit = 0;
 
 	return frame;
 }
@@ -124,7 +127,7 @@ void frame_pool_fini(struct frame_pool * this, struct heartbeat * heartbeat)
 }
 
 
-struct frame * frame_pool_borrow_real(struct frame_pool * this, const char * file, unsigned int line)
+struct frame * frame_pool_borrow_real(struct frame_pool * this, uint64_t frame_type, const char * file, unsigned int line)
 {
 	assert(this != NULL);
 	struct frame * frame =  NULL;
@@ -133,7 +136,7 @@ struct frame * frame_pool_borrow_real(struct frame_pool * this, const char * fil
 	// Borrow from existing zone
 	for (struct frame_pool_zone * zone = this->zones; zone != NULL; zone = zone->next)
 	{
-		frame = frame_pool_zone_borrow(zone, file, line);
+		frame = frame_pool_zone_borrow(zone, frame_type, file, line);
 		if (frame != NULL) return frame;
 
 		last_zone_next = &zone->next;
@@ -146,7 +149,7 @@ struct frame * frame_pool_borrow_real(struct frame_pool * this, const char * fil
 		return NULL;
 	}
 
-	frame = frame_pool_zone_borrow(*last_zone_next, file, line);
+	frame = frame_pool_zone_borrow(*last_zone_next, frame_type, file, line);
 	if (frame == NULL)
 	{
 		L_WARN("Frame pool ran out of memory (2)");

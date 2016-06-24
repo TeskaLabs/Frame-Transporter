@@ -9,11 +9,13 @@ void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct fr
 	this->zone = zone;
 	this->data = data;
 	this->capacity = capacity;
+	
 
 	this->borrowed_by_file = NULL;
 	this->borrowed_by_line = 0;
 
-	this->dvec_count = 0;
+	this->dvec_position = 0;
+	this->dvec_limit = 0;
 
 	bzero(this->data, FRAME_SIZE);
 }
@@ -23,9 +25,10 @@ size_t frame_total_position(struct frame * this)
 	assert(this != NULL);
 
 	size_t length = 0;
-	for (unsigned int i=0; i<this->dvec_count; i += 1)
+	struct frame_dvec * dvecs = (struct frame_dvec *)(this->data + this->capacity);
+	for (int i=-1; i>(-1-this->dvec_limit); i -= 1)
 	{
-		length += this->dvecs[i].position;
+		length += dvecs[i].position;
 	}
 
 	return length;
@@ -36,24 +39,50 @@ size_t frame_total_limit(struct frame * this)
 	assert(this != NULL);
 
 	size_t length = 0;
-	for (unsigned int i=0; i<this->dvec_count; i += 1)
+	struct frame_dvec * dvecs = (struct frame_dvec *)(this->data + this->capacity);
+	for (int i=-1; i>(-1-this->dvec_limit); i -= 1)
 	{
-		length += this->dvecs[i].limit;
+		length += dvecs[i].limit;
 	}
 
 	return length;
 }
 
+struct frame_dvec * frame_add_dvec(struct frame * this, size_t position, size_t capacity)
+{
+	assert(this != NULL);	
+
+	struct frame_dvec * dvec = (struct frame_dvec *)(this->data + this->capacity);
+	dvec -= this->dvec_limit + 1;
+
+	//Test if there is enough space in the frame
+	if (((uint8_t *)dvec - this->data) < (position + capacity))
+	{
+		L_ERROR("Cannot accomodate that dvec in the current frame.");
+		return NULL;
+	}
+
+
+	this->dvec_limit += 1;
+
+	assert((uint8_t *)dvec  > this->data);
+	assert((void *)dvec + this->dvec_limit * sizeof(struct frame_dvec) == (this->data + this->capacity));
+
+	dvec->frame = this;
+	dvec->position = position;
+	dvec->limit = dvec->capacity = capacity;
+
+	return dvec;
+}
+
+
 void frame_format_simple(struct frame * this)
 {
-	assert(this != NULL);
-
-	this->dvec_count = 1;
-	this->dvecs[0].frame = this;
-	this->dvecs[0].position = 0;
-	this->dvecs[0].limit = this->capacity;
-	this->dvecs[0].capacity = this->capacity;
+	this->dvec_limit = 0;
+	this->dvec_position = 0;
+	frame_add_dvec(this, 0, this->capacity - sizeof(struct frame_dvec));
 }
+
 
 bool frame_dvec_vsprintf(struct frame_dvec * this, const char * format, va_list args)
 {
@@ -95,6 +124,7 @@ bool frame_dvec_strcat(struct frame_dvec * this, const char * text)
 
 void frame_print(struct frame * this)
 {
-	for (unsigned int i=0; i<this->dvec_count; i += 1)
-		write(STDOUT_FILENO, this->dvecs[i].frame->data, this->dvecs[i].limit);
+	struct frame_dvec * dvecs = (struct frame_dvec *)(this->data + this->capacity);
+	for (int i=-1; i>(-1-this->dvec_limit); i -= 1)
+		write(STDOUT_FILENO, dvecs[i].frame->data, dvecs[i].limit);
 }

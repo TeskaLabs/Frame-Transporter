@@ -1,6 +1,23 @@
 #ifndef __LIBSCCMN_FRAME_H__
 #define __LIBSCCMN_FRAME_H__
 
+/****
+Frame:
+
++-------------------------------+
+|            data space         |
++-------------------------------+ 
+|            free space         |
++-------------------------------+
+|        dvec[-dvec_limit-1]    |
++-------------------------------+
+|        dvec[-dvec_limit-2]    |
++-------------------------------+
+|             dvec[0]           |
++-------------------------------+ <----- capacity 
+
+****/
+
 struct frame_dvec
 {
 	struct frame * frame;
@@ -48,10 +65,9 @@ bool frame_dvec_strcat(struct frame_dvec * , const char * text);
 bool frame_dvec_cat(struct frame_dvec * , const void * data, size_t data_len);
 
 
-#define frame_type_FREE    	(0xFFFFFFFF)
-#define frame_type_UNKNOWN 	(0xFFFFFFEE)
-#define frame_type_RAW 	    (0xFFFFFFDD)
-
+#define frame_type_FREE    	   (0xFFFFFFFF)
+#define frame_type_STREAM_END  (0xFFFFFFFE)
+#define frame_type_RAW_DATA	   (0xFFFFFFFD)
 
 struct frame
 {
@@ -60,9 +76,8 @@ struct frame
 
 	uint64_t type;
 	
-	//TODO: This is quite temporary
-	unsigned int dvec_count;
-	struct frame_dvec dvecs[2];
+	unsigned int dvec_position;
+	unsigned int dvec_limit;
 
 	// Those two are used for tracing and debugging 
 	const char * borrowed_by_file;
@@ -74,6 +89,8 @@ struct frame
 
 size_t frame_total_position(struct frame *);
 size_t frame_total_limit(struct frame *);
+
+struct frame_dvec * frame_add_dvec(struct frame * this, size_t position, size_t capacity);
 void frame_format_simple(struct frame *);
 
 //This is diagnostics function
@@ -81,15 +98,32 @@ void frame_print(struct frame *);
 
 static inline void frame_flip(struct frame * this)
 {
-	for (unsigned int i=0; i<this->dvec_count; i += 1)
+	assert(this != NULL);
+	struct frame_dvec * dvec = (struct frame_dvec *)(this->data + this->capacity);
+	for (int i=-1; i>(-1-this->dvec_limit); i -= 1)
 	{
-		frame_dvec_flip(&this->dvecs[i]);
+		frame_dvec_flip(&dvec[i]);
 	}
+}
+
+///
+
+static inline struct frame_dvec * frame_current_dvec(struct frame * this)
+{
+	assert(this != NULL);
+	if (this->dvec_position == this->dvec_limit) return NULL;
+	assert(this->dvec_position < this->dvec_limit);
+
+	struct frame_dvec * dvec = (struct frame_dvec *)(this->data + this->capacity);
+	dvec -= (1 + this->dvec_position);
+	return dvec;
 }
 
 static inline size_t frame_currect_dvec_size(struct frame * this)
 {
-	return this->dvecs[this->dvec_count-1].limit - this->dvecs[this->dvec_count-1].position;
+	assert(this != NULL);
+	struct frame_dvec * dvec = frame_current_dvec(this);
+	return dvec->limit - dvec->position;
 }
 
 #endif //__LIBSCCMN_FRAME_H__
