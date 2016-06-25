@@ -22,7 +22,11 @@ struct frame_dvec
 {
 	struct frame * frame;
 
-	// 0 <= position <= limit <= capacity
+	// 0 (+ offset) <= position <= limit <= capacity
+
+	// 
+	// The offset is never negative and is inside a frame
+	size_t offset;
 
 	// The position is the index of the next byte to be read or written.
 	// The position is never negative and is never greater than its limit.
@@ -39,18 +43,18 @@ struct frame_dvec
 
 static inline void frame_dvec_position_add(struct frame_dvec * this, size_t position_delta)
 {
-	assert((this->position + position_delta) > 0);
-	assert((this->position + position_delta) < this->limit);
-	assert((this->position + position_delta) < this->capacity);
+	assert((this->position + position_delta) >= 0);
+	assert((this->position + position_delta) <= this->limit);
+	assert((this->position + position_delta) <= this->capacity);
 
 	this->position += position_delta;
 }
 
-static inline bool frame_dvec_set_position(struct frame_dvec * this, size_t position)
+static inline void frame_dvec_set_position(struct frame_dvec * this, size_t position)
 {
-	if (position > this->limit) return false;
+	assert(this->position <= this->limit);
+	assert(this->position <= this->capacity);
 	this->position = position;
-	return true;
 }
 
 static inline void frame_dvec_flip(struct frame_dvec * this)
@@ -87,10 +91,9 @@ struct frame
 	size_t capacity;
 };
 
-size_t frame_total_position(struct frame *);
-size_t frame_total_limit(struct frame *);
+size_t frame_total_start_to_position(struct frame *);
+size_t frame_total_position_to_limit(struct frame *);
 
-struct frame_dvec * frame_add_dvec(struct frame * this, size_t position, size_t capacity);
 void frame_format_simple(struct frame *);
 
 //This is diagnostics function
@@ -107,6 +110,17 @@ static inline void frame_flip(struct frame * this)
 }
 
 ///
+
+struct frame_dvec * frame_add_dvec(struct frame * this, size_t offset, size_t capacity);
+
+static inline bool frame_next_dvec(struct frame * this)
+{
+	assert(this != NULL);
+	if (this->dvec_position == this->dvec_limit) return false;
+	assert(this->dvec_position < this->dvec_limit);
+	this->dvec_position += 1;
+	return (this->dvec_position < this->dvec_limit);
+}
 
 static inline struct frame_dvec * frame_current_dvec(struct frame * this)
 {

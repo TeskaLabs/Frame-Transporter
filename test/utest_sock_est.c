@@ -29,15 +29,39 @@ static bool resolve(struct addrinfo **res, const char * host, const char * port)
 ////
 
 struct established_socket established_sock;
-size_t test_read_counter;
 
 ///
 
 // This test is about incoming stream that 'hangs open' after all data are uploaded
 
-size_t sock_est_1_on_read_advise(struct established_socket * established_sock, struct frame * frame)
+struct frame * sock_est_1_on_get_read_frame(struct established_socket * established_sock)
 {
-	return 5;
+	struct frame_dvec * dvec;
+
+	struct frame * frame = frame_pool_borrow(&established_sock->context->frame_pool, frame_type_RAW_DATA);
+	ck_assert_ptr_ne(frame, NULL);
+	ck_assert_int_eq(frame->dvec_position, 0);
+	ck_assert_int_eq(frame->dvec_limit, 0);
+
+	dvec = frame_add_dvec(frame, 0, 5);
+	ck_assert_ptr_ne(dvec, NULL);
+	ck_assert_int_eq(dvec->position, 0);
+	ck_assert_int_eq(dvec->limit, 5);
+	ck_assert_int_eq(dvec->capacity, 5);
+
+	ck_assert_int_eq(frame->dvec_position, 0);
+	ck_assert_int_eq(frame->dvec_limit, 1);
+
+	dvec = frame_add_dvec(frame, 5, 6);
+	ck_assert_ptr_ne(dvec, NULL);
+	ck_assert_int_eq(dvec->position, 0);
+	ck_assert_int_eq(dvec->limit, 6);
+	ck_assert_int_eq(dvec->capacity, 6);
+
+	ck_assert_int_eq(frame->dvec_position, 0);
+	ck_assert_int_eq(frame->dvec_limit, 2);
+
+	return frame;
 }
 
 bool sock_est_1_on_read(struct established_socket * established_sock, struct frame * frame)
@@ -48,13 +72,8 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 	{
 		ck_assert_int_eq(established_sock->read_syserror, 0);
 
-		size_t cap = frame_total_position(frame);
-		if (cap < 5) return false;
-
-		ck_assert_int_eq(memcmp(frame->data, "1234\n", 5), 0);
+		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
 		frame_pool_return(frame);
-
-		test_read_counter += cap;
 
 		established_socket_shutdown(established_sock);
 		return true;
@@ -64,7 +83,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 	if (frame->type == frame_type_STREAM_END)
 	{
 		ck_assert_int_eq(established_sock->read_syserror, 0);
-		ck_assert_int_eq(test_read_counter , 5);
+		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
 		established_socket_shutdown(established_sock);
 		return false;
@@ -82,7 +101,7 @@ void sock_est_1_on_state_changed(struct established_socket * established_sock)
 
 struct established_socket_cb sock_est_1_sock_cb = 
 {
-	.read_advise = sock_est_1_on_read_advise,
+	.get_read_frame = sock_est_1_on_get_read_frame,
 	.read = sock_est_1_on_read,
 	.state_changed = sock_est_1_on_state_changed
 };
@@ -126,15 +145,13 @@ START_TEST(sock_est_1_utest)
 
 	freeaddrinfo(rp);
 
-	test_read_counter = 0;
-
 	ok = listening_socket_start(&listen_sock);
 	ck_assert_int_eq(ok, true);
 
 	FILE * p = popen("nc localhost 12345", "w");
 	ck_assert_ptr_ne(p, NULL);
 
-	fprintf(p, "1234\n");
+	fprintf(p, "1234\nABCDE\n");
 	fflush(p);
 
 	ev_run(context.ev_loop, 0);
@@ -148,8 +165,6 @@ START_TEST(sock_est_1_utest)
 
 	listening_socket_close(&listen_sock);
 
-	ck_assert_int_eq(test_read_counter, 5);
-
 	//TODO: Temporary
 	established_socket_fini(&established_sock);
 
@@ -161,6 +176,18 @@ END_TEST
 
 // This test is about incoming stream that terminates after all data are uploaded
 
+struct frame * sock_est_2_on_get_read_frame(struct established_socket * established_sock)
+{
+	struct frame * frame = frame_pool_borrow(&established_sock->context->frame_pool, frame_type_RAW_DATA);
+	ck_assert_ptr_ne(frame, NULL);
+	ck_assert_int_eq(frame->dvec_position, 0);
+	ck_assert_int_eq(frame->dvec_limit, 0);
+
+	frame_format_simple(frame);
+
+	return frame;
+}
+
 bool sock_est_2_on_read(struct established_socket * established_sock, struct frame * frame)
 {
 	ck_assert_int_ne(frame->type, frame_type_FREE);
@@ -169,9 +196,6 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 	{
 		ck_assert_int_eq(established_sock->read_syserror, 0);
 
-		size_t cap = frame_total_position(frame);
-		test_read_counter += cap;
-
 		return false;
 	}
 
@@ -179,7 +203,6 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 	if (frame->type == frame_type_STREAM_END)
 	{
 		ck_assert_int_eq(established_sock->read_syserror, 0);
-		ck_assert_int_gt(test_read_counter , 0);
 
 		established_socket_shutdown(established_sock);
 		return false;
@@ -197,7 +220,7 @@ void sock_est_2_on_state_changed(struct established_socket * established_sock)
 
 struct established_socket_cb sock_est_2_sock_cb = 
 {
-	.read_advise = established_socket_read_advise_opportunistic,
+	.get_read_frame = sock_est_2_on_get_read_frame,
 	.read = sock_est_2_on_read,
 	.state_changed = sock_est_2_on_state_changed
 };
@@ -208,6 +231,8 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 
 	ok = established_socket_init_accept(&established_sock, &sock_est_2_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
+
+	established_sock.read_opportunistic = true;
 
 	ok = established_socket_read_start(&established_sock);
 	ck_assert_int_eq(ok, true);
@@ -241,8 +266,6 @@ START_TEST(sock_est_2_utest)
 
 	freeaddrinfo(rp);
 
-	test_read_counter = 0;
-
 	ok = listening_socket_start(&listen_sock);
 	ck_assert_int_eq(ok, true);
 
@@ -259,8 +282,6 @@ START_TEST(sock_est_2_utest)
 	ck_assert_int_eq(ok, true);
 
 	listening_socket_close(&listen_sock);
-
-	ck_assert_int_gt(test_read_counter, 0);
 
 	//TODO: Temporary
 	established_socket_fini(&established_sock);

@@ -34,7 +34,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(frame.dvec_position, 0);
 	ck_assert_int_eq(frame.dvec_limit, 1);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 0);
 
 	struct frame_dvec * dvec = frame_current_dvec(&frame);
@@ -49,7 +49,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 10);
 
 	ok = frame_dvec_cat(dvec, "ABCDEFG", 7);
@@ -58,7 +58,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 17);
 
 	ok = frame_dvec_strcat(dvec, "abcdefg");
@@ -67,7 +67,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 24);
 
 	ok = frame_core_utest_vprintf(dvec, "%s %d %d", "Hello world", 1, 777);
@@ -76,7 +76,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 41);
 
 	ok = frame_dvec_sprintf(dvec, "%s %d %d", "Another text", 12311, 743427);
@@ -85,7 +85,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 66);
 
 	free(frame_data);
@@ -96,7 +96,6 @@ END_TEST
 START_TEST(frame_flip_utest)
 {
 	int rc;
-	bool ok;
 	size_t pos;
 	struct frame frame;
 	uint8_t * frame_data;
@@ -117,20 +116,18 @@ START_TEST(frame_flip_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	ok = frame_dvec_set_position(dvec, 333);
-	ck_assert_int_eq(ok, true);
-
-	pos = frame_total_position(&frame);
+	frame_dvec_set_position(dvec, 333);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 333);
 
 	frame_dvec_flip(dvec);
 	ck_assert_int_eq(frame.dvec_position, 0);
 	ck_assert_int_eq(frame.dvec_limit, 1);
 
-	pos = frame_total_position(&frame);
+	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 0);
 
-	pos = frame_total_limit(&frame);
+	pos = frame_total_position_to_limit(&frame);
 	ck_assert_int_eq(pos, 333);
 
 	free(frame_data);

@@ -33,8 +33,7 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->cbs = cbs;
 	this->context = listening_socket->context;
 	this->read_frame = NULL;
-	this->read_advise = 0;
-	this->read_size = 0;
+	this->read_opportunistic = false;
 	this->write_frames = NULL;
 	this->write_frame_last = &this->write_frames;
 	this->stats.read_events = 0;
@@ -99,7 +98,7 @@ void established_socket_fini(struct established_socket * this)
 	size_t cap;
 	if (this->read_frame != NULL)
 	{
-		cap = frame_total_position(this->read_frame);
+		cap = frame_total_position_to_limit(this->read_frame);
 		frame_pool_return(this->read_frame);
 		this->read_frame = NULL;
 
@@ -112,7 +111,7 @@ void established_socket_fini(struct established_socket * this)
 		struct frame * frame = this->write_frames;
 		this->write_frames = frame->next;
 
-		cap += frame_total_limit(frame);
+		cap += frame_total_position_to_limit(frame);
 		frame_pool_return(frame);
 	}
 	if (cap > 0) L_WARN("Lost %zu bytes in write buffer of the socket", cap);
@@ -198,78 +197,93 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 
 	if ((revents & EV_READ) == 0) return;
 
-	if (this->read_frame == NULL)
+	for (;;)
 	{
-		this->read_frame = frame_pool_borrow(&this->context->frame_pool, frame_type_RAW_DATA);
 		if (this->read_frame == NULL)
 		{
-			L_WARN("Out of frames when reading, reading stopped");
+			this->read_frame = this->cbs->get_read_frame(this);
+			if (this->read_frame == NULL)
+			{
+				L_WARN("Out of frames when reading, reading stopped");
+				established_socket_read_stop(this);
+				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+				return;
+			}
+		}
+
+		struct frame_dvec * frame_dvec = frame_current_dvec(this->read_frame);
+		assert(frame_dvec != NULL);
+		size_t size_to_read = frame_dvec->limit - frame_dvec->position;
+		assert(size_to_read > 0);
+
+		ssize_t rc = read(watcher->fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, size_to_read);
+
+		if (rc <= 0)
+		{
+			// Handle error situation
+			if (rc < 0)
+			{
+				if (errno == EAGAIN) return;
+				this->read_syserror = errno;
+				L_ERROR_ERRNO_P(errno, "read()");
+			}
+			else
+			{
+				this->read_syserror = 0;
+			}
+
+			// Stop futher reads on the socket
 			established_socket_read_stop(this);
-			//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+			this->read_shutdown_at = ev_now(this->context->ev_loop);
+			this->flags.read_connected = false;
+
+			//TODO: Uplink read frame, if there is one
+
+			// Uplink end-of-stream (reading)
+			ok = established_socket_uplink_read_stream_end(this);
+			if (!ok)
+			{
+				L_WARN("Failed to submit end-of-stream frame");
+				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+				return;
+			}
+
+			established_socket_state_changed(this);		
+
+			return;		
+		}
+
+		this->stats.read_bytes += rc;
+		frame_dvec_position_add(frame_dvec, rc);
+
+		if (frame_dvec->position < frame_dvec->limit)
+		{
+			// Not all expected data arrived
+			if (this->read_opportunistic)
+			{
+				bool upstreamed = this->cbs->read(this, this->read_frame);
+				if (upstreamed) this->read_frame = NULL;				
+			}
 			return;
 		}
+		assert(frame_dvec->position == frame_dvec->limit);
 
-		frame_format_simple(this->read_frame);
-
-		this->read_advise = this->cbs->read_advise(this, this->read_frame);
-		this->read_size = 0;
-	}
-
-	size_t size_to_read;
-	if (this->read_advise == 0)
-	{
-		// Read as much as possible
-		size_to_read = frame_currect_dvec_size(this->read_frame);
-	} else {
-		size_to_read = this->read_advise - this->read_size;
-	}
-
-	struct frame_dvec * frame_dvec = frame_current_dvec(this->read_frame);
-	assert(frame_dvec != NULL);
-
-	//TODO: IMPORTANT: Adjust size_to_read to fit that into a current dvec
-	ssize_t rc = read(watcher->fd, frame_dvec->frame->data + frame_dvec->position, size_to_read);
-
-	if (rc <= 0)
-	{
-		// Handle error situation
-		if (rc < 0)
-		{
-			if (errno == EAGAIN) return;
-			this->read_syserror = errno;
-			L_ERROR_ERRNO_P(errno, "read()");
-		}
-		else
-		{
-			this->read_syserror = 0;
-		}
-
-		// Stop futher reads on the socket
-		established_socket_read_stop(this);
-
-		//TODO: Uplink read frame, if there is one
-
-		// Uplink end-of-stream (reading)
-		ok = established_socket_uplink_read_stream_end(this);
+		// Current dvec is filled, move to next one
+		ok = frame_next_dvec(this->read_frame);
 		if (!ok)
 		{
-			L_WARN("Failed to submit end-of-stream frame");
-			//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
-			return;
+			// All dvecs in the frame are filled with data
+			bool upstreamed = this->cbs->read(this, this->read_frame);
+			if (upstreamed) this->read_frame = NULL;
+			if (!ev_is_active(&this->read_watcher)) return; // If watcher is stopped, break reading
 		}
-
-		this->read_shutdown_at = ev_now(this->context->ev_loop);
-		this->flags.read_connected = false;
-		established_socket_state_changed(this);		
-
-		return;		
+		else if (this->read_opportunistic)
+		{
+			bool upstreamed = this->cbs->read(this, this->read_frame);
+			if (upstreamed) this->read_frame = NULL;
+			if (!ev_is_active(&this->read_watcher)) return; // If watcher is stopped, break reading		
+		}
 	}
-
-	this->stats.read_bytes += rc;
-
-	frame_dvec_position_add(frame_dvec, rc);
-	bool upstreamed = this->cbs->read(this, this->read_frame);
-	if (upstreamed) this->read_frame = NULL;
 }
 
 ///
@@ -335,7 +349,7 @@ static bool established_socket_write_real(struct established_socket * this)
 		struct frame_dvec * frame_dvec = frame_current_dvec(this->write_frames);
 
 		assert(frame_dvec->limit - frame_dvec->position > 0);
-		ssize_t rc = write(this->write_watcher.fd, frame_dvec->frame->data + frame_dvec->position, frame_dvec->limit - frame_dvec->position);
+		ssize_t rc = write(this->write_watcher.fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, frame_dvec->limit - frame_dvec->position);
 
 		if (rc < 0)
 		{
@@ -453,14 +467,3 @@ bool established_socket_shutdown(struct established_socket * this)
 	return established_socket_write(this, frame);
 }
 
-///
-
-size_t established_socket_read_advise_max_frame(struct established_socket * this, struct frame * frame)
-{
-	return frame_currect_dvec_size(frame);
-}
-
-size_t established_socket_read_advise_opportunistic(struct established_socket * this, struct frame * frame)
-{
-	return 0;
-}

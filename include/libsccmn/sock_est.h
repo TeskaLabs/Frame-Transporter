@@ -5,7 +5,7 @@ struct established_socket;
 
 struct established_socket_cb
 {
-	size_t (*read_advise)(struct established_socket *, struct frame * frame);
+	struct frame * (*get_read_frame)(struct established_socket *);
 
 	// True as a return value means, that the frame has been handed over to upstream protocol
 	bool (*read)(struct established_socket *, struct frame * frame);
@@ -43,8 +43,7 @@ struct established_socket
 	// Input
 	struct ev_io read_watcher;
 	struct frame * read_frame;
-	size_t read_advise;
-	size_t read_size;
+	size_t read_opportunistic; // When yes, read() callback is triggered for any incoming data
 	int read_syserror;
 
 	// Output
@@ -79,10 +78,5 @@ bool established_socket_write(struct established_socket *, struct frame * frame)
 
 bool established_socket_shutdown(struct established_socket *);
 
-
-///
-
-size_t established_socket_read_advise_max_frame(struct established_socket *, struct frame * frame);
-size_t established_socket_read_advise_opportunistic(struct established_socket *, struct frame * frame);
 
 #endif // __LIBSCCMN_SOCK_EST_H__
