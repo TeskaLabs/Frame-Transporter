@@ -219,38 +219,11 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 
 ///
 
-int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * addrinfo)
+int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb cb, void * data, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
 {
-	int count = 0;
-	struct listening_socket_chain ** p = chain;
-	
-	// Iterate to the end of the chain
-	while (*p != NULL)
-	{
-		p = &((*p)->next);
-	}
+	assert(cb != NULL);
 
-	for (struct addrinfo * rp = addrinfo; rp != NULL; rp = rp->ai_next)
-	{
-		struct listening_socket_chain * chitem = malloc(sizeof(struct listening_socket_chain));
-		bool ok = listening_socket_init(&chitem->listening_socket, cbs, context, rp);
-		if (!ok)
-		{
-			free(chitem);
-			continue;
-		}
-
-		*p = chitem;
-		chitem->next = NULL;
-		p = &chitem->next;
-		count += 1;
-	}
-
-	return count;
-}
-
-int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** chain, struct listening_socket_cb * cbs, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
-{
+	bool ok;
 	int rc;
 	struct addrinfo hints;
 
@@ -272,7 +245,8 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 		hints.ai_addr = (struct sockaddr *)&un;
 		hints.ai_addrlen = sizeof(un);
 
-		rc = listening_socket_chain_extend(chain, cbs, context, &hints);
+		ok = cb(data, context, &hints);
+		rc = ok ? 1 : 0;
 	}
 
 	else
@@ -284,46 +258,17 @@ int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** c
 		{
 			L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
 			return -1;
-	    }
+		}
 
-		rc = listening_socket_chain_extend(chain, cbs, context, res);
+		int rc = 0;
+		for (struct addrinfo * rp = res; rp != NULL; rp = rp->ai_next)
+		{
+			ok = cb(data, context, rp);
+			rc += ok ? 1 : 0;
+		}
 
 		freeaddrinfo(res);
 	}
 
 	return rc;
 }
-
-
-void listening_socket_chain_start(struct listening_socket_chain * chain)
-{
-	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-		listening_socket_start(&i->listening_socket);
-}
-
-
-void listening_socket_chain_stop(struct listening_socket_chain * chain)
-{
-	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-		listening_socket_stop(&i->listening_socket);
-}
-
-
-void listening_socket_chain_set_data(struct listening_socket_chain * chain, void * data)
-{
-	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-		i->listening_socket.data = data;
-}
-
-
-void listening_socket_chain_del(struct listening_socket_chain * chain)
-{
-	while (chain != NULL)
-	{
-		struct listening_socket_chain * i = chain; 
-		chain = i->next;
-		listening_socket_fini(&i->listening_socket);
-		free(i);
-	}
-}
-

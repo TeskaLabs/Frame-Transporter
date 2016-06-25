@@ -122,126 +122,6 @@ START_TEST(sock_listen_single_utest)
 }
 END_TEST
 
-
-START_TEST(sock_listen_chain_utest)
-{
-	int rc;
-	bool ok;
-
-	struct context context;
-	ok = context_init(&context);
-	ck_assert_int_eq(ok, true);
-
-	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "localhost");
-	ck_assert_int_eq(ok, true);
-	ck_assert_ptr_ne(rp, NULL);
-
-	struct listening_socket_chain * chain = NULL;
-	rc = listening_socket_chain_extend(&chain, &sock_listen_cb, &context, rp);
-	ck_assert_int_gt(rc, 0);
-
-	freeaddrinfo(rp);
-
-	rp = NULL;
-	ok = resolve(&rp, NULL);
-	ck_assert_int_eq(ok, true);
-	ck_assert_ptr_ne(rp, NULL);
-
-	rc = listening_socket_chain_extend(&chain, &sock_listen_cb, &context, rp);
-	ck_assert_int_gt(rc, 0);
-
-	freeaddrinfo(rp);
-
-
-	listening_socket_chain_start(chain);
-
-	FILE * p = popen("nc localhost 12345", "w");
-	ck_assert_ptr_ne(p, NULL);
-
-	fprintf(p, "1234\n");
-	fflush(p);
-
-	ev_run(context.ev_loop, 0);
-
-	rc = pclose(p);
-	ck_assert_int_eq(rc, 0);
-
-	listening_socket_chain_stop(chain);
-
-	bool found = false;
-	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-	{
-		if (i->listening_socket.data == NULL) continue;
-		ck_assert_str_eq(i->listening_socket.data, "1234\n");
-		found = true;
-	}
-	ck_assert_int_eq(found, true);
-
-	listening_socket_chain_del(chain);
-
-	context_fini(&context);
-}
-END_TEST
-
-
-START_TEST(sock_listen_null_chain_utest)
-{
-	struct listening_socket_chain * chain = NULL;
-
-	listening_socket_chain_start(chain);
-	listening_socket_chain_stop(chain);
-	listening_socket_chain_del(chain);
-}
-END_TEST
-
-START_TEST(sock_listen_chain_resolve_utest)
-{
-	int rc;
-	bool ok;
-
-	struct context context;
-	ok = context_init(&context);
-	ck_assert_int_eq(ok, true);
-
-
-	struct listening_socket_chain * chain = NULL;
-	rc = listening_socket_chain_extend_getaddrinfo(&chain, &sock_listen_cb, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
-	ck_assert_int_gt(rc, 0);
-
-	rc = listening_socket_chain_extend_getaddrinfo(&chain, &sock_listen_cb, &context, AF_INET, SOCK_STREAM, NULL, "12345");
-	ck_assert_int_gt(rc, 0);
-
-	listening_socket_chain_start(chain);
-
-	FILE * p = popen("nc localhost 12345", "w");
-	ck_assert_ptr_ne(p, NULL);
-
-	fprintf(p, "1234\n");
-	fflush(p);
-
-	ev_run(context.ev_loop, 0);
-
-	rc = pclose(p);
-	ck_assert_int_eq(rc, 0);
-
-	listening_socket_chain_stop(chain);
-
-	bool found = false;
-	for (struct listening_socket_chain * i = chain; i != NULL; i = i->next)
-	{
-		if (i->listening_socket.data == NULL) continue;
-		ck_assert_str_eq(i->listening_socket.data, "1234\n");
-		found = true;
-	}
-	ck_assert_int_eq(found, true);
-
-	listening_socket_chain_del(chain);
-
-	context_fini(&context);
-}
-END_TEST
-
 ///
 
 Suite * sock_listen_tsuite(void)
@@ -252,9 +132,6 @@ Suite * sock_listen_tsuite(void)
 	tc = tcase_create("sock_listen-core");
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, sock_listen_single_utest);
-	tcase_add_test(tc, sock_listen_chain_utest);
-	tcase_add_test(tc, sock_listen_null_chain_utest);
-	tcase_add_test(tc, sock_listen_chain_resolve_utest);
 
 	return s;
 }

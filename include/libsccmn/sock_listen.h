@@ -44,6 +44,11 @@ bool listening_socket_stop(struct listening_socket *);
 
 ///
 
+typedef bool (*listening_socket_getaddrinfo_cb)(void * data, struct context * context, struct addrinfo * addrinfo);
+
+int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb, void * data, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port);
+
+/*
 struct listening_socket_chain
 {
 	struct listening_socket_chain * next;
@@ -58,5 +63,6 @@ void listening_socket_chain_start(struct listening_socket_chain *);
 void listening_socket_chain_stop(struct listening_socket_chain *);
 
 void listening_socket_chain_set_data(struct listening_socket_chain *, void * data);
+*/
 
 #endif //__LIBSCCMN_SOCK_LISTEN_H__

@@ -77,7 +77,10 @@ bool established_socket_write_stop(struct established_socket *);
 bool established_socket_write(struct established_socket *, struct frame * frame);
 
 bool established_socket_shutdown(struct established_socket *);
-
+static inline bool established_socket_is_closed(struct established_socket * this)
+{
+	return (!this->flags.read_connected) || (!this->flags.write_connected);
+}
 
 struct frame * get_read_frame_simple(struct established_socket * this);
 
