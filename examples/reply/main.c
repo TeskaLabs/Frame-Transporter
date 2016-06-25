@@ -19,36 +19,11 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 	return true;
 }
 
-void on_state_changed(struct established_socket * established_sock)
-{
-	printf("on_state_changed -> %c\n", established_sock->state);
-
-	if (established_sock->state == established_socket_state_CLOSED)
-	{
-		printf("Stats:\n - read: %lu\n - write: %lu\n - delta: %ld\n",
-			established_sock->stats.read_bytes,
-			established_sock->stats.write_bytes,
-			established_sock->stats.read_bytes - established_sock->stats.write_bytes
-		);
-
-		if (established_sock->write_frames != NULL)
-		{
-			size_t cap = 0;
-			for (struct frame * frame = established_sock->write_frames; frame != NULL; frame = frame->next)
-			{
-				cap += frame_total_limit(frame);
-				cap -= frame_total_position(frame);
-			}
-			printf("Lost write frame: %lu\n", cap);
-		}
-	}
-}
-
 struct established_socket_cb sock_est_sock_cb = 
 {
-	.read_advise = established_socket_read_advise_max_frame,
+	.get_read_frame = get_read_frame_simple,
 	.read = on_read,
-	.state_changed = on_state_changed,
+	.state_changed = NULL,
 };
 
 ///
@@ -61,6 +36,8 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	bool ok;
 	ok = established_socket_init_accept(&established_sock, &sock_est_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok) return false;
+
+	established_sock.read_opportunistic = true;
 
 	established_socket_read_start(&established_sock);
 
