@@ -1,5 +1,7 @@
 #include "all.h"
 
+// TODO: Conceptual: Consider implementing readv() and writev() versions for more complicated frame formats
+
 static void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static inline void established_socket_state_changed(struct established_socket *);
