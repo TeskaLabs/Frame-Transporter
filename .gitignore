@@ -34,4 +34,6 @@
 
 # Debug files
 *.dSYM/
+
 examples/reply/reply
+examples/forward/forward

@@ -1,4 +1,6 @@
-SUBDIRS=reply
+SUBDIRS=\
+	reply \
+	forward
 
 all: subdirs
 
