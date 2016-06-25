@@ -13,6 +13,10 @@ struct established_socket_cb
 	void (*state_changed)(struct established_socket *);
 
 	void (*close)(struct established_socket *);
+
+	void (*connected)(struct established_socket *); // Called when connect() is successfully established
+
+	void (*error)(struct established_socket *);
 };
 
 struct established_socket
@@ -26,6 +30,8 @@ struct established_socket
 		unsigned int write_connected : 1; // Socket is write-wise connected
 		unsigned int write_open : 1;      // Write queue is open for adding new frames
 		unsigned int write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
+		unsigned int connecting: 1;
+		unsigned int active: 1;
 	} flags;
 
 	int ai_family;
@@ -37,14 +43,16 @@ struct established_socket
 
 	struct established_socket_cb * cbs;
 
-	ev_tstamp established_at;
+	ev_tstamp created_at;
+	ev_tstamp connected_at;
 	ev_tstamp read_shutdown_at;
+
+	int syserror;
 
 	// Input
 	struct ev_io read_watcher;
 	struct frame * read_frame;
 	size_t read_opportunistic; // When yes, read() callback is triggered for any incoming data
-	int read_syserror;
 
 	// Output
 	struct ev_io write_watcher;
@@ -66,6 +74,7 @@ struct established_socket
 };
 
 bool established_socket_init_accept(struct established_socket *, struct established_socket_cb * cbs, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
+bool established_socket_init_connect(struct established_socket *, struct established_socket_cb * cbs, struct context * context, const struct addrinfo * addr);
 void established_socket_fini(struct established_socket *);
 
 bool established_socket_read_start(struct established_socket *);
@@ -79,7 +88,7 @@ bool established_socket_write(struct established_socket *, struct frame * frame)
 bool established_socket_shutdown(struct established_socket *);
 static inline bool established_socket_is_closed(struct established_socket * this)
 {
-	return (!this->flags.read_connected) || (!this->flags.write_connected);
+	return !(this->flags.read_connected || this->flags.write_connected || this->flags.connecting);
 }
 
 struct frame * get_read_frame_simple(struct established_socket * this);

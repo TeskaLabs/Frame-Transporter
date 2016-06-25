@@ -70,7 +70,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_RAW_DATA)
 	{
-		ck_assert_int_eq(established_sock->read_syserror, 0);
+		ck_assert_int_eq(established_sock->syserror, 0);
 
 		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
 		frame_pool_return(frame);
@@ -82,7 +82,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_STREAM_END)
 	{
-		ck_assert_int_eq(established_sock->read_syserror, 0);
+		ck_assert_int_eq(established_sock->syserror, 0);
 		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
 		established_socket_shutdown(established_sock);
@@ -103,7 +103,8 @@ struct established_socket_cb sock_est_1_sock_cb =
 {
 	.get_read_frame = sock_est_1_on_get_read_frame,
 	.read = sock_est_1_on_read,
-	.state_changed = sock_est_1_on_state_changed
+	.state_changed = sock_est_1_on_state_changed,
+	.error = NULL
 };
 
 bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
@@ -182,7 +183,7 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_RAW_DATA)
 	{
-		ck_assert_int_eq(established_sock->read_syserror, 0);
+		ck_assert_int_eq(established_sock->syserror, 0);
 
 		return false;
 	}
@@ -190,7 +191,7 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_STREAM_END)
 	{
-		ck_assert_int_eq(established_sock->read_syserror, 0);
+		ck_assert_int_eq(established_sock->syserror, 0);
 
 		established_socket_shutdown(established_sock);
 		return false;
@@ -210,7 +211,8 @@ struct established_socket_cb sock_est_2_sock_cb =
 {
 	.get_read_frame = get_read_frame_simple,
 	.read = sock_est_2_on_read,
-	.state_changed = sock_est_2_on_state_changed
+	.state_changed = sock_est_2_on_state_changed,
+	.error = NULL
 };
 
 bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)

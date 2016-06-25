@@ -8,11 +8,10 @@ static inline void established_socket_state_changed(struct established_socket *)
 
 ///
 
-bool established_socket_init_accept(struct established_socket * this, struct established_socket_cb * cbs, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+static bool established_socket_init(struct established_socket * this, struct established_socket_cb * cbs, int fd, struct context * context, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
 {
 	assert(this != NULL);
 	assert(cbs != NULL);
-	assert(listening_socket != NULL);
 
 	// Disable Nagle
 #ifdef TCP_NODELAY
@@ -33,7 +32,8 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 
 	this->data = NULL;
 	this->cbs = cbs;
-	this->context = listening_socket->context;
+	this->context = context;
+	this->syserror = 0;
 	this->read_frame = NULL;
 	this->read_opportunistic = false;
 	this->write_frames = NULL;
@@ -49,15 +49,15 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->flags.write_open = true;
 
 	assert(this->context->ev_loop != NULL);
-	this->established_at = ev_now(this->context->ev_loop);
+	this->created_at = ev_now(this->context->ev_loop);
 	this->read_shutdown_at = NAN;
 
 	memcpy(&this->ai_addr, peer_addr, peer_addr_len);
 	this->ai_addrlen = peer_addr_len;
 
-	this->ai_family = listening_socket->ai_family;
-	this->ai_socktype = listening_socket->ai_socktype;
-	this->ai_protocol = listening_socket->ai_protocol;
+	this->ai_family = ai_family;
+	this->ai_socktype = ai_socktype;
+	this->ai_protocol = ai_protocol;
 
 	ev_io_init(&this->read_watcher, established_socket_on_read, fd, EV_READ);
 	ev_set_priority(&this->read_watcher, -1); // Read has always lower priority than writing
@@ -68,6 +68,29 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->write_watcher.data = this;
 	this->flags.write_ready = false;
 
+	return true;
+}
+
+bool established_socket_init_accept(struct established_socket * this, struct established_socket_cb * cbs, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+{
+	assert(listening_socket != NULL);
+
+	bool ok = established_socket_init(
+		this,
+		cbs,
+		fd,
+		listening_socket->context, 
+		peer_addr, peer_addr_len,
+		listening_socket->ai_family,
+		listening_socket->ai_socktype,
+		listening_socket->ai_protocol
+	);
+	if (!ok) return false;
+
+	this->flags.connecting = false;
+	this->flags.active = false;
+	this->connected_at = this->created_at;
+
 	established_socket_write_start(this);
 	established_socket_state_changed(this);
 
@@ -75,11 +98,58 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 }
 
 
+bool established_socket_init_connect(struct established_socket * this, struct established_socket_cb * cbs, struct context * context, const struct addrinfo * addr)
+{
+	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+	if (fd < 0)
+	{
+		L_ERROR_ERRNO(errno, "socket(%d, %d, %d)", addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+		return false;
+	}
+
+	bool ok = established_socket_init(
+		this,
+		cbs,
+		fd,
+		context, 
+		addr->ai_addr, addr->ai_addrlen,
+		addr->ai_family,
+		addr->ai_socktype,
+		addr->ai_protocol
+	);
+	if (!ok)
+	{
+		return false;
+	}
+
+	this->flags.connecting = true;
+	this->flags.active = true;
+
+	L_DEBUG("Connecting to ...");
+
+	int rc = connect(fd, addr->ai_addr, addr->ai_addrlen);
+	if (rc != 0)
+	{
+		if (errno != EINPROGRESS)
+		{
+			L_ERROR_ERRNO(errno, "connect()");
+			return false;
+		}
+	}
+
+	established_socket_write_start(this);
+	established_socket_state_changed(this);
+
+	return true;
+}
+
 void established_socket_fini(struct established_socket * this)
 {
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
+
+	L_DEBUG("Socket finalized");
 
 	if(this->cbs->close != NULL) this->cbs->close(this);	
 
@@ -124,6 +194,34 @@ void established_socket_fini(struct established_socket * this)
 void established_socket_state_changed(struct established_socket * this)
 {
 	if(this->cbs->state_changed != NULL) this->cbs->state_changed(this);
+}
+
+static void established_socket_error(struct established_socket * this, int syserror)
+{
+	L_DEBUG_ERRNO(syserror, "Socket error");
+
+	this->syserror = syserror;
+
+	if (this->cbs->error != NULL)
+		this->cbs->error(this);
+
+	this->flags.read_connected = false;
+	this->flags.write_connected = false;
+	established_socket_write_stop(this);
+	established_socket_read_stop(this);
+
+	int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
+	if (rc != 0)
+	{
+		switch (errno)
+		{
+			case ENOTCONN:
+				break;
+
+			default:
+				L_WARN_ERRNO(errno, "shutdown() in error handling");
+		}		
+	}
 }
 
 ///
@@ -226,12 +324,14 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 			if (rc < 0)
 			{
 				if (errno == EAGAIN) return;
-				this->read_syserror = errno;
-				L_ERROR_ERRNO_P(errno, "read(%zd)", size_to_read);
+
+				established_socket_error(this, errno);
+				this->syserror = errno;
+				return;
 			}
 			else
 			{
-				this->read_syserror = 0;
+				this->syserror = 0;
 			}
 
 			// Stop futher reads on the socket
@@ -364,7 +464,8 @@ static bool established_socket_write_real(struct established_socket * this)
 				return true; // OS buffer is full, wait for next write event
 			}
 
-			L_ERROR_ERRNO_P(errno, "write(%zd)", size_to_write);
+			established_socket_error(this, errno);
+			this->syserror = errno;
 			return false;
 		}
 
@@ -400,6 +501,35 @@ static bool established_socket_write_real(struct established_socket * this)
 }
 
 
+static bool established_socket_on_connected(struct established_socket * this, struct ev_loop * loop, int fd)
+{
+	int optval = -1;
+	socklen_t optlen = sizeof (optval);
+
+	int rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
+	if (rc != 0)
+	{
+		L_ERROR_ERRNO(errno, "getsockopt(SOL_SOCKET, SO_ERROR) for async connect");
+		return false;
+	}
+
+	if (optval != 0)
+	{
+		L_WARN_ERRNO(optval,"Error when connecting a socket");
+		established_socket_error(this, optval);
+		return false;
+	}
+
+	this->connected_at = ev_now(loop);
+	this->flags.connecting = false;
+	this->cbs->connected(this);
+
+	L_DEBUG("Connected");
+
+	return true;
+}
+
+
 void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct established_socket * this = watcher->data;
@@ -412,6 +542,12 @@ void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, 
 	}
 
 	if ((revents & EV_WRITE) == 0) return;
+
+	if (this->flags.connecting == true)
+	{
+		bool ok = established_socket_on_connected(this, loop, watcher->fd);
+		if (!ok) return;
+	}
 
 	this->flags.write_ready = true;
 
@@ -459,6 +595,8 @@ bool established_socket_shutdown(struct established_socket * this)
 	assert(this != NULL);
 	
 	if (this->flags.write_connected == false) return true;
+
+	//TODO: When .connecting, do shutdown directly ...
 
 	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
 	if (frame == NULL)
