@@ -107,6 +107,9 @@ static inline void frame_flip(struct frame * this)
 	{
 		frame_dvec_flip(&dvec[i]);
 	}
+
+	// Reset also to the original dvec position
+	this->dvec_position = 0;
 }
 
 ///
