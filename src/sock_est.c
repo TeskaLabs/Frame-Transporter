@@ -467,3 +467,11 @@ bool established_socket_shutdown(struct established_socket * this)
 	return established_socket_write(this, frame);
 }
 
+///
+
+struct frame * get_read_frame_simple(struct established_socket * this)
+{
+	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_RAW_DATA);
+	frame_format_simple(frame);
+	return frame;
+}

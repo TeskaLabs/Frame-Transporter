@@ -79,4 +79,6 @@ bool established_socket_write(struct established_socket *, struct frame * frame)
 bool established_socket_shutdown(struct established_socket *);
 
 
+struct frame * get_read_frame_simple(struct established_socket * this);
+
 #endif // __LIBSCCMN_SOCK_EST_H__

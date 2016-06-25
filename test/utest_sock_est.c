@@ -176,18 +176,6 @@ END_TEST
 
 // This test is about incoming stream that terminates after all data are uploaded
 
-struct frame * sock_est_2_on_get_read_frame(struct established_socket * established_sock)
-{
-	struct frame * frame = frame_pool_borrow(&established_sock->context->frame_pool, frame_type_RAW_DATA);
-	ck_assert_ptr_ne(frame, NULL);
-	ck_assert_int_eq(frame->dvec_position, 0);
-	ck_assert_int_eq(frame->dvec_limit, 0);
-
-	frame_format_simple(frame);
-
-	return frame;
-}
-
 bool sock_est_2_on_read(struct established_socket * established_sock, struct frame * frame)
 {
 	ck_assert_int_ne(frame->type, frame_type_FREE);
@@ -220,7 +208,7 @@ void sock_est_2_on_state_changed(struct established_socket * established_sock)
 
 struct established_socket_cb sock_est_2_sock_cb = 
 {
-	.get_read_frame = sock_est_2_on_get_read_frame,
+	.get_read_frame = get_read_frame_simple,
 	.read = sock_est_2_on_read,
 	.state_changed = sock_est_2_on_state_changed
 };
