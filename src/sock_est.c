@@ -100,7 +100,7 @@ void established_socket_fini(struct established_socket * this)
 	size_t cap;
 	if (this->read_frame != NULL)
 	{
-		cap = frame_total_position_to_limit(this->read_frame);
+		cap = frame_total_start_to_position(this->read_frame);
 		frame_pool_return(this->read_frame);
 		this->read_frame = NULL;
 
