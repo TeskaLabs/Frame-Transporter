@@ -1,4 +1,9 @@
-#include "all.h"
+#include <stdlib.h>
+#include <stdbool.h>
+
+#include <libsccmn.h>
+
+///
 
 struct exiting_watcher watcher;
 
