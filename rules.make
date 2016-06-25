@@ -58,7 +58,7 @@ subdirs:
 
 clean:
 	@echo " [RM] in" $(CURDIR)
-	@$(RM) $(BIN) $(LIB) $(CLEAN) $(EXTRACLEAN) *.o
+	@$(RM) $(BIN) $(LIB) $(CLEAN) $(EXTRACLEAN) ${OBJS}
 	@$(foreach dir, $(SUBDIRS) $(CLEANSUBDIRS), $(MAKE) -C $(dir) clean;)
 
 
