@@ -37,12 +37,10 @@ struct listening_socket
 };
 
 bool listening_socket_init(struct listening_socket * , struct listening_socket_cb * cbs, struct context * context, struct addrinfo * rp);
+void listening_socket_fini(struct listening_socket *);
 
 bool listening_socket_start(struct listening_socket *);
 bool listening_socket_stop(struct listening_socket *);
-
-//TODO: Rename to listening_socket_fini()
-void listening_socket_close(struct listening_socket *);
 
 ///
 

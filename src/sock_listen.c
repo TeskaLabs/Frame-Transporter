@@ -105,7 +105,7 @@ error_exit:
 }
 
 
-void listening_socket_close(struct listening_socket * this)
+void listening_socket_fini(struct listening_socket * this)
 {
 	int rc;
 
@@ -124,7 +124,6 @@ void listening_socket_close(struct listening_socket * this)
 		rc = unlink(un->sun_path);
 		if (rc != 0) L_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
 	}
-
 }
 
 
@@ -323,7 +322,7 @@ void listening_socket_chain_del(struct listening_socket_chain * chain)
 	{
 		struct listening_socket_chain * i = chain; 
 		chain = i->next;
-		listening_socket_close(&i->listening_socket);
+		listening_socket_fini(&i->listening_socket);
 		free(i);
 	}
 }

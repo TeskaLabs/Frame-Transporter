@@ -116,7 +116,7 @@ START_TEST(sock_listen_single_utest)
 
 	ck_assert_int_eq(sock.stats.accept_events, 1);
 
-	listening_socket_close(&sock);
+	listening_socket_fini(&sock);
 
 	context_fini(&context);
 }

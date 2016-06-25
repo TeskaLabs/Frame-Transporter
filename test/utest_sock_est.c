@@ -163,7 +163,7 @@ START_TEST(sock_est_1_utest)
 	ok = listening_socket_stop(&listen_sock);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_close(&listen_sock);
+	listening_socket_fini(&listen_sock);
 
 	//TODO: Temporary
 	established_socket_fini(&established_sock);
@@ -269,7 +269,7 @@ START_TEST(sock_est_2_utest)
 	ok = listening_socket_stop(&listen_sock);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_close(&listen_sock);
+	listening_socket_fini(&listen_sock);
 
 	//TODO: Temporary
 	established_socket_fini(&established_sock);
