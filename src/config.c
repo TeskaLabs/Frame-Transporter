@@ -21,7 +21,7 @@ struct libsccmn_config libsccmn_config =
 
 	.fpool_zone_free_timeout = 2.0,
 
-	.heartbeat_interval = 0.1,
+	.heartbeat_interval = 2.0,
 
 	.sock_listen_backlog = 128,
 };
