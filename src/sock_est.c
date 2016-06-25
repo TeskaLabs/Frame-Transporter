@@ -213,19 +213,19 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 
 		struct frame_dvec * frame_dvec = frame_current_dvec(this->read_frame);
 		assert(frame_dvec != NULL);
+
 		size_t size_to_read = frame_dvec->limit - frame_dvec->position;
 		assert(size_to_read > 0);
 
 		ssize_t rc = read(watcher->fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, size_to_read);
 
-		if (rc <= 0)
+		if (rc <= 0) // Handle error situation
 		{
-			// Handle error situation
 			if (rc < 0)
 			{
 				if (errno == EAGAIN) return;
 				this->read_syserror = errno;
-				L_ERROR_ERRNO_P(errno, "read()");
+				L_ERROR_ERRNO_P(errno, "read(%zd)", size_to_read);
 			}
 			else
 			{
@@ -347,11 +347,14 @@ static bool established_socket_write_real(struct established_socket * this)
 		}
 
 		struct frame_dvec * frame_dvec = frame_current_dvec(this->write_frames);
+		assert(frame_dvec != NULL);
 
-		assert(frame_dvec->limit - frame_dvec->position > 0);
-		ssize_t rc = write(this->write_watcher.fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, frame_dvec->limit - frame_dvec->position);
+		size_t size_to_write = frame_dvec->limit - frame_dvec->position;
+		assert(size_to_write > 0);
 
-		if (rc < 0)
+		ssize_t rc = write(this->write_watcher.fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, size_to_write);
+
+		if (rc < 0) // Handle error situation
 		{
 			if (errno == EAGAIN)
 			{
@@ -359,18 +362,25 @@ static bool established_socket_write_real(struct established_socket * this)
 				return true; // OS buffer is full, wait for next write event
 			}
 
-			L_ERROR_ERRNO_P(errno, "write(%zd)", frame_dvec->limit - frame_dvec->position);
+			L_ERROR_ERRNO_P(errno, "write(%zd)", size_to_write);
 			return false;
 		}
 
 		this->stats.write_bytes += rc;
-
-		frame_dvec->position += rc;
-		assert(frame_dvec->position <= frame_dvec->limit);
-		if (frame_dvec->position == frame_dvec->limit)
+		frame_dvec_position_add(frame_dvec, rc);
+		if (frame_dvec->position < frame_dvec->limit)
 		{
-			// Frame has been written completely, iterate to next one
+			// Not all data has been written, wait for next write event
+			this->flags.write_ready = false;
+			return true; 
+		}
+		assert(frame_dvec->position == frame_dvec->limit);
 
+		// Current dvec is filled, move to next one
+		bool ok = frame_next_dvec(this->write_frames);
+		if (!ok)
+		{
+			// All dvecs in the frame have been written
 			struct frame * frame = this->write_frames;
 
 			this->write_frames = frame->next;
@@ -381,13 +391,6 @@ static bool established_socket_write_real(struct established_socket * this)
 			}
 
 			frame_pool_return(frame);
-		}
-
-		else
-		{
-			//We likely exceeded a size of OS output buffer, so now wait for next write event
-			this->flags.write_ready = false;
-			return true; 
 		}
 	}
 
