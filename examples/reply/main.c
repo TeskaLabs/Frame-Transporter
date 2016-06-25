@@ -59,7 +59,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	ok = established_socket_init_accept(established_sock, &sock_est_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
-		ft_list_node_del(new_node, &listen_socks);
+		ft_list_node_del(new_node, &established_socks);
 		return false;
 	}
 
