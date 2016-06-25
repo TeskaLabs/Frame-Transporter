@@ -1,6 +1,5 @@
 #include "all.h"
 
-struct context context;
 struct exiting_watcher watcher;
 
 ///
@@ -61,7 +60,8 @@ int main(int argc, char const *argv[])
 {
 	bool ok;
 	int rc;
-	
+	struct context context;
+
 	logging_set_verbose(true);
 	libsccmn_init();
 	
