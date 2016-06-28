@@ -119,7 +119,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	pair->in_sock.data = pair;
 	pair->in_sock.read_opportunistic = true;
 
-	//TODO: Initialize connection on &pair->out_sock
+	// Initialize connection on the outgoing connection
 	ok = established_socket_init_connect(&pair->out_sock, &sock_est_out_sock_cb, listening_socket->context, target_addr);
 	if (!ok)
 	{
