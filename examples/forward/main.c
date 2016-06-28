@@ -109,6 +109,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 
 	struct est_sock_pair * pair = (struct est_sock_pair *)&new_node->payload;
 
+	// Initialize connection on the incoming connection
 	ok = established_socket_init_accept(&pair->in_sock, &sock_est_in_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
