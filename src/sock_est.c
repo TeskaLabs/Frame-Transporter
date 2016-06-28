@@ -44,13 +44,15 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
 
-	this->flags.read_connected = true;
-	this->flags.write_connected = true;
+	this->flags.read_shutdown = false;
+	this->read_shutdown_at = NAN;
+	this->flags.write_shutdown = false;
+	this->write_shutdown_at = NAN;
 	this->flags.write_open = true;
 
 	assert(this->context->ev_loop != NULL);
 	this->created_at = ev_now(this->context->ev_loop);
-	this->read_shutdown_at = NAN;
+	
 
 	memcpy(&this->ai_addr, peer_addr, peer_addr_len);
 	this->ai_addrlen = peer_addr_len;
@@ -162,8 +164,9 @@ void established_socket_fini(struct established_socket * this)
 	this->read_watcher.fd = -1;
 	this->write_watcher.fd = -1;
 
-	this->flags.read_connected = false;
-	this->flags.write_connected = false;
+	this->flags.read_shutdown = true;
+	this->flags.write_shutdown = true;
+	this->write_shutdown_at = this->read_shutdown_at = ev_now(this->context->ev_loop);
 	this->flags.write_open = false;
 	this->flags.write_ready = false;
 
@@ -205,8 +208,8 @@ static void established_socket_error(struct established_socket * this, int syser
 	if (this->cbs->error != NULL)
 		this->cbs->error(this);
 
-	this->flags.read_connected = false;
-	this->flags.write_connected = false;
+	this->flags.read_shutdown = true;
+	this->flags.write_shutdown = true;
 	established_socket_write_stop(this);
 	established_socket_read_stop(this);
 
@@ -236,7 +239,7 @@ bool established_socket_read_start(struct established_socket * this)
 		return false;
 	}
 
-	if (this->flags.read_connected == false)
+	if (this->flags.read_shutdown == true)
 	{
 		L_WARN("Requesting reading on the socket that has been shut down");
 		return false;
@@ -337,7 +340,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 			// Stop futher reads on the socket
 			established_socket_read_stop(this);
 			this->read_shutdown_at = ev_now(this->context->ev_loop);
-			this->flags.read_connected = false;
+			this->flags.read_shutdown = true;
 
 			//TODO: Uplink read frame, if there is one
 
@@ -440,7 +443,8 @@ static bool established_socket_write_real(struct established_socket * this)
 			if (this->write_frames != NULL) L_ERROR("There are data frames in the write queue after end-of-stream.");
 
 			assert(this->flags.write_open == false);
-			this->flags.write_connected = false;
+			this->write_shutdown_at = ev_now(this->context->ev_loop);
+			this->flags.write_shutdown = true;
 
 			int rc = shutdown(this->write_watcher.fd, SHUT_WR);
 			if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
@@ -593,10 +597,28 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 bool established_socket_shutdown(struct established_socket * this)
 {
 	assert(this != NULL);
-	
-	if (this->flags.write_connected == false) return true;
 
-	//TODO: When .connecting, do shutdown directly ...
+	// When .connecting, do shutdown directly ...
+	if (this->flags.connecting)
+	{
+		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
+		if (rc != 0)
+		{
+			switch (errno)
+			{
+				case ENOTCONN:
+					break;
+
+				default:
+					L_WARN_ERRNO(errno, "shutdown() in error handling");
+					return false;
+			}		
+		}
+		return true;
+	}
+	
+	if (this->flags.write_shutdown == true) return true;
+	if (this->flags.write_open == false) return true;
 
 	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
 	if (frame == NULL)
@@ -604,7 +626,6 @@ bool established_socket_shutdown(struct established_socket * this)
 		L_WARN("Out of frames when preparing end of stream (read)");
 		return false;
 	}
-
 	frame_format_simple(frame);
 
 	return established_socket_write(this, frame);

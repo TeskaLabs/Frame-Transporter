@@ -95,7 +95,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 void sock_est_1_on_state_changed(struct established_socket * established_sock)
 {
-	if (established_sock->flags.read_connected == false)
+	if (established_sock->flags.read_shutdown == true)
 		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
 }
 
@@ -203,7 +203,7 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 
 void sock_est_2_on_state_changed(struct established_socket * established_sock)
 {
-	if (established_sock->flags.read_connected == false)
+	if (established_sock->flags.read_shutdown == true)
 		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
 }
 

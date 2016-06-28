@@ -26,8 +26,8 @@ struct established_socket
 
 	struct
 	{
-		unsigned int read_connected : 1;  // Socket is read-wise connected
-		unsigned int write_connected : 1; // Socket is write-wise connected
+		unsigned int read_shutdown : 1;  // Socket is read-wise connected
+		unsigned int write_shutdown : 1; // Socket is write-wise connected
 		unsigned int write_open : 1;      // Write queue is open for adding new frames
 		unsigned int write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
 		unsigned int connecting: 1;
@@ -46,6 +46,7 @@ struct established_socket
 	ev_tstamp created_at;
 	ev_tstamp connected_at;
 	ev_tstamp read_shutdown_at;
+	ev_tstamp write_shutdown_at;
 
 	int syserror;
 
@@ -86,9 +87,9 @@ bool established_socket_write_stop(struct established_socket *);
 bool established_socket_write(struct established_socket *, struct frame * frame);
 
 bool established_socket_shutdown(struct established_socket *);
-static inline bool established_socket_is_closed(struct established_socket * this)
+static inline bool established_socket_is_shutdown(struct established_socket * this)
 {
-	return !(this->flags.read_connected || this->flags.write_connected || this->flags.connecting);
+	return (this->flags.write_shutdown && this->flags.write_shutdown);
 }
 
 struct frame * get_read_frame_simple(struct established_socket * this);
