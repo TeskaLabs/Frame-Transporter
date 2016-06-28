@@ -187,11 +187,11 @@ restart:
 	for (struct ft_list_node * node = established_sock_pairs.head; node != NULL; node = node->next)
 	{
 		struct est_sock_pair * pair = (struct est_sock_pair *)&node->payload;
-		if (established_socket_is_closed(&pair->in_sock) || established_socket_is_closed(&pair->out_sock))
+		if (established_socket_is_shutdown(&pair->in_sock) || established_socket_is_shutdown(&pair->out_sock))
 		{
 			// L_DEBUG("Removing socket pair: %c %c",
-			// 	established_socket_is_closed(&pair->in_sock) ? '-' : 'O',
-			// 	established_socket_is_closed(&pair->out_sock) ? '-' : 'O'
+			// 	established_socket_is_shutdown(&pair->in_sock) ? '-' : 'O',
+			// 	established_socket_is_shutdown(&pair->out_sock) ? '-' : 'O'
 			// );
 			ft_list_remove(&established_sock_pairs, node);
 			goto restart;

@@ -127,7 +127,7 @@ static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 restart:
 	for (struct ft_list_node * node = established_socks.head; node != NULL; node = node->next)
 	{
-		if (established_socket_is_closed((struct established_socket *)node->payload))
+		if (established_socket_is_shutdown((struct established_socket *)node->payload))
 		{
 			ft_list_remove(&established_socks, node);
 			goto restart;
