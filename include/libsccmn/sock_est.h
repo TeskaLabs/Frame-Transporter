@@ -30,8 +30,8 @@ struct established_socket
 		unsigned int write_shutdown : 1; // Socket is write-wise connected
 		unsigned int write_open : 1;      // Write queue is open for adding new frames
 		unsigned int write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
-		unsigned int connecting: 1;
-		unsigned int active: 1;
+		unsigned int connecting : 1;
+		unsigned int active : 1;
 	} flags;
 
 	int ai_family;
