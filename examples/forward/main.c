@@ -117,7 +117,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 		return false;
 	}
 	pair->in_sock.data = pair;
-	pair->in_sock.read_opportunistic = true;
+	established_socket_set_read_partial(&pair->in_sock, true);
 
 	// Initialize connection on the outgoing connection
 	ok = established_socket_init_connect(&pair->out_sock, &sock_est_out_sock_cb, listening_socket->context, target_addr);
@@ -127,7 +127,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 		return false;
 	}
 	pair->out_sock.data = pair;
-	pair->out_sock.read_opportunistic = true;
+	established_socket_set_read_partial(&pair->out_sock, true);
 
 	ft_list_add(&established_sock_pairs, new_node);
 

@@ -35,7 +35,6 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->context = context;
 	this->syserror = 0;
 	this->read_frame = NULL;
-	this->read_opportunistic = false;
 	this->write_frames = NULL;
 	this->write_frame_last = &this->write_frames;
 	this->stats.read_events = 0;
@@ -43,7 +42,7 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->stats.direct_write_events = 0;
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
-
+	this->flags.read_partial = false;
 	this->flags.read_shutdown = false;
 	this->read_shutdown_at = NAN;
 	this->flags.write_shutdown = false;
@@ -364,7 +363,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 		if (frame_dvec->position < frame_dvec->limit)
 		{
 			// Not all expected data arrived
-			if (this->read_opportunistic)
+			if (this->flags.read_partial == true)
 			{
 				bool upstreamed = this->cbs->read(this, this->read_frame);
 				if (upstreamed) this->read_frame = NULL;				
@@ -382,7 +381,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 			if (upstreamed) this->read_frame = NULL;
 			if (!ev_is_active(&this->read_watcher)) return; // If watcher is stopped, break reading
 		}
-		else if (this->read_opportunistic)
+		else if (this->flags.read_partial == true)
 		{
 			bool upstreamed = this->cbs->read(this, this->read_frame);
 			if (upstreamed) this->read_frame = NULL;

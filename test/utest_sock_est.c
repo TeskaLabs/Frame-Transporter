@@ -222,7 +222,7 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 	ok = established_socket_init_accept(&established_sock, &sock_est_2_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
-	established_sock.read_opportunistic = true;
+	established_socket_set_read_partial(&established_sock, true);
 
 	ok = established_socket_read_start(&established_sock);
 	ck_assert_int_eq(ok, true);

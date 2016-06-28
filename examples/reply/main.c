@@ -65,7 +65,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	}
 
 	// Start read on the socket
-	established_sock->read_opportunistic = true;
+	established_socket_set_read_partial(established_sock, true);
 	established_socket_read_start(established_sock);
 
 	ft_list_add(&established_socks, new_node);

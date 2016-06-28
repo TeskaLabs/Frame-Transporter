@@ -32,6 +32,7 @@ struct established_socket
 		unsigned int write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
 		unsigned int connecting : 1;
 		unsigned int active : 1;
+		unsigned int read_partial : 1; // When yes, read() callback is triggered for any incoming data
 	} flags;
 
 	int ai_family;
@@ -53,7 +54,6 @@ struct established_socket
 	// Input
 	struct ev_io read_watcher;
 	struct frame * read_frame;
-	size_t read_opportunistic; // When yes, read() callback is triggered for any incoming data
 
 	// Output
 	struct ev_io write_watcher;
@@ -91,6 +91,14 @@ static inline bool established_socket_is_shutdown(struct established_socket * th
 {
 	return (this->flags.write_shutdown && this->flags.write_shutdown);
 }
+
+static inline void established_socket_set_read_partial(struct established_socket * this, bool read_partial)
+{
+	assert(this != NULL);
+	this->flags.read_partial = read_partial;
+}
+
+//
 
 struct frame * get_read_frame_simple(struct established_socket * this);
 
