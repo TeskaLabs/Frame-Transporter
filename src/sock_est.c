@@ -374,7 +374,10 @@ static void established_socket_read_shutdown(struct established_socket * this)
 	this->read_shutdown_at = ev_now(this->context->ev_loop);
 	this->flags.read_shutdown = true;
 
-	//TODO: Uplink read frame, if there is one
+	// Uplink read frame, if there is one (this can result in a partial frame but that's ok)
+	bool upstreamed = this->cbs->read(this, this->read_frame);
+	if (!upstreamed) frame_pool_return(this->read_frame);
+	this->read_frame = NULL;
 
 	// Uplink end-of-stream (reading)
 	bool ok = established_socket_uplink_read_stream_end(this);
