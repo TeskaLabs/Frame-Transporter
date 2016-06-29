@@ -339,8 +339,19 @@ bool established_socket_read_stop(struct established_socket * this)
 
 static bool established_socket_uplink_read_stream_end(struct established_socket * this)
 {
-	//TODO: Recycle this->read_frame if there are no data
-	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
+	struct frame * frame = NULL;
+	if ((this->read_frame != NULL) && (frame_total_start_to_position(this->read_frame) == 0))
+	{
+		// Recycle this->read_frame if there are no data read
+		frame = this->read_frame;
+		this->read_frame = NULL;
+	}
+
+	if (frame == NULL)
+	{
+		frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
+	}
+
 	if (frame == NULL)
 	{
 		L_WARN("Out of frames when preparing end of stream (read)");
