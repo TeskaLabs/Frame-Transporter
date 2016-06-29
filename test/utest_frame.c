@@ -116,7 +116,7 @@ START_TEST(frame_flip_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct frame_dvec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	frame_dvec_set_position(dvec, 333);
+	frame_dvec_position_set(dvec, 333);
 	pos = frame_total_start_to_position(&frame);
 	ck_assert_int_eq(pos, 333);
 

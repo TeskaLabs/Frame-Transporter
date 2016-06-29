@@ -50,7 +50,7 @@ static inline void frame_dvec_position_add(struct frame_dvec * this, size_t posi
 	this->position += position_delta;
 }
 
-static inline void frame_dvec_set_position(struct frame_dvec * this, size_t position)
+static inline void frame_dvec_position_set(struct frame_dvec * this, size_t position)
 {
 	assert(this->position <= this->limit);
 	assert(this->position <= this->capacity);
