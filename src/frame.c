@@ -77,11 +77,15 @@ struct frame_dvec * frame_add_dvec(struct frame * this, size_t offset, size_t ca
 	return dvec;
 }
 
+void frame_format_empty(struct frame * this)
+{
+	this->dvec_limit = 0;
+	this->dvec_position = 0;	
+}
 
 void frame_format_simple(struct frame * this)
 {
-	this->dvec_limit = 0;
-	this->dvec_position = 0;
+	frame_format_empty(this);
 	frame_add_dvec(this, 0, this->capacity - sizeof(struct frame_dvec));
 }
 

@@ -167,6 +167,104 @@ START_TEST(frame_add_dvec_utest)
 END_TEST
 
 
+START_TEST(frame_format_empty_utest)
+{
+	int rc;
+	size_t x;
+	struct frame frame;
+	uint8_t * frame_data;
+	struct frame_dvec * dvec;
+
+	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
+	ck_assert_int_eq(rc, 0);
+
+	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	ck_assert_int_eq(frame.dvec_position, 0);
+	ck_assert_int_eq(frame.dvec_limit, 0);
+
+	frame_format_empty(&frame);
+	ck_assert_int_eq(frame.dvec_position, 0);
+	ck_assert_int_eq(frame.dvec_limit, 0);
+
+	dvec = frame_add_dvec(&frame, 0, 30);
+	ck_assert_ptr_ne(dvec, NULL);
+
+	ck_assert_int_eq(frame.dvec_position, 0);
+	ck_assert_int_eq(frame.dvec_limit, 1);
+
+	frame_format_empty(&frame);
+	ck_assert_int_eq(frame.dvec_position, 0);
+	ck_assert_int_eq(frame.dvec_limit, 0);
+
+	x = frame_total_start_to_position(&frame);
+	ck_assert_int_eq(x, 0);
+
+	x = frame_total_position_to_limit(&frame);
+	ck_assert_int_eq(x, 0);
+}
+END_TEST
+
+
+START_TEST(frame_format_simple_utest)
+{
+	int rc;
+	size_t x;
+	struct frame frame;
+	uint8_t * frame_data;
+	struct frame_dvec * dvec;
+
+	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
+	ck_assert_int_eq(rc, 0);
+
+	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	ck_assert_int_eq(frame.dvec_position, 0);
+	ck_assert_int_eq(frame.dvec_limit, 0);
+
+	frame_format_simple(&frame);
+	ck_assert_int_eq(frame.dvec_position, 0);
+	ck_assert_int_eq(frame.dvec_limit, 1);
+
+	x = frame_total_start_to_position(&frame);
+	ck_assert_int_eq(x, 0);
+
+	x = frame_total_position_to_limit(&frame);
+	ck_assert_int_eq(x, 4056);
+
+	x = frame_currect_dvec_size(&frame);
+	ck_assert_int_eq(x, 4056);
+
+	dvec = frame_current_dvec(&frame);
+	ck_assert_ptr_ne(dvec, NULL);
+
+	frame_dvec_position_set(dvec, 10);
+
+	x = frame_currect_dvec_size(&frame);
+	ck_assert_int_eq(x, 4046);
+
+	x = frame_total_start_to_position(&frame);
+	ck_assert_int_eq(x, 10);
+
+	frame_dvec_position_add(dvec, 33);
+
+	x = frame_total_start_to_position(&frame);
+	ck_assert_int_eq(x, 43);
+
+	x = frame_currect_dvec_size(&frame);
+	ck_assert_int_eq(x, 4013);
+
+	frame_flip(&frame);
+
+	x = frame_total_start_to_position(&frame);
+	ck_assert_int_eq(x, 0);
+
+	x = frame_currect_dvec_size(&frame);
+	ck_assert_int_eq(x, 43);
+
+	x = frame_total_position_to_limit(&frame);
+	ck_assert_int_eq(x, 43);
+}
+END_TEST
+
 ///
 
 Suite * frame_tsuite(void)
@@ -179,6 +277,11 @@ Suite * frame_tsuite(void)
 	tcase_add_test(tc, frame_core_utest);
 	tcase_add_test(tc, frame_flip_utest);
 	tcase_add_test(tc, frame_add_dvec_utest);
+
+	tc = tcase_create("frame-format");
+	suite_add_tcase(s, tc);
+	tcase_add_test(tc, frame_format_empty_utest);
+	tcase_add_test(tc, frame_format_simple_utest);
 
 	return s;
 }

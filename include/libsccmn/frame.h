@@ -94,6 +94,7 @@ struct frame
 size_t frame_total_start_to_position(struct frame *);
 size_t frame_total_position_to_limit(struct frame *);
 
+void frame_format_empty(struct frame *);
 void frame_format_simple(struct frame *);
 
 //This is diagnostics function

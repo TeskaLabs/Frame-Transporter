@@ -11,6 +11,4 @@
 - context SIGHUP (maybe done)
 - context SIGTERM
 - context SIGINT
-- frame_flip
-- frame_currect_dvec_size
 - cols/list
