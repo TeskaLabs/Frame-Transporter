@@ -6,6 +6,10 @@ static void established_socket_on_read(struct ev_loop * loop, struct ev_io * wat
 static void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static inline void established_socket_state_changed(struct established_socket *);
 
+static void established_socket_on_connect(struct ev_loop * loop, struct ev_io * watcher, int revents);
+
+static void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * watcher, int revents);
+
 ///
 
 static bool established_socket_init(struct established_socket * this, struct established_socket_cb * cbs, int fd, struct context * context, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
@@ -48,6 +52,8 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->flags.write_shutdown = false;
 	this->write_shutdown_at = NAN;
 	this->flags.write_open = true;
+	this->flags.ssl_status = 0;	
+	this->ssl = NULL;
 
 	assert(this->context->ev_loop != NULL);
 	this->created_at = ev_now(this->context->ev_loop);
@@ -60,11 +66,11 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->ai_socktype = ai_socktype;
 	this->ai_protocol = ai_protocol;
 
-	ev_io_init(&this->read_watcher, established_socket_on_read, fd, EV_READ);
+	ev_io_init(&this->read_watcher, NULL, fd, EV_READ);
 	ev_set_priority(&this->read_watcher, -1); // Read has always lower priority than writing
 	this->read_watcher.data = this;
 
-	ev_io_init(&this->write_watcher, established_socket_on_write, fd, EV_WRITE);
+	ev_io_init(&this->write_watcher, NULL, fd, EV_WRITE);
 	ev_set_priority(&this->write_watcher, 1);
 	this->write_watcher.data = this;
 	this->flags.write_ready = false;
@@ -91,6 +97,9 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	this->flags.connecting = false;
 	this->flags.active = false;
 	this->connected_at = this->created_at;
+
+	ev_set_cb(&this->write_watcher, established_socket_on_write);
+	ev_set_cb(&this->read_watcher, established_socket_on_read);
 
 	established_socket_write_start(this);
 	established_socket_state_changed(this);
@@ -138,8 +147,12 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 		}
 	}
 
-	established_socket_write_start(this);
 	established_socket_state_changed(this);
+
+	ev_set_cb(&this->write_watcher, established_socket_on_connect);
+	ev_set_cb(&this->read_watcher, established_socket_on_connect);
+
+	ev_io_start(this->context->ev_loop, &this->write_watcher);
 
 	return true;
 }
@@ -189,6 +202,12 @@ void established_socket_fini(struct established_socket * this)
 		frame_pool_return(frame);
 	}
 	if (cap > 0) L_WARN("Lost %zu bytes in write buffer of the socket", cap);
+
+	if (this->ssl != NULL)
+	{
+		SSL_free(this->ssl);
+		this->ssl = NULL;
+	}
 }
 
 ///
@@ -198,9 +217,9 @@ void established_socket_state_changed(struct established_socket * this)
 	if(this->cbs->state_changed != NULL) this->cbs->state_changed(this);
 }
 
-static void established_socket_error(struct established_socket * this, int syserror)
+static void established_socket_error(struct established_socket * this, int syserror, const char * when)
 {
-	L_DEBUG_ERRNO(syserror, "Socket error");
+	L_WARN_ERRNO(syserror, "Socket error when %s", when);
 
 	this->syserror = syserror;
 
@@ -228,15 +247,73 @@ static void established_socket_error(struct established_socket * this, int syser
 
 ///
 
+void established_socket_on_connect(struct ev_loop * loop, struct ev_io * watcher, int revents)
+{
+	struct established_socket * this = watcher->data;
+	assert(this != NULL);
+	assert(this->flags.connecting == true);
+
+	if (revents & EV_ERROR)
+	{
+		established_socket_error(this, ECONNRESET, "connecting (libev)");
+		return;
+	}
+
+	int optval = -1;
+	socklen_t optlen = sizeof (optval);
+
+	int rc = getsockopt(this->write_watcher.fd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
+	if (rc != 0)
+	{
+		L_ERROR_ERRNO(errno, "getsockopt(SOL_SOCKET, SO_ERROR) for async connect");
+		return;
+	}
+
+	if (optval != 0)
+	{
+		established_socket_error(this, optval, "connecting");
+		return;
+	}
+
+	L_INFO("Connected on TCP layer");
+
+	if (this->ssl != NULL)
+	{
+		// Initialize SSL handshake
+		ev_set_cb(&this->read_watcher, established_socket_on_ssl_handshake);
+		ev_set_cb(&this->write_watcher, established_socket_on_ssl_handshake);
+		ev_io_start(this->context->ev_loop, &this->read_watcher);
+		ev_io_start(this->context->ev_loop, &this->write_watcher);
+		
+		this->flags.ssl_status = 1;
+
+		// Save one loop
+		ev_invoke(loop, &this->write_watcher, EV_WRITE);
+
+		L_INFO("SSL handshake started");
+		return;
+	}
+
+	// Wire I/O event callbacks
+	ev_set_cb(&this->write_watcher, established_socket_on_write);
+	ev_io_stop(this->context->ev_loop, &this->read_watcher);
+	ev_set_cb(&this->read_watcher, established_socket_on_read);
+
+	this->connected_at = ev_now(loop);
+	this->flags.connecting = false;
+	if (this->cbs->connected != NULL) this->cbs->connected(this);
+
+	established_socket_state_changed(this);
+
+	return;
+}
+
+///
+
 bool established_socket_read_start(struct established_socket * this)
 {
 	assert(this != NULL);
-
-	if (this->read_watcher.fd < 0)
-	{
-		L_WARN("Requesting reading on the socket that is not open!");
-		return false;
-	}
+	assert(this->read_watcher.fd >= 0);
 
 	if (this->flags.read_shutdown == true)
 	{
@@ -252,12 +329,7 @@ bool established_socket_read_start(struct established_socket * this)
 bool established_socket_read_stop(struct established_socket * this)
 {
 	assert(this != NULL);
-
-	if (this->read_watcher.fd < 0)
-	{
-		L_WARN("Reading (stop) on socket that is not open!");
-		return false;
-	}
+	assert(this->read_watcher.fd >= 0);
 
 	ev_io_stop(this->context->ev_loop, &this->read_watcher);
 	return true;
@@ -283,17 +355,40 @@ static bool established_socket_uplink_read_stream_end(struct established_socket 
 }
 
 
+static void established_socket_read_shutdown(struct established_socket * this)
+{
+	// Stop futher reads on the socket
+	established_socket_read_stop(this);
+	this->read_shutdown_at = ev_now(this->context->ev_loop);
+	this->flags.read_shutdown = true;
+
+	//TODO: Uplink read frame, if there is one
+
+	// Uplink end-of-stream (reading)
+	bool ok = established_socket_uplink_read_stream_end(this);
+	if (!ok)
+	{
+		L_WARN("Failed to submit end-of-stream frame");
+		//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+		return;
+	}
+
+	established_socket_state_changed(this);			
+}
+
 void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	bool ok;
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
+	assert(this->flags.connecting == false);
+	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
 
 	this->stats.read_events += 1;
 
 	if (revents & EV_ERROR)
 	{
-		L_ERROR("Established socket (read) got error event");
+		established_socket_error(this, ECONNRESET, "reading (libev)");
 		return;
 	}
 
@@ -319,44 +414,96 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 		size_t size_to_read = frame_dvec->limit - frame_dvec->position;
 		assert(size_to_read > 0);
 
-		ssize_t rc = read(watcher->fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, size_to_read);
+		void * p_to_read = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position;
 
-		if (rc <= 0) // Handle error situation
+		ssize_t rc;
+
+		if (this->ssl == NULL)
 		{
-			if (rc < 0)
-			{
-				if (errno == EAGAIN) return;
+			rc = read(watcher->fd, p_to_read, size_to_read);
 
-				established_socket_error(this, errno);
-				this->syserror = errno;
+			if (rc <= 0) // Handle error situation
+			{
+				if (rc < 0)
+				{
+					if (errno == EAGAIN) return;
+
+					established_socket_error(this, errno, "reading");
+				}
+				else
+				{
+					L_DEBUG("Peer closed a connection");
+					this->syserror = 0;
+				}
+
+				established_socket_read_shutdown(this);
 				return;
 			}
-			else
-			{
-				this->syserror = 0;
-			}
-
-			// Stop futher reads on the socket
-			established_socket_read_stop(this);
-			this->read_shutdown_at = ev_now(this->context->ev_loop);
-			this->flags.read_shutdown = true;
-
-			//TODO: Uplink read frame, if there is one
-
-			// Uplink end-of-stream (reading)
-			ok = established_socket_uplink_read_stream_end(this);
-			if (!ok)
-			{
-				L_WARN("Failed to submit end-of-stream frame");
-				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
-				return;
-			}
-
-			established_socket_state_changed(this);		
-
-			return;		
 		}
 
+		else
+		{
+			try_ssl_read_again:
+			rc = SSL_read(this->ssl, p_to_read, size_to_read);
+			if (rc <= 0)
+			{
+				int errno_read = errno;
+				int ssl_err = SSL_get_error(this->ssl, rc);
+				switch (ssl_err)
+				{
+					case SSL_ERROR_WANT_READ:
+						//TODO: This is not correct ...
+						ev_io_stop(this->context->ev_loop, &this->write_watcher);
+						ev_io_start(this->context->ev_loop, &this->read_watcher);
+						return;
+
+					case SSL_ERROR_WANT_WRITE:
+						if (this->flags.write_ready == true)
+						{
+							this->flags.write_ready = false;
+							goto try_ssl_read_again;
+						}
+						//TODO: This is not correct ...
+						ev_io_start(this->context->ev_loop, &this->write_watcher);
+						ev_io_stop(this->context->ev_loop, &this->read_watcher);
+						return;
+
+					case SSL_ERROR_ZERO_RETURN:
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (zero ret)");
+						established_socket_read_shutdown(this);
+						return;
+
+					case SSL_ERROR_SYSCALL:
+						if ((rc == 0) && (errno_read == 0))
+						{
+							// This is a quite standard way how SSL connection is closed (by peer)
+							L_DEBUG("Peer closed a connection");
+							this->syserror = 0;
+						}
+						else
+						{
+							established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (syscall)");
+						}
+						established_socket_read_shutdown(this);
+						return;
+
+					case SSL_ERROR_SSL:
+						L_ERROR_OPENSSL("SSL error during read");
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (SSL error)");
+						established_socket_read_shutdown(this);
+						return;
+
+					default:
+						L_WARN_P("Unexpected error %d  during read, closing", ssl_err);
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (unknown)");
+						established_socket_read_shutdown(this);
+						return;
+
+				}
+			}
+		}
+
+		assert(rc > 0);
 		this->stats.read_bytes += rc;
 		frame_dvec_position_add(frame_dvec, rc);
 
@@ -366,7 +513,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 			if (this->flags.read_partial == true)
 			{
 				bool upstreamed = this->cbs->read(this, this->read_frame);
-				if (upstreamed) this->read_frame = NULL;				
+				if (upstreamed) this->read_frame = NULL;
 			}
 			return;
 		}
@@ -395,12 +542,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 bool established_socket_write_start(struct established_socket * this)
 {
 	assert(this != NULL);
-
-	if (this->read_watcher.fd < 0)
-	{
-		L_WARN("Writing on socket that is not open!");
-		return false;
-	}
+	assert(this->write_watcher.fd >= 0);
 
 	ev_io_start(this->context->ev_loop, &this->write_watcher);
 	return true;
@@ -410,12 +552,7 @@ bool established_socket_write_start(struct established_socket * this)
 bool established_socket_write_stop(struct established_socket * this)
 {
 	assert(this != NULL);
-
-	if (this->read_watcher.fd < 0)
-	{
-		L_WARN("Writing (stop) on socket that is not open!");
-		return false;
-	}
+	assert(this->write_watcher.fd >= 0);
 
 	ev_io_stop(this->context->ev_loop, &this->write_watcher);
 	return true;
@@ -428,6 +565,8 @@ static bool established_socket_write_real(struct established_socket * this)
 {
 	assert(this != NULL);
 	assert(this->flags.write_ready == true);
+	assert(this->flags.connecting == false);
+	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
 
 	this->stats.write_events += 1;
 
@@ -457,21 +596,43 @@ static bool established_socket_write_real(struct established_socket * this)
 		size_t size_to_write = frame_dvec->limit - frame_dvec->position;
 		assert(size_to_write > 0);
 
-		ssize_t rc = write(this->write_watcher.fd, frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position, size_to_write);
+		const void * p_to_write = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position;
 
-		if (rc < 0) // Handle error situation
+		ssize_t rc;
+
+		if (this->ssl == NULL)
 		{
-			if (errno == EAGAIN)
+			rc = write(this->write_watcher.fd, p_to_write, size_to_write);
+			if (rc < 0) // Handle error situation
 			{
-				this->flags.write_ready = false;
-				return true; // OS buffer is full, wait for next write event
-			}
+				if (errno == EAGAIN)
+				{
+					this->flags.write_ready = false;
+					return true; // OS buffer is full, wait for next write event
+				}
 
-			established_socket_error(this, errno);
-			this->syserror = errno;
-			return false;
+				established_socket_error(this, errno, "writing");
+				return false;
+			}
+			else if (rc == 0)
+			{
+				established_socket_error(this, ECONNRESET, "writing");
+				return false;
+			}
 		}
 
+		else
+		{
+			rc = SSL_write(this->ssl, p_to_write, size_to_write);
+			if (rc <= 0)
+			{
+				//TODO: This is temporary, handle all nasty SSL return states
+				established_socket_error(this, ECONNRESET, "writing (SSL)");
+				return false;
+			}
+		}
+
+		assert(rc > 0);
 		this->stats.write_bytes += rc;
 		frame_dvec_position_add(frame_dvec, rc);
 		if (frame_dvec->position < frame_dvec->limit)
@@ -504,56 +665,21 @@ static bool established_socket_write_real(struct established_socket * this)
 }
 
 
-static bool established_socket_on_connected(struct established_socket * this, struct ev_loop * loop, int fd)
-{
-	int optval = -1;
-	socklen_t optlen = sizeof (optval);
-
-	int rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
-	if (rc != 0)
-	{
-		L_ERROR_ERRNO(errno, "getsockopt(SOL_SOCKET, SO_ERROR) for async connect");
-		return false;
-	}
-
-	if (optval != 0)
-	{
-		L_WARN_ERRNO(optval,"Error when connecting a socket");
-		established_socket_error(this, optval);
-		return false;
-	}
-
-	this->connected_at = ev_now(loop);
-	this->flags.connecting = false;
-	this->cbs->connected(this);
-
-	L_DEBUG("Connected");
-
-	return true;
-}
-
-
 void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
+	assert(this->flags.connecting == false);
 
 	if (revents & EV_ERROR)
 	{
-		L_ERROR("Established socket (write) got error event");
+		established_socket_error(this, ECONNRESET, "writing (libev)");
 		return;
 	}
 
 	if ((revents & EV_WRITE) == 0) return;
 
-	if (this->flags.connecting == true)
-	{
-		bool ok = established_socket_on_connected(this, loop, watcher->fd);
-		if (!ok) return;
-	}
-
 	this->flags.write_ready = true;
-
 	bool start = established_socket_write_real(this);
 	if (!start) ev_io_stop(this->context->ev_loop, &this->write_watcher);
 }
@@ -628,6 +754,101 @@ bool established_socket_shutdown(struct established_socket * this)
 	frame_format_simple(frame);
 
 	return established_socket_write(this, frame);
+}
+
+///
+
+bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ctx)
+{
+	assert(this != NULL);
+	if (this->ssl != NULL)
+	{
+		L_WARN("SSL already enabled on the socket");
+		return false;
+	}
+	
+	this->ssl = SSL_new(ctx);
+	if (this->ssl == NULL)
+	{
+		L_WARN_OPENSSL("established_socket_ssl_enable:SSL_new");
+		return false;
+	}
+
+	// Link SSL with socket
+	int rc = SSL_set_fd(this->ssl, this->write_watcher.fd);
+	if (rc != 1)
+	{
+		L_WARN_OPENSSL("established_socket_ssl_enable:SSL_set_fd");
+		return false;
+	}
+
+	return true;
+}
+
+
+void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * watcher, int revents)
+{
+	struct established_socket * this = watcher->data;
+	assert(this != NULL);
+
+	int rc;
+
+	assert(this->flags.ssl_status == 1);
+
+	rc = SSL_connect(this->ssl);
+	if (rc == 1) // Handshake is successfully completed
+	{
+		// Wire I/O event callbacks
+		ev_set_cb(&this->read_watcher, established_socket_on_read);
+		ev_io_stop(this->context->ev_loop, &this->read_watcher);
+		ev_set_cb(&this->write_watcher, established_socket_on_write);
+		ev_io_start(this->context->ev_loop, &this->write_watcher);
+
+		this->connected_at = ev_now(loop);
+		this->flags.connecting = false;
+		this->flags.ssl_status = 2;
+
+		if (this->cbs->connected != NULL) this->cbs->connected(this);
+		established_socket_state_changed(this);
+
+		L_INFO("Connected on SSL layer");
+		return;
+	}
+
+	int errno_con = errno;
+	int ssl_err = SSL_get_error(this->ssl, rc);
+	switch (ssl_err)
+	{
+		case SSL_ERROR_WANT_READ:
+			ev_io_stop(this->context->ev_loop, &this->write_watcher);
+			ev_io_start(this->context->ev_loop, &this->read_watcher);
+			return;
+
+		case SSL_ERROR_WANT_WRITE:
+			ev_io_start(this->context->ev_loop, &this->write_watcher);
+			ev_io_stop(this->context->ev_loop, &this->read_watcher);
+			return;
+
+		case SSL_ERROR_ZERO_RETURN:
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (zero ret)");
+			return;
+
+		case SSL_ERROR_SYSCALL:
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (syscall)");
+			return;
+
+		case SSL_ERROR_SSL:
+			L_ERROR_OPENSSL("SSL error during handshake");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (SSL error)");
+			return;
+
+		default:
+			L_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (unknown)");
+			return;
+
+	}
+
 }
 
 ///

@@ -26,6 +26,46 @@ static bool resolve(struct addrinfo **res, const char * host, const char * port)
     return true;
 }
 
+#define READ 0
+#define WRITE 1
+
+pid_t popen2(const char *command, int *infp, int *outfp)
+{
+    int p_stdin[2], p_stdout[2];
+    pid_t pid;
+
+    if (pipe(p_stdin) != 0 || pipe(p_stdout) != 0)
+        return -1;
+
+    pid = fork();
+
+    if (pid < 0)
+        return pid;
+    else if (pid == 0)
+    {
+        close(p_stdin[WRITE]);
+        dup2(p_stdin[READ], READ);
+        close(p_stdout[READ]);
+        dup2(p_stdout[WRITE], WRITE);
+
+        execl("/bin/sh", "sh", "-c", command, NULL);
+        perror("execl");
+        exit(1);
+    }
+
+    if (infp == NULL)
+        close(p_stdin[WRITE]);
+    else
+        *infp = p_stdin[WRITE];
+
+    if (outfp == NULL)
+        close(p_stdout[READ]);
+    else
+        *outfp = p_stdout[READ];
+
+    return pid;
+}
+
 ////
 
 struct established_socket established_sock;
@@ -282,6 +322,120 @@ END_TEST
 
 ///
 
+void sock_est_ssl_1_on_connected(struct established_socket * this)
+{
+	ck_assert_int_eq(this->flags.ssl_status, 2);
+	ck_assert_int_eq(this->flags.connecting, false);
+
+	established_socket_read_start(this);
+}
+
+bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct frame * frame)
+{
+	ck_assert_int_ne(frame->type, frame_type_FREE);
+
+	if (frame->type == frame_type_RAW_DATA)
+	{
+		ck_assert_int_eq(established_sock->syserror, 0);
+
+		frame_flip(frame);
+		printf("!!!!! READ !!!!! -> %zd\n", frame_total_position_to_limit(frame));
+		frame_print(frame);
+	}
+
+	frame_pool_return(frame);
+	return true;
+}
+
+void sock_est_ssl_1_on_state_changed(struct established_socket * established_sock)
+{
+	if (established_sock->flags.read_shutdown == true)
+	{
+		printf(">>>> SHUTDOWN\n");
+		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
+	}
+}
+
+
+
+struct established_socket_cb sock_est_ssl_1_cb = 
+{
+	.connected = sock_est_ssl_1_on_connected,
+	.get_read_frame = get_read_frame_simple,
+	.read = sock_est_ssl_1_on_read,
+	.state_changed = sock_est_ssl_1_on_state_changed,
+	.error = NULL
+};
+
+
+START_TEST(sock_est_ssl_1_utest)
+{
+	struct established_socket sock;
+	bool ok;
+	int rc;
+
+	libsccmn_init();
+
+	SSL_CTX * ssl_ctx = SSL_CTX_new(TLSv1_2_client_method());
+	ck_assert_ptr_ne(ssl_ctx, NULL);
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	int inf = 0, outf = 0;
+	pid_t pid = popen2("openssl s_server -accept 12345 -tls1_2 -key ./ssl/key.pem -cert ./ssl/cert.pem -www -msg", &inf, &outf);
+	ck_assert_int_ge(pid, 0);
+	ck_assert_int_ge(inf, 0);
+	ck_assert_int_ge(outf, 0);
+	usleep(10000);
+
+	struct addrinfo * rp = NULL;
+	ok = resolve(&rp, "127.0.0.1", "12345");
+	ck_assert_int_eq(ok, true);
+	ck_assert_ptr_ne(rp, NULL);
+
+	ok = established_socket_init_connect(&sock, &sock_est_ssl_1_cb, &context, rp);
+	ck_assert_int_eq(ok, true);
+
+	freeaddrinfo(rp);
+
+	established_socket_set_read_partial(&sock, true);
+
+	ok = established_socket_ssl_enable(&sock, ssl_ctx);
+	ck_assert_int_eq(ok, true);
+
+
+	struct frame * frame = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+	ck_assert_ptr_ne(frame, NULL);
+
+	frame_format_simple(frame);
+	struct frame_dvec * dvec = frame_current_dvec(frame);
+	ck_assert_ptr_ne(dvec, NULL);	
+
+	ok = frame_dvec_sprintf(dvec, "GET /\r\n\r\n");
+
+	frame_flip(frame);
+
+	ok = established_socket_write(&sock, frame);
+	ck_assert_int_eq(ok, true);
+
+	context_evloop_run(&context);
+
+	close(inf);
+	close(outf);
+	rc = kill(pid, SIGTERM);
+	ck_assert_int_eq(rc, 0);
+
+	established_socket_fini(&sock);
+
+	context_fini(&context);
+
+}
+END_TEST
+
+///
+
 Suite * sock_est_tsuite(void)
 {
 	TCase *tc;
@@ -291,6 +445,10 @@ Suite * sock_est_tsuite(void)
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, sock_est_1_utest);
 	tcase_add_test(tc, sock_est_2_utest);
+
+	tc = tcase_create("sock_est-ssl");
+	suite_add_tcase(s, tc);
+	tcase_add_test(tc, sock_est_ssl_1_utest);
 
 	return s;
 }

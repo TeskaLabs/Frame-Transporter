@@ -10,10 +10,11 @@ struct established_socket_cb
 	// True as a return value means, that the frame has been handed over to upstream protocol
 	bool (*read)(struct established_socket *, struct frame * frame);
 
+	void (*state_changed)(struct established_socket *); // Can be NULL
 
 	void (*close)(struct established_socket *);
 
-	void (*connected)(struct established_socket *); // Called when connect() is successfully established
+	void (*connected)(struct established_socket *); // Called when connect() is successfully established; can be NULL
 
 	void (*error)(struct established_socket *);
 };
@@ -32,6 +33,7 @@ struct established_socket
 		unsigned int connecting : 1;
 		unsigned int active : 1;
 		unsigned int read_partial : 1; // When yes, read() callback is triggered for any incoming data
+		unsigned int ssl_status: 2; // 0 - disconnected; 1 - in handshake; 2 - established; 3 - closing
 	} flags;
 
 	int ai_family;
@@ -58,6 +60,9 @@ struct established_socket
 	struct ev_io write_watcher;
 	struct frame * write_frames; // Queue of write frames 
 	struct frame ** write_frame_last;
+
+	// SSL
+	SSL *ssl;
 
 	// Statistics
 	struct
@@ -96,6 +101,8 @@ static inline void established_socket_set_read_partial(struct established_socket
 	assert(this != NULL);
 	this->flags.read_partial = read_partial;
 }
+
+bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
 
 //
 
