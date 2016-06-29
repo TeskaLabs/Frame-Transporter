@@ -10,7 +10,6 @@ struct established_socket_cb
 	// True as a return value means, that the frame has been handed over to upstream protocol
 	bool (*read)(struct established_socket *, struct frame * frame);
 
-	void (*state_changed)(struct established_socket *);
 
 	void (*close)(struct established_socket *);
 
