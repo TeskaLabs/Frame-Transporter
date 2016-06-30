@@ -57,8 +57,9 @@ void on_connected(struct established_socket * established_sock)
 void on_error(struct established_socket * established_sock)
 {
 	struct est_sock_pair * pair = (struct est_sock_pair *)established_sock->data;
-	established_socket_shutdown(&pair->in_sock);
-	established_socket_shutdown(&pair->out_sock);
+	//TODO: maybe even hard shutdown
+	established_socket_write_shutdown(&pair->in_sock);
+	established_socket_write_shutdown(&pair->out_sock);
 }
 
 struct established_socket_cb sock_est_in_sock_cb = 
