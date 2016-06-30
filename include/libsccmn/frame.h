@@ -113,6 +113,12 @@ static inline void frame_flip(struct frame * this)
 	this->dvec_position = 0;
 }
 
+static inline void frame_set_type(struct frame * this, uint64_t type)
+{
+	assert(this != NULL);
+	this->type = type;
+}
+
 ///
 
 struct frame_dvec * frame_add_dvec(struct frame * this, size_t offset, size_t capacity);
