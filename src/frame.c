@@ -93,7 +93,7 @@ void frame_format_simple(struct frame * this)
 bool frame_dvec_vsprintf(struct frame_dvec * this, const char * format, va_list args)
 {
 	size_t max_size = (this->limit - this->position) - 1;
-	int rc = vsnprintf((char *)this->frame->data + this->offset + this->position, max_size, format, args);
+	int rc = vsnprintf((char *)frame_dvec_ptr(this), max_size, format, args);
 
 	if (rc < 0) return false;
 	if (rc > max_size) return false;
@@ -117,7 +117,7 @@ bool frame_dvec_cat(struct frame_dvec * this, const void * data, size_t data_len
 {
 	if ((this->position + data_len) > this->limit) return false;
 
-	memcpy(this->frame->data + this->offset + this->position, data, data_len);
+	memcpy(frame_dvec_ptr(this), data, data_len);
 	this->position += data_len;
 
 	return true;
