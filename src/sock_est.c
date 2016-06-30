@@ -261,8 +261,7 @@ void established_socket_on_connect(struct ev_loop * loop, struct ev_io * watcher
 	}
 
 	int optval = -1;
-	socklen_t optlen = sizeof (optval);
-
+	socklen_t optlen = sizeof(optval);
 	int rc = getsockopt(this->write_watcher.fd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
 	if (rc != 0)
 	{
@@ -272,11 +271,12 @@ void established_socket_on_connect(struct ev_loop * loop, struct ev_io * watcher
 
 	if (optval != 0)
 	{
+		L_WARN_ERRNO(optval, "System error during connect");
 		established_socket_error(this, optval, "connecting");
 		return;
 	}
 
-	L_INFO("Connected on TCP layer");
+	L_INFO("TCP connection established");
 
 	if (this->ssl != NULL)
 	{
@@ -764,7 +764,7 @@ bool established_socket_write_shutdown(struct established_socket * this)
 	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
 	if (frame == NULL)
 	{
-		L_WARN("Out of frames when preparing end of stream (read)");
+		L_WARN("Out of frames when preparing end of stream (write)");
 		return false;
 	}
 	frame_format_simple(frame);
@@ -827,7 +827,7 @@ void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * w
 		if (this->cbs->connected != NULL) this->cbs->connected(this);
 		established_socket_state_changed(this);
 
-		L_INFO("Connected on SSL layer");
+		L_INFO("SSL connection established");
 		return;
 	}
 
@@ -850,6 +850,7 @@ void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * w
 			return;
 
 		case SSL_ERROR_SYSCALL:
+			L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (syscall)");
 			return;
 
