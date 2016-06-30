@@ -97,6 +97,21 @@ size_t frame_total_position_to_limit(struct frame *);
 void frame_format_empty(struct frame *);
 void frame_format_simple(struct frame *);
 
+
+static inline void * frame_dvec_ptr(struct frame_dvec * this)
+{
+	assert(this != NULL);
+	assert(this->frame != NULL);
+	return this->frame->data + this->offset + this->position;
+}
+
+static inline size_t frame_dvec_len(struct frame_dvec * this)
+{
+	assert(this != NULL);
+	return this->limit - this->position;
+}
+
+
 //This is diagnostics function
 void frame_print(struct frame *);
 
