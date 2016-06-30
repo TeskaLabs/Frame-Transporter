@@ -735,9 +735,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 	return true;
 }
 
-///
-
-bool established_socket_shutdown(struct established_socket * this)
+bool established_socket_write_shutdown(struct established_socket * this)
 {
 	assert(this != NULL);
 

@@ -89,8 +89,8 @@ bool established_socket_write_start(struct established_socket *);
 bool established_socket_write_stop(struct established_socket *);
 
 bool established_socket_write(struct established_socket *, struct frame * frame);
+bool established_socket_write_shutdown(struct established_socket *);
 
-bool established_socket_shutdown(struct established_socket *);
 static inline bool established_socket_is_shutdown(struct established_socket * this)
 {
 	return (this->flags.write_shutdown && this->flags.write_shutdown);

@@ -49,7 +49,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
 		frame_pool_return(frame);
 
-		established_socket_shutdown(established_sock);
+		established_socket_write_shutdown(established_sock);
 		return true;
 	}
 
@@ -59,7 +59,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 		ck_assert_int_eq(established_sock->syserror, 0);
 		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
-		established_socket_shutdown(established_sock);
+		established_socket_write_shutdown(established_sock);
 		return false;
 	}
 
@@ -167,7 +167,7 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 	{
 		ck_assert_int_eq(established_sock->syserror, 0);
 
-		established_socket_shutdown(established_sock);
+		established_socket_write_shutdown(established_sock);
 		return false;
 	}
 
