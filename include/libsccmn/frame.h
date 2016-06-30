@@ -138,13 +138,17 @@ static inline void frame_set_type(struct frame * this, uint64_t type)
 
 struct frame_dvec * frame_add_dvec(struct frame * this, size_t offset, size_t capacity);
 
-static inline bool frame_next_dvec(struct frame * this)
+static inline struct frame_dvec * frame_next_dvec(struct frame * this)
 {
 	assert(this != NULL);
-	if (this->dvec_position == this->dvec_limit) return false;
+	if (this->dvec_position == this->dvec_limit) return NULL;
 	assert(this->dvec_position < this->dvec_limit);
 	this->dvec_position += 1;
-	return (this->dvec_position < this->dvec_limit);
+	if (this->dvec_position == this->dvec_limit) return NULL;
+
+	struct frame_dvec * dvec = (struct frame_dvec *)(this->data + this->capacity);
+	dvec -= (1 + this->dvec_position);
+	return dvec;
 }
 
 static inline struct frame_dvec * frame_current_dvec(struct frame * this)
