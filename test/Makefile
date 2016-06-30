@@ -2,7 +2,7 @@
 
 BIN=unittest
 
-OBJS=main.o  $(patsubst %.c,%.o,$(wildcard utest_*.c))
+OBJS=main.o testutils.o $(patsubst %.c,%.o,$(wildcard utest_*.c))
 
 all: $(BIN)
 	@echo " [UT]" $(BIN)
