@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <check.h>
-#include <unistd.h>
-#include <time.h>
+#include "testutils.h"
 
 /* Use:
 

@@ -1,30 +1,4 @@
-#include <libsccmn.h>
-#include <check.h>
-
-////
-
-static bool resolve(struct addrinfo **res, const char * host)
-{
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_protocol = 0;
-	hints.ai_canonname = NULL;
-	hints.ai_addr = NULL;
-	hints.ai_next = NULL;
-
-	int rc = getaddrinfo(host, "12345", &hints, res);
-	if (rc != 0)
-	{
-		*res = NULL;
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rc));
-		return false;
-    }
-
-    return true;
-}
+#include "testutils.h"
 
 ////
 
@@ -67,7 +41,7 @@ START_TEST(sock_listen_single_utest)
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1");
+	ok = resolve(&rp, "127.0.0.1", "12345");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 

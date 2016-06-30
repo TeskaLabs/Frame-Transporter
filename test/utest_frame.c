@@ -1,6 +1,5 @@
-#include <libsccmn.h>
+#include "testutils.h"
 #include <../src/all.h>
-#include <check.h>
 
 ////
 
