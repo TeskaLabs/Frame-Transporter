@@ -345,6 +345,9 @@ static bool established_socket_uplink_read_stream_end(struct established_socket 
 		// Recycle this->read_frame if there are no data read
 		frame = this->read_frame;
 		this->read_frame = NULL;
+
+		frame_format_empty(frame);
+		frame_set_type(frame, frame_type_STREAM_END);
 	}
 
 	if (frame == NULL)
