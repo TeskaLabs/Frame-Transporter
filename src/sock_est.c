@@ -361,8 +361,6 @@ static bool established_socket_uplink_read_stream_end(struct established_socket 
 		return false;
 	}
 
-	frame_format_simple(frame);
-
 	bool upstreamed = this->cbs->read(this, frame);
 	if (!upstreamed) frame_pool_return(frame);
 
@@ -767,7 +765,6 @@ bool established_socket_write_shutdown(struct established_socket * this)
 		L_WARN("Out of frames when preparing end of stream (write)");
 		return false;
 	}
-	frame_format_simple(frame);
 
 	return established_socket_write(this, frame);
 }
