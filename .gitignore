@@ -1,6 +1,10 @@
 /rules.site
 /test/unittest
 /test/log.txt
+/test/sock_est_ssl_1_utest.bin
+
+/examples/reply/reply
+/examples/forward/forward
 
 # Object files
 *.o
@@ -34,6 +38,3 @@
 
 # Debug files
 *.dSYM/
-
-examples/reply/reply
-examples/forward/forward
