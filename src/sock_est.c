@@ -151,7 +151,6 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 	established_socket_state_changed(this);
 
 	ev_set_cb(&this->write_watcher, established_socket_on_connect);
-	ev_set_cb(&this->read_watcher, established_socket_on_connect);
 
 	ev_io_start(this->context->ev_loop, &this->write_watcher);
 
@@ -376,8 +375,12 @@ static void established_socket_read_shutdown(struct established_socket * this)
 	this->flags.read_shutdown = true;
 
 	// Uplink read frame, if there is one (this can result in a partial frame but that's ok)
-	bool upstreamed = this->cbs->read(this, this->read_frame);
-	if (!upstreamed) frame_pool_return(this->read_frame);
+	if (frame_total_start_to_position(this->read_frame) > 0)
+	{
+		L_WARN("Partial read due to read shutdown");
+		bool upstreamed = this->cbs->read(this, this->read_frame);
+		if (!upstreamed) frame_pool_return(this->read_frame);
+	}
 	this->read_frame = NULL;
 
 	// Uplink end-of-stream (reading)
@@ -468,8 +471,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 				switch (ssl_err)
 				{
 					case SSL_ERROR_WANT_READ:
-						//TODO: This is not correct ...
-						ev_io_stop(this->context->ev_loop, &this->write_watcher);
+						// SSL_read_want_read
 						ev_io_start(this->context->ev_loop, &this->read_watcher);
 						return;
 
@@ -639,12 +641,56 @@ static bool established_socket_write_real(struct established_socket * this)
 
 		else
 		{
+			try_ssl_write_again:
 			rc = SSL_write(this->ssl, p_to_write, size_to_write);
 			if (rc <= 0)
 			{
-				//TODO: This is temporary, handle all nasty SSL return states
-				established_socket_error(this, ECONNRESET, "writing (SSL)");
-				return false;
+				int errno_read = errno;
+				int ssl_err = SSL_get_error(this->ssl, rc);
+				switch (ssl_err)
+				{
+					case SSL_ERROR_WANT_READ:
+						//TODO: Not correct - SSL_write_want_read_event
+						ev_io_start(this->context->ev_loop, &this->read_watcher);
+						return false;
+
+					case SSL_ERROR_WANT_WRITE:
+						if (this->flags.write_ready == true)
+						{
+							this->flags.write_ready = false;
+							goto try_ssl_write_again;
+						}
+						// SSL_write_want_write_event
+						return true;
+
+					case SSL_ERROR_ZERO_RETURN:
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (zero ret)");
+						return false;
+
+					case SSL_ERROR_SYSCALL:
+						if ((rc == 0) && (errno_read == 0))
+						{
+							// This is a quite standard way how SSL connection is closed (by peer)
+							L_DEBUG("Peer closed a connection");
+							this->syserror = 0;
+						}
+						else
+						{
+							established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (syscall)");
+						}
+						return false;
+
+					case SSL_ERROR_SSL:
+						L_ERROR_OPENSSL("SSL error during write");
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (SSL error)");
+						return false;
+
+					default:
+						L_WARN_P("Unexpected error %d  during write, closing", ssl_err);
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (unknown)");
+						return false;
+
+				}
 			}
 		}
 
@@ -736,25 +782,6 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 bool established_socket_write_shutdown(struct established_socket * this)
 {
 	assert(this != NULL);
-
-	// When .connecting, do shutdown directly ...
-	if (this->flags.connecting)
-	{
-		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
-		if (rc != 0)
-		{
-			switch (errno)
-			{
-				case ENOTCONN:
-					break;
-
-				default:
-					L_WARN_ERRNO(errno, "shutdown() in error handling");
-					return false;
-			}		
-		}
-		return true;
-	}
 	
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
@@ -809,8 +836,10 @@ void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * w
 	assert(this->flags.ssl_status == 1);
 
 	rc = SSL_connect(this->ssl);
-	if (rc == 1) // Handshake is successfully completed
+	if (rc == 1) // Handshake is  completed
 	{
+		//TODO: long verify_result = SSL_get_verify_result(seacatcc_context.gwconn_ssl_handle);
+
 		// Wire I/O event callbacks
 		ev_set_cb(&this->read_watcher, established_socket_on_read);
 		ev_io_stop(this->context->ev_loop, &this->read_watcher);

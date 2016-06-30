@@ -256,6 +256,72 @@ END_TEST
 
 ///
 
+void sock_est_conn_fail_on_error(struct established_socket * established_sock)
+{
+	printf("ERROR - NICE!\n");
+}
+
+
+struct established_socket_cb sock_est_conn_fail_cb = 
+{
+	.connected = NULL,
+	.get_read_frame = NULL,
+	.read = NULL,
+	.state_changed = NULL,
+	.error = sock_est_conn_fail_on_error,
+};
+
+START_TEST(sock_est_conn_fail_utest)
+{
+	struct established_socket sock;
+	bool ok;
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	struct addrinfo * rp = NULL;
+	ok = resolve(&rp, "127.0.0.1", "12346");
+	ck_assert_int_eq(ok, true);
+	ck_assert_ptr_ne(rp, NULL);
+
+	ok = established_socket_init_connect(&sock, &sock_est_conn_fail_cb, &context, rp);
+	ck_assert_int_eq(ok, true);
+
+	freeaddrinfo(rp);
+
+	struct frame * frame = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+	ck_assert_ptr_ne(frame, NULL);
+
+	frame_format_simple(frame);
+	struct frame_dvec * dvec = frame_current_dvec(frame);
+	ck_assert_ptr_ne(dvec, NULL);	
+
+	ok = frame_dvec_sprintf(dvec, "Virtually anything, will be lost anyway");
+
+	frame_flip(frame);
+
+	ok = established_socket_write(&sock, frame);
+	ck_assert_int_eq(ok, true);
+
+	ok = established_socket_write_shutdown(&sock);
+	ck_assert_int_eq(ok, true);
+
+	context_evloop_run(&context);
+
+
+	established_socket_fini(&sock);
+
+	context_fini(&context);
+
+}
+END_TEST
+
+///
+
+ssize_t sock_est_ssl_1_read_counter;
+EVP_MD_CTX * sock_est_ssl_1_mdctx;
+
 void sock_est_ssl_1_on_connected(struct established_socket * this)
 {
 	ck_assert_int_eq(this->flags.ssl_status, 2);
@@ -273,8 +339,16 @@ bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct
 		ck_assert_int_eq(established_sock->syserror, 0);
 
 		frame_flip(frame);
-		printf("!!!!! READ !!!!! -> %zd\n", frame_total_position_to_limit(frame));
-		frame_print(frame);
+		ck_assert_int_gt(frame_total_position_to_limit(frame), 0);
+		//frame_print(frame);
+
+		for (struct frame_dvec * dvec = frame_current_dvec(frame); dvec != NULL; dvec = frame_next_dvec(frame))
+		{
+			int rc = EVP_DigestUpdate(sock_est_ssl_1_mdctx, frame_dvec_ptr(dvec), frame_dvec_len(dvec));
+			ck_assert_int_eq(rc, 1);
+		}
+
+		sock_est_ssl_1_read_counter += frame_total_position_to_limit(frame);
 	}
 
 	frame_pool_return(frame);
@@ -285,11 +359,15 @@ void sock_est_ssl_1_on_state_changed(struct established_socket * established_soc
 {
 	if (established_sock->flags.read_shutdown == true)
 	{
-		printf(">>>> SHUTDOWN\n");
 		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
 	}
 }
 
+
+void sock_est_ssl_1_on_error(struct established_socket * established_sock)
+{
+	ck_assert_int_eq(0,1);
+}
 
 
 struct established_socket_cb sock_est_ssl_1_cb = 
@@ -298,7 +376,7 @@ struct established_socket_cb sock_est_ssl_1_cb =
 	.get_read_frame = get_read_frame_simple,
 	.read = sock_est_ssl_1_on_read,
 	.state_changed = sock_est_ssl_1_on_state_changed,
-	.error = NULL
+	.error = sock_est_ssl_1_on_error,
 };
 
 
@@ -308,7 +386,29 @@ START_TEST(sock_est_ssl_1_utest)
 	bool ok;
 	int rc;
 
+	generate_random_file("./sock_est_ssl_1_utest.bin", 4096, 100);
+
+	EVP_MD_CTX * mdctx = EVP_MD_CTX_create();
+	ck_assert_ptr_ne(mdctx, NULL);
+
+	rc = EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+	ck_assert_int_eq(rc, 1);
+
+	digest_file(mdctx, "./sock_est_ssl_1_utest.bin");
+
+	unsigned char digest1[EVP_MAX_MD_SIZE];
+	EVP_DigestFinal(mdctx, digest1, NULL);
+    EVP_MD_CTX_cleanup(mdctx);
+	
+	sock_est_ssl_1_mdctx = EVP_MD_CTX_create();
+	ck_assert_ptr_ne(sock_est_ssl_1_mdctx, NULL);
+	
+	rc = EVP_DigestInit_ex(sock_est_ssl_1_mdctx, EVP_sha256(), NULL);
+	ck_assert_int_eq(rc, 1);
+
 	libsccmn_init();
+
+	sock_est_ssl_1_read_counter = 0;
 
 	SSL_CTX * ssl_ctx = SSL_CTX_new(TLSv1_2_client_method());
 	ck_assert_ptr_ne(ssl_ctx, NULL);
@@ -318,11 +418,11 @@ START_TEST(sock_est_ssl_1_utest)
 	ck_assert_int_eq(ok, true);
 
 	int inf = 0, outf = 0;
-	pid_t pid = popen2("openssl s_server -accept 12345 -tls1_2 -key ./ssl/key.pem -cert ./ssl/cert.pem -www -msg", &inf, &outf);
+	pid_t pid = popen2("openssl s_server -accept 12345 -tls1_2 -key ./ssl/key.pem -cert ./ssl/cert.pem -msg -HTTP", &inf, &outf);
 	ck_assert_int_ge(pid, 0);
 	ck_assert_int_ge(inf, 0);
 	ck_assert_int_ge(outf, 0);
-	usleep(10000);
+	usleep(60000);
 
 	struct addrinfo * rp = NULL;
 	ok = resolve(&rp, "127.0.0.1", "12345");
@@ -347,19 +447,34 @@ START_TEST(sock_est_ssl_1_utest)
 	struct frame_dvec * dvec = frame_current_dvec(frame);
 	ck_assert_ptr_ne(dvec, NULL);	
 
-	ok = frame_dvec_sprintf(dvec, "GET /\r\n\r\n");
+	ok = frame_dvec_sprintf(dvec, "GET /sock_est_ssl_1_utest.bin HTTP/1.0\r\n\r\n");
 
 	frame_flip(frame);
 
 	ok = established_socket_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
 
+	ok = established_socket_write_shutdown(&sock);
+	ck_assert_int_eq(ok, true);
+
 	context_evloop_run(&context);
+
+	unsigned char digest2[EVP_MAX_MD_SIZE];
+	EVP_DigestFinal(sock_est_ssl_1_mdctx, digest2, NULL);
+    EVP_MD_CTX_cleanup(sock_est_ssl_1_mdctx);
+    ck_assert_int_eq(memcmp(digest1, digest2, EVP_MD_size(EVP_sha256())), 0);
+
+	ck_assert_int_eq(sock_est_ssl_1_read_counter, 4096 * 100);
+
+	rc = kill(pid, SIGINT);
+	ck_assert_int_eq(rc, 0);
+
+	char buffer[128*1024];
+	ssize_t x = read(outf, buffer, sizeof(buffer));
+	ck_assert_int_gt(x, 0);
 
 	close(inf);
 	close(outf);
-	rc = kill(pid, SIGTERM);
-	ck_assert_int_eq(rc, 0);
 
 	established_socket_fini(&sock);
 
@@ -379,6 +494,7 @@ Suite * sock_est_tsuite(void)
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, sock_est_1_utest);
 	tcase_add_test(tc, sock_est_2_utest);
+	tcase_add_test(tc, sock_est_conn_fail_utest);
 
 	tc = tcase_create("sock_est-ssl");
 	suite_add_tcase(s, tc);
