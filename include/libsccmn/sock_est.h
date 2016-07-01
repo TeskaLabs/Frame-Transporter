@@ -33,7 +33,7 @@ struct established_socket
 		unsigned int connecting : 1;
 		unsigned int active : 1;
 		unsigned int read_partial : 1; // When yes, read() callback is triggered for any incoming data
-		unsigned int ssl_status: 2; // 0 - disconnected; 1 - in handshake; 2 - established; 3 - closing
+		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established; 3 - closing
 	} flags;
 
 	int ai_family;
