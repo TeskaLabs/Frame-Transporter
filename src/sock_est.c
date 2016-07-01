@@ -927,6 +927,8 @@ void established_socket_on_ssl_shutdown(struct ev_loop * loop, struct ev_io * wa
 	rc = SSL_shutdown(this->ssl);
 	if (rc == 1) // SSL Shutdown is  completed
 	{
+		this->flags.ssl_status = 0;
+
 		ev_io_stop(this->context->ev_loop, &this->write_watcher);
 
 		L_INFO("SSL connection has been shutdown");
