@@ -10,6 +10,7 @@ static inline void established_socket_state_changed(struct established_socket *)
 static void established_socket_on_connect(struct ev_loop * loop, struct ev_io * watcher, int revents);
 
 static void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * watcher, int revents);
+static void established_socket_on_ssl_shutdown(struct ev_loop * loop, struct ev_io * watcher, int revents);
 
 ///
 
@@ -401,7 +402,10 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
 	assert(this->flags.connecting == false);
-	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
+	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) \
+		|| ((this->ssl != NULL) && (this->flags.ssl_status == 2)) \
+		|| ((this->ssl != NULL) && (this->flags.ssl_status == 3))
+	);
 
 	this->stats.read_events += 1;
 
@@ -495,7 +499,7 @@ void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, i
 						if ((rc == 0) && (errno_read == 0))
 						{
 							// This is a quite standard way how SSL connection is closed (by peer)
-							L_DEBUG("Peer closed a connection");
+							L_INFO("Peer closed a connection");
 							this->syserror = 0;
 						}
 						else
@@ -602,8 +606,25 @@ static bool established_socket_write_real(struct established_socket * this)
 			this->write_shutdown_at = ev_now(this->context->ev_loop);
 			this->flags.write_shutdown = true;
 
-			int rc = shutdown(this->write_watcher.fd, SHUT_WR);
-			if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
+			if (this->ssl)
+			{
+				// Initialize SSL shutdown
+				ev_set_cb(&this->write_watcher, established_socket_on_ssl_shutdown);
+				ev_io_start(this->context->ev_loop, &this->write_watcher);
+				
+				this->flags.ssl_status = 3;
+
+				// Save one loop
+				ev_invoke(this->context->ev_loop, &this->write_watcher, EV_WRITE);
+
+				L_INFO("SSL shutdown started");
+			}
+
+			else
+			{
+				int rc = shutdown(this->write_watcher.fd, SHUT_WR);
+				if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
+			}
 
 			return false;
 		}
@@ -892,6 +913,69 @@ void established_socket_on_ssl_handshake(struct ev_loop * loop, struct ev_io * w
 
 	}
 
+}
+
+void established_socket_on_ssl_shutdown(struct ev_loop * loop, struct ev_io * watcher, int revents)
+{
+	struct established_socket * this = watcher->data;
+	assert(this != NULL);
+
+	int rc;
+
+	assert(this->flags.ssl_status == 3);
+
+	rc = SSL_shutdown(this->ssl);
+	if (rc == 1) // SSL Shutdown is  completed
+	{
+		ev_io_stop(this->context->ev_loop, &this->write_watcher);
+
+		L_INFO("SSL connection has been shutdown");
+
+		int rc = shutdown(this->write_watcher.fd, SHUT_WR);
+		if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
+
+		return;
+	}
+
+	int errno_ssl_cmd = errno;
+	int ssl_err = SSL_get_error(this->ssl, rc);
+	switch (ssl_err)
+	{
+		case SSL_ERROR_WANT_READ:
+			//TODO: This: Read // SSL_shutdown_want_read
+			//ev_io_stop(this->context->ev_loop, &this->write_watcher);
+			//ev_io_start(this->context->ev_loop, &this->read_watcher);
+			return;
+
+		case SSL_ERROR_WANT_WRITE:
+			ev_io_start(this->context->ev_loop, &this->write_watcher);
+			ev_io_stop(this->context->ev_loop, &this->read_watcher);
+			return;
+
+		case SSL_ERROR_ZERO_RETURN:
+			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (zero ret)");
+			return;
+
+		case SSL_ERROR_SYSCALL:
+			if (errno_ssl_cmd == 0)
+			{
+				ev_io_start(this->context->ev_loop, &this->write_watcher);
+				return;
+			}
+			L_WARN_ERRNO(errno_ssl_cmd, "SSL shutdown (syscall, rc: %d)", rc);
+			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (syscall)");
+			return;
+
+		case SSL_ERROR_SSL:
+			L_ERROR_OPENSSL("SSL error during shutdown");
+			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (SSL error)");
+			return;
+
+		default:
+			L_WARN_P("Unexpected error %d  during shutdown, closing", ssl_err);
+			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (unknown)");
+			return;
+	}
 }
 
 ///
