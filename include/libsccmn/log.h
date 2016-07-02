@@ -11,9 +11,9 @@ Log levels:
   'A': audit
 */
 
-void _log_v(char level, const char * format, va_list args);
-static inline void _log(char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
-static inline void _log(char level, const char * format, ...)
+void _log_v(const char level, const char * format, va_list args);
+static inline void _log(const char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
+static inline void _log(const char level, const char * format, ...)
 {
 	if ((level == 'D') && (!libsccmn_config.log_verbose)) return;
 
@@ -23,9 +23,9 @@ static inline void _log(char level, const char * format, ...)
 	va_end(args);
 }
 
-void _log_errno_v(int errnum, char level, const char * format, va_list args);
-static inline void _log_errno(int errnum, char level, const char *format, ...) __attribute__((format(printf,3,4)));
-static inline void _log_errno(int errnum, char level, const char *format, ...)
+void _log_errno_v(int errnum, const char level, const char * format, va_list args);
+static inline void _log_errno(int errnum, const char level, const char *format, ...) __attribute__((format(printf,3,4)));
+static inline void _log_errno(int errnum, const char level, const char *format, ...)
 {
 	if ((level == 'D') && (!libsccmn_config.log_verbose)) return;
 
@@ -36,9 +36,9 @@ static inline void _log_errno(int errnum, char level, const char *format, ...)
 }
 
 
-void _log_openssl_err_v(char level, const char * format, va_list args);
-static inline void _log_openssl_err(char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
-static inline void _log_openssl_err(char level, const char * format, ...)
+void _log_openssl_err_v(char const level, const char * format, va_list args);
+static inline void _log_openssl_err(char const level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
+static inline void _log_openssl_err(char const level, const char * format, ...)
 {
 	if ((level == 'D') && (!libsccmn_config.log_verbose)) return;
 

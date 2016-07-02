@@ -75,14 +75,14 @@ static inline int log_entry_format(struct log_entry * le, char level,const char 
 
 ///
 
-void _log_v(char level, const char * format, va_list args)
+void _log_v(const char level, const char * format, va_list args)
 {
 	static struct log_entry le;
 	int le_message_length = log_entry_format(&le, level, format, args);
 	log_entry_process(&le, le_message_length);
 }
 
-void _log_errno_v(int errnum, char level, const char * format, va_list args)
+void _log_errno_v(int errnum, const char level, const char * format, va_list args)
 {
 	static struct log_entry le;
 	int le_message_length = log_entry_format(&le, level, format, args);
@@ -109,7 +109,7 @@ void _log_errno_v(int errnum, char level, const char * format, va_list args)
 	log_entry_process(&le, le_message_length);
 }
 
-void _log_openssl_err_v(char level, const char * format, va_list args)
+void _log_openssl_err_v(const char level, const char * format, va_list args)
 {
 	static struct log_entry le;
 	int le_message_length = log_entry_format(&le, level, format, args);
