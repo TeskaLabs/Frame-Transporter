@@ -119,6 +119,8 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 		return false;
 	}
 
+	L_TRACE(L_TRACEID_SOCK_STREAM, "(fd:%d)", fd);
+
 	bool ok = established_socket_init(
 		this,
 		cbs,

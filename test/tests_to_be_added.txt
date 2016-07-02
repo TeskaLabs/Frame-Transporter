@@ -12,3 +12,4 @@
 - context SIGTERM
 - context SIGINT
 - cols/list
+- log TRACE

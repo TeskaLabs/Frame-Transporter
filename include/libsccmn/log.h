@@ -3,6 +3,7 @@
 
 /*
 Log levels:
+  'T': trace
   'D': debug
   'I': info
   'W': warning
@@ -10,6 +11,16 @@ Log levels:
   'F': fatal
   'A': audit
 */
+
+enum log_trace_ids
+{
+	L_TRACEID_SOCK_STREAM = 0x0001,
+};
+
+static inline bool _log_traceid(unsigned int traceid)
+{
+	return (libsccmn_config.log_trace_mask & traceid) != 0; 
+}
 
 void _log_v(const char level, const char * format, va_list args);
 static inline void _log(const char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
@@ -48,6 +59,7 @@ static inline void _log_openssl_err(char const level, const char * format, ...)
 	va_end(args);
 }
 
+#define L_TRACE(traceid, fmt, args...) if (_log_traceid(traceid)) _log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
 #define L_DEBUG(fmt, args...) _log('D', fmt, ## args)
 #define L_INFO(fmt, args...)  _log('I', fmt, ## args)
 #define L_WARN(fmt, args...)  _log('W', fmt, ## args)

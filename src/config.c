@@ -5,6 +5,7 @@ struct libsccmn_config libsccmn_config =
 	.initialized = false, // Will be changed to true when initialized
 
 	.log_verbose = false,
+	.log_trace_mask = 0,
 	.log_filename = NULL,
 	.log_f = NULL,
 	.log_flush_counter = 0,

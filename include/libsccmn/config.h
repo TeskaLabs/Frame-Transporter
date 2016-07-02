@@ -6,6 +6,7 @@ struct libsccmn_config
 	bool initialized;
 
 	bool log_verbose;
+	unsigned int log_trace_mask;
 	const char * log_filename;
 	FILE * log_f;
 	unsigned int log_flush_counter;

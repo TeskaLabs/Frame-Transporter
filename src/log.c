@@ -6,6 +6,7 @@ static const char * log_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "
 
 static inline const char * log_levelname(char level)
 {
+	static const char * lln_TRACE = "TRACE";
 	static const char * lln_DEBUG = "DEBUG";
 	static const char * lln_INFO = " INFO";
 	static const char * lln_WARN = " WARN";
@@ -16,6 +17,7 @@ static inline const char * log_levelname(char level)
 
 	switch (level)
 	{
+		case 'T': return lln_TRACE;
 		case 'D': return lln_DEBUG;
 		case 'I': return lln_INFO;
 		case 'W': return lln_WARN;
