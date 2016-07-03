@@ -606,6 +606,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				bool upstreamed = this->cbs->read(this, this->read_frame);
 				if (upstreamed) this->read_frame = NULL;
 			}
+			established_socket_read_set_event(this, READ_WANT_READ);
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " incomplete read", TRACE_ARGS);
 			return;
 		}
