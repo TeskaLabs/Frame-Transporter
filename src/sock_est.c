@@ -472,7 +472,7 @@ void established_socket_on_read_event(struct established_socket * this)
 
 	this->stats.read_events += 1;
 
-	for (;;)
+	for (unsigned int read_loops = 0; read_loops<libsccmn_config.sock_est_max_read_loops; read_loops += 1)
 	{
 		if (this->read_frame == NULL)
 		{
@@ -620,6 +620,10 @@ void established_socket_on_read_event(struct established_socket * this)
 			if (!ev_is_active(&this->read_watcher)) return; // If watcher is stopped, break reading		
 		}
 	}
+
+	// Maximum read loops within event loop iteration is exceeded
+	established_socket_read_set_event(this, READ_WANT_READ);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " max read loops", TRACE_ARGS);
 }
 
 ///

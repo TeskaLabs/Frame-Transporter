@@ -25,6 +25,8 @@ struct libsccmn_config libsccmn_config =
 	.heartbeat_interval = 2.0,
 
 	.sock_listen_backlog = 128,
+
+	.sock_est_max_read_loops = 10,
 };
 
 

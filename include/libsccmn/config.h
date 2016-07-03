@@ -26,6 +26,8 @@ struct libsccmn_config
 	ev_tstamp heartbeat_interval;
 
 	int sock_listen_backlog;
+
+	unsigned int sock_est_max_read_loops;
 };
 
 extern struct libsccmn_config libsccmn_config;
