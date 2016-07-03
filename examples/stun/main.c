@@ -92,6 +92,22 @@ static void established_sock_pair_node_fini_cb(struct ft_list_node * node)
 {
 	struct est_sock_pair * pair = (struct est_sock_pair *)&node->payload;
 
+	L_INFO("Stats  IN: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+		pair->in_sock.stats.read_events,
+		pair->in_sock.stats.write_events,
+		pair->in_sock.stats.write_direct,
+		pair->in_sock.stats.read_bytes,
+		pair->in_sock.stats.write_bytes
+	);
+
+	L_INFO("Stats OUT: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+		pair->out_sock.stats.read_events,
+		pair->out_sock.stats.write_events,
+		pair->out_sock.stats.write_direct,
+		pair->out_sock.stats.read_bytes,
+		pair->out_sock.stats.write_bytes
+	);
+
 	established_socket_fini(&pair->in_sock);
 	established_socket_fini(&pair->out_sock);
 }
@@ -277,7 +293,16 @@ int main(int argc, char const *argv[])
 	ev_unref(context.ev_loop);
 
 	// Resolve target
-	target_addr = resolve("www.teskalabs.com", "443");
+	if (argc == 3)
+	{
+		L_INFO("Target set to %s %s", argv[1], argv[2]);
+		target_addr = resolve( argv[1], argv[2]);
+	}
+	else
+	{
+		L_INFO("Target set to www.teskalabs.com 443");
+		target_addr = resolve("www.teskalabs.com", "443");
+	}
 	if (target_addr == NULL)
 	{
 		L_ERROR("Cannot resolve target");
