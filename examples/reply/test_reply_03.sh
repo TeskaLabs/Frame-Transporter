@@ -21,4 +21,4 @@ wait
 
 cat /tmp/sc-test-reply-03.bin | shasum --check /tmp/sc-test-reply-03.chsum
 
-echo "TEST OK"
+echo "TEST $0 OK"
