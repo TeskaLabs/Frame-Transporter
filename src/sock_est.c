@@ -340,6 +340,7 @@ void established_socket_on_connect_event(struct established_socket * this)
 
 	// Configure established callbacks
 	established_socket_read_start(this);
+	established_socket_write_start(this);
 
 	this->connected_at = ev_now(this->context->ev_loop);
 	this->flags.connecting = false;
@@ -827,7 +828,8 @@ void established_socket_on_write_event(struct established_socket * this)
 
 	this->flags.write_ready = true;
 	established_socket_write_unset_event(this, WRITE_WANT_WRITE);
-	established_socket_write_real(this);
+	if (this->write_frames != NULL)
+		established_socket_write_real(this);
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
@@ -939,6 +941,7 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 		established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 
 		established_socket_read_start(this);
+		established_socket_write_start(this);
 
 		this->connected_at = ev_now(this->context->ev_loop);
 		this->flags.connecting = false;
