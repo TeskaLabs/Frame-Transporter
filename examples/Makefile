@@ -1,6 +1,7 @@
 SUBDIRS=\
 	reply \
-	forward
+	forward \
+	stun
 
 all: subdirs
 
