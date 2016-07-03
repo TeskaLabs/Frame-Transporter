@@ -619,13 +619,23 @@ void established_socket_on_read_event(struct established_socket * this)
 			// All dvecs in the frame are filled with data
 			bool upstreamed = this->cbs->read(this, this->read_frame);
 			if (upstreamed) this->read_frame = NULL;
-			if (!ev_is_active(&this->read_watcher)) return; // If watcher is stopped, break reading
+			if ((this->read_events & READ_WANT_READ) == 0)
+			{
+				// If watcher is stopped, break reading	
+				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " read stopped", TRACE_ARGS);
+				return;
+			}
 		}
 		else if (this->flags.read_partial == true)
 		{
 			bool upstreamed = this->cbs->read(this, this->read_frame);
 			if (upstreamed) this->read_frame = NULL;
-			if (!ev_is_active(&this->read_watcher)) return; // If watcher is stopped, break reading		
+			if ((this->read_events & READ_WANT_READ) == 0)
+			{
+				// If watcher is stopped, break reading	
+				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " partial read stopped", TRACE_ARGS);
+				return;
+			}
 		}
 	}
 
