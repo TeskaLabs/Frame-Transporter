@@ -482,6 +482,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				L_WARN("Out of frames when reading, throttling");
 				established_socket_read_throttle(this, true);
 				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 				return;
 			}
 		}
@@ -507,6 +508,7 @@ void established_socket_on_read_event(struct established_socket * this)
 					if (errno == EAGAIN)
 					{
 						established_socket_read_set_event(this, READ_WANT_READ);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 						return;
 					}
 
@@ -519,6 +521,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				}
 
 				established_socket_read_shutdown(this);
+				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 				return;
 			}
 		}
@@ -659,12 +662,14 @@ static void established_socket_write_real(struct established_socket * this)
 	assert(this->flags.connecting == false);
 	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);
 
 	this->stats.write_events += 1;
 
 	while (this->write_frames != NULL)
 	{
+		L_TRACE(L_TRACEID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, this->write_frames->type);
+
 		if (this->write_frames->type == frame_type_STREAM_END)
 		{
 			struct frame * frame = this->write_frames;
@@ -698,7 +703,7 @@ static void established_socket_write_real(struct established_socket * this)
 				if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
 			}
 
-			L_TRACE(L_TRACEID_SOCK_STREAM, "ENDs " TRACE_FMT, TRACE_ARGS);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
 			return;
 		}
 
@@ -788,6 +793,7 @@ static void established_socket_write_real(struct established_socket * this)
 		}
 
 		assert(rc > 0);
+		L_TRACE(L_TRACEID_SOCK_STREAM, "WRITE " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
 		this->stats.write_bytes += rc;
 		frame_dvec_position_add(frame_dvec, rc);
 		if (frame_dvec->position < frame_dvec->limit)
@@ -826,6 +832,8 @@ void established_socket_on_write_event(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->flags.connecting == false);
 
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
 	this->flags.write_ready = true;
 	established_socket_write_unset_event(this, WRITE_WANT_WRITE);
 	if (this->write_frames != NULL)
@@ -858,7 +866,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 	if (this->flags.write_ready == false)
 	{
 		if (this->flags.connecting == false) established_socket_write_set_event(this, WRITE_WANT_WRITE);
-		L_TRACE(L_TRACEID_SOCK_STREAM, "ENDq" TRACE_FMT, TRACE_ARGS);
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " queue", TRACE_ARGS);
 		return true;
 	}
 
@@ -866,7 +874,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 
 	established_socket_write_real(this);
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, "ENDd " TRACE_FMT, TRACE_ARGS);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " direct", TRACE_ARGS);
 	return true;
 }
 
