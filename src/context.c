@@ -52,7 +52,7 @@ void context_fini(struct context * this)
 
 	//TODO: Destroy heartbeat
 	//TODO: Destroy frame pool
-	//TODO: Uninstall signel handlers
+	//TODO: Uninstall signal handlers
 
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;
