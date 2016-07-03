@@ -2,7 +2,8 @@
 
 function finish
 {
-	jobs -rp | xargs kill
+	JOBS=$(jobs -rp)
+	[[ !  -z  ${JOBS}  ]] && ( echo ${JOBS} | xargs -n1 kill )
 }
 trap finish EXIT
 

@@ -2,7 +2,8 @@
 
 function finish
 {
-	jobs -rp | xargs kill
+	JOBS=$(jobs -rp)
+	[[ !  -z  ${JOBS}  ]] && ( echo ${JOBS} | xargs -n1 kill )
 	rm -f /tmp/sc-test-reply-01.bin /tmp/sc-test-reply-01.chsum
 }
 trap finish EXIT
