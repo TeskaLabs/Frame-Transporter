@@ -1,5 +1,12 @@
 #!/bin/bash -e
 
+function finish
+{
+	jobs -rp | xargs kill
+	rm -f /tmp/sc-test-reply-03.bin /tmp/sc-test-reply-03.chsum
+}
+trap finish EXIT
+
 ./reply &
 TASK_PID=$!
 
@@ -14,4 +21,3 @@ wait
 cat /tmp/sc-test-reply-03.bin | shasum --check /tmp/sc-test-reply-03.chsum
 
 echo "TEST OK"
-rm -f /tmp/sc-test-reply-03.bin /tmp/sc-test-reply-03.chsum

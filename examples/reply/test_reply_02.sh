@@ -1,5 +1,11 @@
 #!/bin/bash -e
 
+function finish
+{
+	jobs -rp | xargs kill
+}
+trap finish EXIT
+
 ./reply &
 TASK_PID=$!
 sleep 0.2
