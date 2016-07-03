@@ -1,0 +1,17 @@
+#!/bin/bash -e
+
+./reply &
+TASK_PID=$!
+
+dd if=/dev/urandom count=1024 bs=1024 > /tmp/sc-test-reply-03.bin
+sleep 0.2
+
+cat /tmp/sc-test-reply-03.bin | pv -r | nc -U /tmp/sctext.tmp | pv -r | shasum > /tmp/sc-test-reply-03.chsum
+
+kill ${TASK_PID}
+wait
+
+cat /tmp/sc-test-reply-03.bin | shasum --check /tmp/sc-test-reply-03.chsum
+
+echo "TEST OK"
+rm -f /tmp/sc-test-reply-03.bin /tmp/sc-test-reply-03.chsum

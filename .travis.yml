@@ -3,6 +3,7 @@ script:
     - make clean all
     - make test
     - (cd examples && make clean all)
+    - (cd examples/reply/ && ./test_reply_01.sh && ./test_reply_02.sh && ./test_reply_03.sh)
 
 before_install:
     - sudo apt-get update -qq
