@@ -29,7 +29,6 @@ struct established_socket_cb sock_est_sock_cb =
 {
 	.get_read_frame = get_read_frame_simple,
 	.read = on_read,
-	.state_changed = NULL,
 	.error = NULL,
 };
 
