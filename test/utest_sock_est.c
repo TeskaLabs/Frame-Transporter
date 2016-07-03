@@ -67,17 +67,10 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 	return false;
 }
 
-void sock_est_1_on_state_changed(struct established_socket * established_sock)
-{
-	if (established_sock->flags.read_shutdown == true)
-		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
-}
-
 struct established_socket_cb sock_est_1_sock_cb = 
 {
 	.get_read_frame = sock_est_1_on_get_read_frame,
 	.read = sock_est_1_on_read,
-	.state_changed = sock_est_1_on_state_changed,
 	.error = NULL
 };
 
@@ -88,8 +81,7 @@ bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 	ok = established_socket_init_accept(&established_sock, &sock_est_1_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
-	ok = established_socket_read_start(&established_sock);
-	ck_assert_int_eq(ok, true);
+	listening_socket_stop(listening_socket);
 
 	return true;
 }
@@ -110,6 +102,7 @@ START_TEST(sock_est_1_utest)
 	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
 
+
 	struct addrinfo * rp = NULL;
 	ok = resolve(&rp, "127.0.0.1", "12345");
 	ck_assert_int_eq(ok, true);
@@ -129,7 +122,7 @@ START_TEST(sock_est_1_utest)
 	fprintf(p, "1234\nABCDE\n");
 	fflush(p);
 
-	ev_run(context.ev_loop, 0);
+	context_evloop_run(&context);
 
 	rc = pclose(p);
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
@@ -175,18 +168,10 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 	return false;
 }
 
-void sock_est_2_on_state_changed(struct established_socket * established_sock)
-{
-	if (established_sock->flags.read_shutdown == true)
-		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
-}
-
 struct established_socket_cb sock_est_2_sock_cb = 
 {
 	.get_read_frame = get_read_frame_simple,
 	.read = sock_est_2_on_read,
-	.state_changed = sock_est_2_on_state_changed,
-	.error = NULL
 };
 
 bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
@@ -198,8 +183,9 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 
 	established_socket_set_read_partial(&established_sock, true);
 
-	ok = established_socket_read_start(&established_sock);
-	ck_assert_int_eq(ok, true);
+
+	// Stop listening
+	listening_socket_stop(listening_socket);
 
 	return true;
 }
@@ -215,6 +201,9 @@ START_TEST(sock_est_2_utest)
 	struct listening_socket listen_sock;
 	int rc;
 	bool ok;
+
+	libsccmn_config.log_verbose = true;
+	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
 
 	struct context context;
 	ok = context_init(&context);
@@ -236,7 +225,7 @@ START_TEST(sock_est_2_utest)
 	FILE * p = popen("cat /etc/hosts | nc localhost 12345", "w");
 	ck_assert_ptr_ne(p, NULL);
 
-	ev_run(context.ev_loop, 0);
+	context_evloop_run(&context);
 
 	rc = pclose(p);
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
@@ -267,7 +256,6 @@ struct established_socket_cb sock_est_conn_fail_cb =
 	.connected = NULL,
 	.get_read_frame = NULL,
 	.read = NULL,
-	.state_changed = NULL,
 	.error = sock_est_conn_fail_on_error,
 };
 
@@ -355,15 +343,6 @@ bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct
 	return true;
 }
 
-void sock_est_ssl_1_on_state_changed(struct established_socket * established_sock)
-{
-	if (established_sock->flags.read_shutdown == true)
-	{
-		ev_break(established_sock->context->ev_loop, EVBREAK_ALL);
-	}
-}
-
-
 void sock_est_ssl_1_on_error(struct established_socket * established_sock)
 {
 	ck_assert_int_eq(0,1);
@@ -375,7 +354,6 @@ struct established_socket_cb sock_est_ssl_1_cb =
 	.connected = sock_est_ssl_1_on_connected,
 	.get_read_frame = get_read_frame_simple,
 	.read = sock_est_ssl_1_on_read,
-	.state_changed = sock_est_ssl_1_on_state_changed,
 	.error = sock_est_ssl_1_on_error,
 };
 

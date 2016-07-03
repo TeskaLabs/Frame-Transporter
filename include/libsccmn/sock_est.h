@@ -10,11 +10,9 @@ struct established_socket_cb
 	// True as a return value means, that the frame has been handed over to upstream protocol
 	bool (*read)(struct established_socket *, struct frame * frame);
 
-	void (*state_changed)(struct established_socket *); // Can be NULL
-
-	void (*close)(struct established_socket *);
-
 	void (*connected)(struct established_socket *); // Called when connect() is successfully established; can be NULL
+
+	void (*fini)(struct established_socket *);
 
 	void (*error)(struct established_socket *);
 };
@@ -31,9 +29,11 @@ struct established_socket
 		unsigned int write_open : 1;      // Write queue is open for adding new frames
 		unsigned int write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
 		unsigned int connecting : 1;
-		unsigned int active : 1;
+		unsigned int active : 1;  // Yes - we initiated connection using connect(), No - accept()
 		unsigned int read_partial : 1; // When yes, read() callback is triggered for any incoming data
 		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established; 3 - closing
+
+		unsigned int read_throttle : 1;
 	} flags;
 
 	int ai_family;
@@ -55,11 +55,13 @@ struct established_socket
 	// Input
 	struct ev_io read_watcher;
 	struct frame * read_frame;
+	unsigned int read_events;
 
 	// Output
 	struct ev_io write_watcher;
 	struct frame * write_frames; // Queue of write frames 
 	struct frame ** write_frame_last;
+	unsigned int write_events;
 
 	// SSL
 	SSL *ssl;
@@ -82,18 +84,19 @@ bool established_socket_init_accept(struct established_socket *, struct establis
 bool established_socket_init_connect(struct established_socket *, struct established_socket_cb * cbs, struct context * context, const struct addrinfo * addr);
 void established_socket_fini(struct established_socket *);
 
-bool established_socket_read_start(struct established_socket *);
-bool established_socket_read_stop(struct established_socket *);
+void established_socket_read_start(struct established_socket *);
+void established_socket_read_stop(struct established_socket *);
+void established_socket_read_throttle(struct established_socket *, bool throttle);
 
-bool established_socket_write_start(struct established_socket *);
-bool established_socket_write_stop(struct established_socket *);
+void established_socket_write_start(struct established_socket *);
+void established_socket_write_stop(struct established_socket *);
 
 bool established_socket_write(struct established_socket *, struct frame * frame);
 bool established_socket_write_shutdown(struct established_socket *);
 
 static inline bool established_socket_is_shutdown(struct established_socket * this)
 {
-	return (this->flags.write_shutdown && this->flags.write_shutdown);
+	return ((this->flags.read_shutdown) && (this->flags.write_shutdown));
 }
 
 static inline void established_socket_set_read_partial(struct established_socket * this, bool read_partial)
