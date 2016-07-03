@@ -482,7 +482,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				L_WARN("Out of frames when reading, throttling");
 				established_socket_read_throttle(this, true);
 				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
-				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
 			}
 		}
@@ -539,6 +539,7 @@ void established_socket_on_read_event(struct established_socket * this)
 					case SSL_ERROR_WANT_READ:
 						established_socket_read_set_event(this, READ_WANT_READ);
 						established_socket_write_unset_event(this, SSL_READ_WANT_WRITE);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " READ_WANT_READ", TRACE_ARGS);
 						return;
 
 					case SSL_ERROR_WANT_WRITE:
@@ -550,11 +551,13 @@ void established_socket_on_read_event(struct established_socket * this)
 						}
 						established_socket_read_unset_event(this, READ_WANT_READ);
 						established_socket_write_set_event(this, SSL_READ_WANT_WRITE);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_READ_WANT_WRITE", TRACE_ARGS);
 						return;
 
 					case SSL_ERROR_ZERO_RETURN:
 						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (zero ret)");
 						established_socket_read_shutdown(this);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 						return;
 
 					case SSL_ERROR_SYSCALL:
@@ -569,18 +572,21 @@ void established_socket_on_read_event(struct established_socket * this)
 							established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (syscall)");
 						}
 						established_socket_read_shutdown(this);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 						return;
 
 					case SSL_ERROR_SSL:
 						L_ERROR_OPENSSL("SSL error during read");
 						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (SSL error)");
 						established_socket_read_shutdown(this);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 						return;
 
 					default:
 						L_WARN_P("Unexpected error %d  during read, closing", ssl_err);
 						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (unknown)");
 						established_socket_read_shutdown(this);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
 						return;
 
 				}
@@ -600,6 +606,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				bool upstreamed = this->cbs->read(this, this->read_frame);
 				if (upstreamed) this->read_frame = NULL;
 			}
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " incomplete read", TRACE_ARGS);
 			return;
 		}
 		assert(frame_dvec->position == frame_dvec->limit);
