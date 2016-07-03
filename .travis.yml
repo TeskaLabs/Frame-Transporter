@@ -11,7 +11,7 @@ script:
 
 before_install:
     - sudo apt-get update -qq
-    - sudo apt-get install openssl libev-dev netcat pv -qq
+    - sudo apt-get install openssl libev-dev netcat pv socat -qq
     - wget http://downloads.sourceforge.net/project/check/check/0.10.0/check-0.10.0.tar.gz -O /tmp/libcheck.tar.gz
     - tar xf /tmp/libcheck.tar.gz -C /tmp
     - (cd /tmp/check-0.10.0/ && ./configure --prefix=/usr && make && sudo make install)
