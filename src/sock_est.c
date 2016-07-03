@@ -90,7 +90,7 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->write_frame_last = &this->write_frames;
 	this->stats.read_events = 0;
 	this->stats.write_events = 0;
-	this->stats.direct_write_events = 0;
+	this->stats.write_direct = 0;
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
 	this->flags.read_partial = false;
@@ -662,9 +662,7 @@ static void established_socket_write_real(struct established_socket * this)
 	assert(this->flags.connecting == false);
 	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);
-
-	this->stats.write_events += 1;
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);	
 
 	while (this->write_frames != NULL)
 	{
@@ -834,6 +832,8 @@ void established_socket_on_write_event(struct established_socket * this)
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
+	this->stats.write_events += 1;
+
 	this->flags.write_ready = true;
 	established_socket_write_unset_event(this, WRITE_WANT_WRITE);
 	if (this->write_frames != NULL)
@@ -870,7 +870,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 		return true;
 	}
 
-	this->stats.direct_write_events += 1;
+	this->stats.write_direct += 1;
 
 	established_socket_write_real(this);
 

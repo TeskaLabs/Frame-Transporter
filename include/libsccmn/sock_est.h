@@ -71,7 +71,7 @@ struct established_socket
 	{
 		unsigned int read_events;
 		unsigned int write_events;
-		unsigned int direct_write_events; //Writes without need of wait for EV_WRITE
+		unsigned int write_direct; //Writes without need of wait for EV_WRITE
 		unsigned long read_bytes;
 		unsigned long write_bytes;
 	} stats;
