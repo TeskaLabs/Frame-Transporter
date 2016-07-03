@@ -84,20 +84,38 @@ static void context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents
 	ev_signal_stop(this->ev_loop, &this->sigterm_w);
 }
 
+
+static void context_evloop_check_cb(struct ev_loop * loop, ev_check * w, int revents)
+{
+	L_TRACE(L_TRACEID_EVENT_LOOP, "iter:%u", ev_iteration(loop));
+}
+
 void context_evloop_run(struct context * this)
 {
 	assert(this != NULL);
+
+	ev_check check_w;
+	ev_check_init(&check_w, context_evloop_check_cb);
+	ev_check_start(this->ev_loop, &check_w);
+	ev_unref(this->ev_loop);
+
+	L_TRACE(L_TRACEID_EVENT_LOOP, "event loop start");
 
 #if ((EV_VERSION_MINOR > 11) && (EV_VERSION_MAJOR >= 4))
 	bool run=true;
 	while (run)
 	{
 		run = ev_run(this->ev_loop, 0);
+		if (run) L_TRACE(L_TRACEID_EVENT_LOOP, "event loop continue");
 	}
 #else
 	ev_run(this->ev_loop, 0);
 #endif
 
+	ev_ref(this->ev_loop);
+	ev_check_stop(this->ev_loop, &check_w);
+
+	L_TRACE(L_TRACEID_EVENT_LOOP, "event loop stop");
 }
 
 ///
