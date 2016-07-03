@@ -986,7 +986,7 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 			return;
 
 		case SSL_ERROR_SSL:
-			L_ERROR_OPENSSL("SSL error during handshake");
+			L_WARN_OPENSSL("SSL error during handshake");
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (SSL error)");
 			return;
 
