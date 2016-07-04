@@ -555,7 +555,7 @@ void established_socket_on_read_event(struct established_socket * this)
 						return;
 
 					case SSL_ERROR_ZERO_RETURN:
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (zero ret)");
+						L_INFO("Peer closed a connection");
 						established_socket_read_shutdown(this);
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 						return;
