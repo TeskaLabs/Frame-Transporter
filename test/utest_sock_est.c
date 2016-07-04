@@ -203,7 +203,7 @@ START_TEST(sock_est_2_utest)
 	bool ok;
 
 	libsccmn_config.log_verbose = true;
-	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
+	//libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
 
 	struct context context;
 	ok = context_init(&context);
