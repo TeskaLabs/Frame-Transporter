@@ -426,6 +426,7 @@ START_TEST(sock_est_ssl_1_utest)
 	ck_assert_ptr_ne(dvec, NULL);	
 
 	ok = frame_dvec_sprintf(dvec, "GET /sock_est_ssl_1_utest.bin HTTP/1.0\r\n\r\n");
+	ck_assert_int_eq(ok, true);
 
 	frame_flip(frame);
 
