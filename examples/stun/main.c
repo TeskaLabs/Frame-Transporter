@@ -263,6 +263,8 @@ int main(int argc, char const *argv[])
 	logging_set_verbose(true);
 	libsccmn_init();
 
+	//libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
+
 	// Initialize context
 	ok = context_init(&context);
 	if (!ok) return EXIT_FAILURE;
