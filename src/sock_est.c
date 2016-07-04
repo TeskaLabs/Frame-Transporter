@@ -1078,15 +1078,9 @@ retry:
 			return;
 
 		case SSL_ERROR_SYSCALL:
-			if (errno_ssl_cmd == 0)
-			{
-				L_WARN(">>> SSL_ERROR_SYSCALL / 0");
-				//TODO: What is the best reaction here ...
-				established_socket_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
-				return;
-			}
-			L_WARN_ERRNO(errno_ssl_cmd, "SSL shutdown (syscall, rc: %d)", rc);
+			L_ERROR_ERRNO(errno_ssl_cmd, "SSL shutdown (syscall, rc: %d)", rc);
 			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (syscall)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL errno: %d", TRACE_ARGS, errno_ssl_cmd);
 			return;
 
 		case SSL_ERROR_SSL:
