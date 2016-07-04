@@ -1126,6 +1126,9 @@ static void established_socket_on_read(struct ev_loop * loop, struct ev_io * wat
 		goto end;
 	}
 
+	if (this->read_events & READ_WANT_READ)
+		established_socket_on_read_event(this);
+
 	if (this->ssl != NULL)
 	{
 		if (this->read_events & SSL_HANDSHAKE_WANT_READ)
@@ -1143,9 +1146,6 @@ static void established_socket_on_read(struct ev_loop * loop, struct ev_io * wat
 			established_socket_on_write_event(this);
 		}
 	}
-
-	if (this->read_events & READ_WANT_READ)
-		established_socket_on_read_event(this);
 
 end:
 	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " e:%x", TRACE_ARGS, revents);
