@@ -1026,6 +1026,8 @@ void established_socket_on_ssl_shutdown_event(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->flags.ssl_status == 3);
 
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
 	int rc;
 
 	rc = SSL_shutdown(this->ssl);
@@ -1041,6 +1043,7 @@ void established_socket_on_ssl_shutdown_event(struct established_socket * this)
 		int rc = shutdown(this->write_watcher.fd, SHUT_WR);
 		if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
 
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
 		return;
 	}
 
@@ -1051,15 +1054,18 @@ void established_socket_on_ssl_shutdown_event(struct established_socket * this)
 		case SSL_ERROR_WANT_READ:
 			established_socket_read_set_event(this, SSL_SHUTDOWN_WANT_READ);
 			established_socket_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_READ", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_WANT_WRITE:
 			established_socket_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
 			established_socket_write_set_event(this, SSL_SHUTDOWN_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_WRITE", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
 			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (zero ret)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
@@ -1077,11 +1083,13 @@ void established_socket_on_ssl_shutdown_event(struct established_socket * this)
 		case SSL_ERROR_SSL:
 			L_ERROR_OPENSSL("SSL error during shutdown");
 			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (SSL error)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
 
 		default:
 			L_WARN_P("Unexpected error %d  during shutdown, closing", ssl_err);
 			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (unknown)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
 }
