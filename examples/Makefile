@@ -1,7 +1,8 @@
 SUBDIRS=\
 	reply \
 	forward \
-	stun
+	stun \
+	wget
 
 all: subdirs
 

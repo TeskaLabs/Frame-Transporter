@@ -8,6 +8,7 @@ script:
     - (cd examples/reply/ && ./test_reply_03.sh)
     - (cd examples/forward/ && ./test_forward_01.sh)
     - (cd examples/stun/ && ./test_stun_01.sh)
+    - (cd examples/sfetch/ && ./test_sfetch_01.sh)
 
 before_install:
     - sudo apt-get update -qq

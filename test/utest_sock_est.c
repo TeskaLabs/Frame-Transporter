@@ -386,6 +386,8 @@ START_TEST(sock_est_ssl_1_utest)
 
 	libsccmn_init();
 
+	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
+
 	sock_est_ssl_1_read_counter = 0;
 
 	SSL_CTX * ssl_ctx = SSL_CTX_new(TLSv1_2_client_method());

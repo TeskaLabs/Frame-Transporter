@@ -6,6 +6,7 @@
 /examples/reply/reply
 /examples/forward/forward
 /examples/stun/stun
+/examples/sfetch/sfetch
 
 # Object files
 *.o
