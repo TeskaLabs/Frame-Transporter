@@ -1030,6 +1030,7 @@ void established_socket_on_ssl_shutdown_event(struct established_socket * this)
 
 	int rc;
 
+retry:
 	rc = SSL_shutdown(this->ssl);
 	if (rc == 1) // SSL Shutdown is  completed
 	{
@@ -1045,6 +1046,14 @@ void established_socket_on_ssl_shutdown_event(struct established_socket * this)
 
 		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
 		return;
+	}
+
+	if (rc == 0)
+	{
+		// The shutdown is not yet finished.
+		// Call SSL_shutdown() for a second time, if a bidirectional shutdown shall be performed.
+		L_TRACE(L_TRACEID_SOCK_STREAM, "RETRY " TRACE_FMT, TRACE_ARGS);
+		goto retry;
 	}
 
 	int errno_ssl_cmd = errno;
