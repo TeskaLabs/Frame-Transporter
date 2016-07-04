@@ -555,22 +555,24 @@ void established_socket_on_read_event(struct established_socket * this)
 						return;
 
 					case SSL_ERROR_ZERO_RETURN:
-						L_INFO("Peer closed a connection");
+						L_DEBUG("Peer closed a connection (zero ret)");
+						this->syserror = 0;
 						established_socket_read_shutdown(this);
-						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " zeroret", TRACE_ARGS);
 						return;
 
 					case SSL_ERROR_SYSCALL:
 						if ((rc == 0) && (errno_read == 0))
 						{
 							// This is a quite standard way how SSL connection is closed (by peer)
-							L_INFO("Peer closed a connection");
+							L_DEBUG("Peer closed a connection (syscall)");
 							this->syserror = 0;
+							established_socket_read_shutdown(this);
+							L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " syscall", TRACE_ARGS);
+							return;
 						}
-						else
-						{
-							established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (syscall)");
-						}
+						L_ERROR_ERRNO(errno, "SSL error (syscall) during read");
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (syscall)");
 						established_socket_read_shutdown(this);
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 						return;
@@ -1078,7 +1080,20 @@ retry:
 			return;
 
 		case SSL_ERROR_SYSCALL:
-			L_ERROR_ERRNO(errno_ssl_cmd, "SSL shutdown (syscall, rc: %d)", rc);
+			established_socket_read_set_event(this, READ_WANT_READ);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL errno: %d", TRACE_ARGS, errno_ssl_cmd);
+			return;
+			if (errno_ssl_cmd == 0)
+			{
+				socklen_t optlen = sizeof(errno_ssl_cmd);
+				rc = getsockopt(this->write_watcher.fd, SOL_SOCKET, SO_ERROR, &errno_ssl_cmd, &optlen);
+				if (rc != 0)
+				{
+					L_ERROR_ERRNO(errno, "getsockopt(SOL_SOCKET, SO_ERROR) for async SSL_shutdown");
+				}
+			}
+
+			L_ERROR_ERRNO(errno_ssl_cmd, "SSL shutdown (syscall, rc: %d, ERR_peek_last_error: %ld)", rc, ERR_peek_last_error());
 			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (syscall)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL errno: %d", TRACE_ARGS, errno_ssl_cmd);
 			return;
