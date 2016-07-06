@@ -2,7 +2,7 @@ SUBDIRS=\
 	reply \
 	forward \
 	stun \
-	wget
+	sfetch
 
 all: subdirs
 
