@@ -321,7 +321,7 @@ void established_socket_on_connect_event(struct established_socket * this)
 		return;
 	}
 
-	L_INFO("TCP connection established");
+	L_DEBUG("TCP connection established");
 	established_socket_write_unset_event(this, CONNECT_WANT_WRITE);
 
 	if (this->ssl != NULL)
@@ -332,7 +332,7 @@ void established_socket_on_connect_event(struct established_socket * this)
 		
 		this->flags.ssl_status = 1;
 
-		L_INFO("SSL handshake started");
+		L_DEBUG("SSL handshake started");
 
 		// Save one loop
 		ev_invoke(this->context->ev_loop, &this->write_watcher, EV_WRITE);
@@ -576,7 +576,7 @@ void established_socket_on_read_event(struct established_socket * this)
 							// Both SSL and TCP connection has been closed (not via SSL_RECEIVED_SHUTDOWN)
 							int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 							assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == 0);
-							L_DEBUG("Connection closed by peer (ssl_shutdown:%d)", ssl_shutdown_status);
+							L_DEBUG("Connection closed by peer");
 							this->syserror = 0;
 							established_socket_read_shutdown(this);
 							L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL terminate (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
@@ -973,7 +973,7 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 	{
 		//TODO: long verify_result = SSL_get_verify_result(seacatcc_context.gwconn_ssl_handle);
 
-		L_INFO("SSL connection established");
+		L_DEBUG("SSL connection established");
 
 		// Wire I/O event callbacks
 		established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
@@ -1046,7 +1046,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 
 	if (rc == 0)
 	{
-		L_INFO("SSL shutdown sent");
+		L_DEBUG("SSL shutdown sent");
 
 		//SSL_SENT_SHUTDOWN has been sent
 		// The shutdown is not yet finished, we are waiting for SSL_RECEIVED_SHUTDOWN
@@ -1063,7 +1063,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 		established_socket_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
 		established_socket_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
 
-		L_INFO("SSL connection has been shutdown");
+		L_DEBUG("SSL connection has been shutdown");
 
 		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
 		if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
