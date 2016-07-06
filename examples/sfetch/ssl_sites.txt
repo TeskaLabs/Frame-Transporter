@@ -25,7 +25,6 @@ bit.ly 443
 w3.org 443
 networkadvertising.org 443
 weebly.com 443
-qq.com 443
 goo.gl 443
 buydomains.com 443
 nytimes.com 443
