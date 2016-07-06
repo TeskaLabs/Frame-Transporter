@@ -202,7 +202,7 @@ START_TEST(sock_est_2_utest)
 	int rc;
 	bool ok;
 
-	libsccmn_config.log_verbose = true;
+	//libsccmn_config.log_verbose = true;
 	//libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
 
 	struct context context;
@@ -386,6 +386,7 @@ START_TEST(sock_est_ssl_1_utest)
 
 	libsccmn_init();
 
+	libsccmn_config.log_verbose = true;
 	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
 
 	sock_est_ssl_1_read_counter = 0;
@@ -440,6 +441,16 @@ START_TEST(sock_est_ssl_1_utest)
 
 	context_evloop_run(&context);
 
+	L_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+		sock.stats.read_events,
+		sock.stats.write_events,
+		sock.stats.write_direct,
+		sock.stats.read_bytes,
+		sock.stats.write_bytes
+	);
+
+	ck_assert_int_eq(sock.stats.read_bytes, 4096 * 100);
+
 	unsigned char digest2[EVP_MAX_MD_SIZE];
 	EVP_DigestFinal(sock_est_ssl_1_mdctx, digest2, NULL);
     EVP_MD_CTX_cleanup(sock_est_ssl_1_mdctx);
@@ -449,11 +460,9 @@ START_TEST(sock_est_ssl_1_utest)
 
 	rc = kill(pid, SIGINT);
 	ck_assert_int_eq(rc, 0);
-
 	char buffer[128*1024];
 	ssize_t x = read(outf, buffer, sizeof(buffer));
 	ck_assert_int_gt(x, 0);
-
 	close(inf);
 	close(outf);
 
