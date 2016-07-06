@@ -386,8 +386,8 @@ START_TEST(sock_est_ssl_1_utest)
 
 	libsccmn_init();
 
-	libsccmn_config.log_verbose = true;
-	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
+//	libsccmn_config.log_verbose = true;
+//	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
 
 	sock_est_ssl_1_read_counter = 0;
 
