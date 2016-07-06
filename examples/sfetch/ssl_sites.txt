@@ -1,7 +1,6 @@
 twitter.com 443
 google.com 443
 youtube.com 443
-wordpress.org 443
 linkedin.com 443
 sedo.com 443
 sedoparking.com 443
