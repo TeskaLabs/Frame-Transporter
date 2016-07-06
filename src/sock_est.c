@@ -1039,8 +1039,14 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 	assert(this->flags.ssl_status != 0);
 	assert(this->ssl != NULL);
 
-	//TODO: if (SSL_SENT_SHUTDOWN) return
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
+	if ((SSL_get_shutdown(this->ssl) & SSL_SENT_SHUTDOWN) == SSL_get_shutdown(this->ssl))
+	{
+		L_WARN("SSL shutdown has been already sent");
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " already sent", TRACE_ARGS);
+		return;
+	}
 
 	int rc = SSL_shutdown(this->ssl);
 
