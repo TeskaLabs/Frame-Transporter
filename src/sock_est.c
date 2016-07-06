@@ -1052,13 +1052,11 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 
 	if (rc == 0)
 	{
-		L_DEBUG("SSL shutdown sent");
-
 		//SSL_SENT_SHUTDOWN has been sent
-		// The shutdown is not yet finished, we are waiting for SSL_RECEIVED_SHUTDOWN
+		L_DEBUG("SSL shutdown sent");
 		established_socket_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
 		established_socket_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
-		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_SENT_SHUTDOWN", TRACE_ARGS);
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " sent", TRACE_ARGS);
 		return;
 	}
 
@@ -1072,9 +1070,9 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 		L_DEBUG("SSL connection has been shutdown");
 
 		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
-		if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
+		if (rc != 0) L_WARN_ERRNO_P(errno, "shutdown()");
 
-		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " rc:0", TRACE_ARGS);
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " completed", TRACE_ARGS);
 		return;
 	}
 
