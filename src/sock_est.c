@@ -466,8 +466,7 @@ void established_socket_on_read_event(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->flags.connecting == false);
 	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) \
-		|| ((this->ssl != NULL) && (this->flags.ssl_status == 2)) \
-		|| ((this->ssl != NULL) && (this->flags.ssl_status == 3))
+		|| ((this->ssl != NULL) && (this->flags.ssl_status == 2))
 	);
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
@@ -557,27 +556,39 @@ void established_socket_on_read_event(struct established_socket * this)
 						return;
 
 					case SSL_ERROR_ZERO_RETURN:
-						L_DEBUG("Peer closed a connection (zero ret)");
+						// This is a clean SSL_RECEIVED_SHUTDOWN (read is closed)
+						// The socket is still open
+						assert(rc == 0); // not sure what to do then rc < -1 ....
+						int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
+						assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == SSL_RECEIVED_SHUTDOWN);
+						L_DEBUG("SSL shutdown received");
 						this->syserror = 0;
+						// Now close alse the socket
+						rc = shutdown(this->write_watcher.fd, SHUT_RD);
+						if (rc != 0) L_WARN_ERRNO_P(errno, "shutdown()");
 						established_socket_read_shutdown(this);
-						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " zeroret", TRACE_ARGS);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL received shutdown (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 						return;
 
 					case SSL_ERROR_SYSCALL:
 						if ((rc == 0) && (errno_read == 0))
 						{
-							// This is a quite standard way how SSL connection is closed (by peer)
-							// It is also an end of SSL_shutdown itiated by our party
-							L_DEBUG("Peer closed a connection (syscall)");
+							// Both SSL and TCP connection has been closed (not via SSL_RECEIVED_SHUTDOWN)
+							int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
+							assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == 0);
+							L_DEBUG("Connection closed by peer (ssl_shutdown:%d)", ssl_shutdown_status);
 							this->syserror = 0;
 							established_socket_read_shutdown(this);
-							L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL (errno: 0)", TRACE_ARGS);
+							L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL terminate (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 							return;
 						}
-						L_ERROR_ERRNO(errno, "SSL error (syscall) during read");
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (syscall)");
+						if (errno_read != 0)
+						{
+							this->syserror = errno_read;
+							established_socket_error(this, errno_read, "SSL read (syscall)");
+						}
 						established_socket_read_shutdown(this);
-						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL (errno: %d, rc: %zd)", TRACE_ARGS, errno_read, rc);
 						return;
 
 					case SSL_ERROR_SSL:
@@ -1025,7 +1036,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 	// This function handles outgoing SSL shutdown (SSL_SENT_SHUTDOWN)
 
 	assert(this != NULL);
-	assert(this->flags.ssl_status > 0);
+	assert(this->flags.ssl_status != 0);
 	assert(this->ssl != NULL);
 
 	//TODO: if (SSL_SENT_SHUTDOWN) return
@@ -1035,8 +1046,6 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 
 	if (rc == 0)
 	{
-		this->flags.ssl_status = 3;
-
 		L_INFO("SSL shutdown sent");
 
 		//SSL_SENT_SHUTDOWN has been sent
@@ -1056,7 +1065,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 
 		L_INFO("SSL connection has been shutdown");
 
-		int rc = shutdown(this->write_watcher.fd, SHUT_WR);
+		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
 		if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
 
 		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " rc:0", TRACE_ARGS);
