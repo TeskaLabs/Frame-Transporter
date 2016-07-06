@@ -24,7 +24,6 @@ reddit.com 443
 bit.ly 443
 w3.org 443
 networkadvertising.org 443
-whoisprivacyprotect.com 443
 weebly.com 443
 qq.com 443
 goo.gl 443
