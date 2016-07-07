@@ -2,7 +2,9 @@
 #include <openssl/rand.h>
 #include <sys/mman.h>
 
-#define FRAME_SIZE (3*4096)
+// Frame size should be above 16kb, which is a maximum record size of 16kB for SSLv3/TLSv1
+// See https://www.openssl.org/docs/manmaster/ssl/SSL_read.html
+#define FRAME_SIZE (5*4096)
 #define MEMPAGE_SIZE (4096)
 
 void _logging_init(void);
