@@ -627,7 +627,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				if (upstreamed) this->read_frame = NULL;
 			}
 			established_socket_read_set_event(this, READ_WANT_READ);
-			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " incomplete read", TRACE_ARGS);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " incomplete read (%zd)", TRACE_ARGS, rc);
 			return;
 		}
 		assert(frame_dvec->position == frame_dvec->limit);
