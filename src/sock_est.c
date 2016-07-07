@@ -970,6 +970,7 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->flags.ssl_status == 1);
 
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
 
 	rc = SSL_connect(this->ssl);
@@ -994,6 +995,7 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 		// Simulate a write event to dump frames in the write queue
 		established_socket_on_write_event(this);
 
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
 		return;
 	}
 
@@ -1004,30 +1006,36 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 		case SSL_ERROR_WANT_READ:
 			established_socket_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
 			established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_READ (rc: %d)", TRACE_ARGS, rc);
 			return;
 
 		case SSL_ERROR_WANT_WRITE:
 			established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 			established_socket_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (zero ret)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
 			L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (syscall)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SSL:
 			L_WARN_OPENSSL("SSL error during handshake");
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (SSL error)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
 
 		default:
 			L_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (unknown)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 
 	}
