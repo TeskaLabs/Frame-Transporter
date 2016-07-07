@@ -563,9 +563,9 @@ void established_socket_on_read_event(struct established_socket * this)
 						assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == SSL_RECEIVED_SHUTDOWN);
 						L_DEBUG("SSL shutdown received");
 						this->syserror = 0;
-						// Now close alse the socket
+						// Now close also the TCP socket
 						rc = shutdown(this->write_watcher.fd, SHUT_RD);
-						if (rc != 0) L_WARN_ERRNO_P(errno, "shutdown()");
+						if ((rc != 0) && (errno != ENOTCONN)) L_WARN_ERRNO_P(errno, "shutdown()");
 						established_socket_read_shutdown(this);
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL received shutdown (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 						return;
