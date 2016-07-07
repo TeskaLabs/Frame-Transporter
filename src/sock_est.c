@@ -733,7 +733,7 @@ static void established_socket_write_real(struct established_socket * this)
 			else
 			{
 				int rc = shutdown(this->write_watcher.fd, SHUT_WR);
-				if (rc != 0) L_ERROR_ERRNO_P(errno, "shutdown()");
+				if (rc != 0) L_WARN_ERRNO_P(errno, "shutdown()");
 			}
 
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
