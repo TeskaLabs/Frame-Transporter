@@ -25,7 +25,6 @@ w3.org 443
 networkadvertising.org 443
 weebly.com 443
 goo.gl 443
-buydomains.com 443
 nytimes.com 443
 addthis.com 443
 blogger.com 443
