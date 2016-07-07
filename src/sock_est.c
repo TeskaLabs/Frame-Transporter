@@ -571,13 +571,17 @@ void established_socket_on_read_event(struct established_socket * this)
 						return;
 
 					case SSL_ERROR_SYSCALL:
-						if ((rc == 0) && (errno_read == 0))
+						if (    ((rc ==  0) && (errno_read == 0)) \
+							 || ((rc == -1 )&& (errno_read == ECONNRESET)) \
+						   )
 						{
 							// Both SSL and TCP connection has been closed (not via SSL_RECEIVED_SHUTDOWN)
+							// rc== 0, errno_read == 0 -> Other side called close() nicely
+							// rc==-1, errno_read == ECONNRESET -> Other side aborted() aka sent RST flag
 							int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 							assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == 0);
 							L_DEBUG("Connection closed by peer");
-							this->syserror = 0;
+							this->syserror = errno_read;
 							established_socket_read_shutdown(this);
 							L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL terminate (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 							return;
