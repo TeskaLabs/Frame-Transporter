@@ -60,6 +60,10 @@ static inline void frame_pool_return(struct frame * frame)
 
 	zone->frames_used -= 1;
 	zone->free_timeout_triggered = (frame->zone->frames_used == 0);
+
+	// Erase a page
+	// TODO: Conditionally based on the zone configuration
+	bzero(frame->data, frame->capacity);
 }
 
 #endif //__LIBSCCMN_FPOOL_H__
