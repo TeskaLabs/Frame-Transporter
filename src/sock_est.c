@@ -1041,7 +1041,9 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
-	if ((SSL_get_shutdown(this->ssl) & SSL_SENT_SHUTDOWN) == SSL_get_shutdown(this->ssl))
+
+	int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
+	if ((ssl_shutdown_status & SSL_SENT_SHUTDOWN) == SSL_SENT_SHUTDOWN)
 	{
 		L_WARN("SSL shutdown has been already sent");
 		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " already sent", TRACE_ARGS);
