@@ -12,11 +12,17 @@ struct frame_pool_zone
 {
 	struct frame_pool_zone * next;
 
-	bool freeable; // If true, then the zone can be returned (unmmaped) back to OS when all frames are returned
+	struct
+	{
+		unsigned int freeable : 1; // If true, then the zone can be returned (unmmaped) back to OS when all frames are returned
+		unsigned int erase_on_return : 1; // If true, frames will be erased using bzero() on frame_pool_return()
+		unsigned int mlock_when_used : 1;
+		unsigned int free_on_hb : 1; // If true, zone will be removed during next heartbeat
+	} flags;
+
 	size_t frames_total;
 	size_t frames_used;
 
-	bool free_timeout_triggered;
 	ev_tstamp free_at;
 
 	size_t mmap_size;
@@ -51,6 +57,7 @@ struct frame * frame_pool_borrow_real(struct frame_pool *, uint64_t frame_type, 
 
 static inline void frame_pool_return(struct frame * frame)
 {
+	int rc;
 	struct frame_pool_zone * zone = frame->zone;
 
 	frame->type = frame_type_FREE;
@@ -59,15 +66,18 @@ static inline void frame_pool_return(struct frame * frame)
 	zone->available_frames = frame;
 
 	zone->frames_used -= 1;
-	zone->free_timeout_triggered = (frame->zone->frames_used == 0);
+	zone->flags.free_on_hb = (frame->zone->frames_used == 0);
 
 	// Erase a page
-	// TODO: Conditionally based on the zone configuration
-	bzero(frame->data, frame->capacity);
+	if (zone->flags.erase_on_return)
+		bzero(frame->data, frame->capacity);
 
 	// Unlock pages from the memory
-	int rc = munlock(frame->data, frame->capacity);
-	if (rc != 0) L_WARN_ERRNO(errno, "munlock in frame pool return");
+	if (zone->flags.mlock_when_used)
+	{
+		rc = munlock(frame->data, frame->capacity);
+		if (rc != 0) L_WARN_ERRNO(errno, "munlock in frame pool return");
+	}
 
 	// Advise that we will use it
 	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);

@@ -20,7 +20,10 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 	}
 
 	struct frame_pool_zone * this = p;
-	this->freeable = freeable;
+	this->flags.freeable = freeable;
+	this->flags.erase_on_return = true;
+	this->flags.mlock_when_used = true;
+	this->flags.free_on_hb = false;
 	this->mmap_size = mmap_size_frames+mmap_size_zone+mmap_size_fill;
 	this->next = NULL;
 
@@ -74,6 +77,8 @@ static void frame_pool_zone_del(struct frame_pool_zone * this)
 
 static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint64_t frame_type, const char * file, unsigned int line)
 {
+	int rc;
+
 	if (this->available_frames == NULL) return NULL; // Zone has no available frames
 	struct frame * frame = this->available_frames;
 	this->available_frames = frame->next;
@@ -89,9 +94,11 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint
 	frame->dvec_limit = 0;
 
 	// Lock the frame the memory
-	//TODO: This should be conditional baed on a zone settings
-	int rc = mlock(frame->data, frame->capacity);
-	if (rc != 0) L_WARN_ERRNO(errno, "mlock in frame pool borrow");
+	if (frame->zone->flags.mlock_when_used)
+	{
+		rc = mlock(frame->data, frame->capacity);
+		if (rc != 0) L_WARN_ERRNO(errno, "mlock in frame pool borrow");
+	}
 
 	// Advise that we will use it
 	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
@@ -194,17 +201,17 @@ void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbea
 	struct frame_pool_zone * zone = this->zones;
 	while (zone != NULL)
 	{
-		if ((!zone->freeable) || (zone->frames_used > 0))
+		if ((!zone->flags.freeable) || (zone->frames_used > 0))
 		{
 			last_zone_next = &zone->next;
 			zone = zone->next;
 			continue;
 		}
 
-		if (zone->free_timeout_triggered)
+		if (zone->flags.free_on_hb)
 		{
 			zone->free_at = now + libsccmn_config.fpool_zone_free_timeout;
-			zone->free_timeout_triggered = false;
+			zone->flags.free_on_hb = false;
 
 			last_zone_next = &zone->next;
 			zone = zone->next;
