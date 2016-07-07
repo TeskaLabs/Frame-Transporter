@@ -16,7 +16,7 @@ struct frame_pool_zone
 	{
 		unsigned int freeable : 1; // If true, then the zone can be returned (unmmaped) back to OS when all frames are returned
 		unsigned int erase_on_return : 1; // If true, frames will be erased using bzero() on frame_pool_return()
-		unsigned int mlock_when_used : 1;
+		unsigned int mlock_when_used : 1; // If true, frames will be mlock()-ed into memory when in use (prevention of swapping to the disk)
 		unsigned int free_on_hb : 1; // If true, zone will be removed during next heartbeat
 	} flags;
 
