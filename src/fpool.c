@@ -88,6 +88,15 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint
 	frame->dvec_position = 0;
 	frame->dvec_limit = 0;
 
+	// Lock the frame the memory
+	//TODO: This should be conditional baed on a zone settings
+	int rc = mlock(frame->data, frame->capacity);
+	if (rc != 0) L_WARN_ERRNO(errno, "mlock in frame pool borrow");
+
+	// Advise that we will use it
+	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
+	if (rc != 0) L_WARN_ERRNO(errno, "posix_madvise in frame pool borrow");
+
 	return frame;
 }
 

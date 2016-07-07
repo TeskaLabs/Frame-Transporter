@@ -64,6 +64,15 @@ static inline void frame_pool_return(struct frame * frame)
 	// Erase a page
 	// TODO: Conditionally based on the zone configuration
 	bzero(frame->data, frame->capacity);
+
+	// Unlock pages from the memory
+	int rc = munlock(frame->data, frame->capacity);
+	if (rc != 0) L_WARN_ERRNO(errno, "munlock in frame pool return");
+
+	// Advise that we will use it
+	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);
+	if (rc != 0) L_WARN_ERRNO(errno, "posix_madvise in frame pool return");
+
 }
 
 #endif //__LIBSCCMN_FPOOL_H__
