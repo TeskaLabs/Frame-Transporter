@@ -148,6 +148,7 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 
 	this->flags.connecting = false;
 	this->flags.active = false;
+	this->flags.ssl_server = true;
 	this->connected_at = this->created_at;	
 
 	established_socket_read_start(this);
@@ -187,6 +188,7 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 
 	this->flags.connecting = true;
 	this->flags.active = true;
+	this->flags.ssl_server = false;
 
 	L_DEBUG("Connecting ...");
 

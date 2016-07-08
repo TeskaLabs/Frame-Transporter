@@ -32,6 +32,7 @@ struct established_socket
 		unsigned int active : 1;  // Yes - we initiated connection using connect(), No - accept()
 		unsigned int read_partial : 1; // When yes, read() callback is triggered for any incoming data
 		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established
+		unsigned int ssl_server : 1; // Yes - we are SSL server (SSL_accept will be used in accept), No - we are SSL client (SSL_connect will be used)
 
 		unsigned int read_throttle : 1;
 	} flags;
