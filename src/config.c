@@ -27,6 +27,7 @@ struct libsccmn_config libsccmn_config =
 	.sock_listen_backlog = 128,
 
 	.sock_est_max_read_loops = 10,
+	.sock_est_ssl_ex_data_index = -2
 };
 
 

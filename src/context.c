@@ -42,6 +42,17 @@ bool context_init(struct context * this)
 	ok = frame_pool_init(&this->frame_pool, &this->heartbeat);
 	if (!ok) return false;
 
+	if (libsccmn_config.sock_est_ssl_ex_data_index == -2)
+	{
+		libsccmn_config.sock_est_ssl_ex_data_index = SSL_get_ex_new_index(0, "libsccmn_ptr", NULL, NULL, NULL);	
+		if (libsccmn_config.sock_est_ssl_ex_data_index == -1)
+		{
+			libsccmn_config.sock_est_ssl_ex_data_index = -2;
+			L_ERROR_OPENSSL("SSL_get_ex_new_index");
+			return false;
+		}
+	}
+
 	return true;
 }
 

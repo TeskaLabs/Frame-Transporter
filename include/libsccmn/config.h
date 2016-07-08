@@ -28,6 +28,7 @@ struct libsccmn_config
 	int sock_listen_backlog;
 
 	unsigned int sock_est_max_read_loops;
+	int sock_est_ssl_ex_data_index; // Where to store a pointer to socket object
 };
 
 extern struct libsccmn_config libsccmn_config;

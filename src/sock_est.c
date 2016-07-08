@@ -961,6 +961,13 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 		return false;
 	}
 
+	assert((libsccmn_config.sock_est_ssl_ex_data_index != -1) && (libsccmn_config.sock_est_ssl_ex_data_index != -2));
+	rc = SSL_set_ex_data(this->ssl, libsccmn_config.sock_est_ssl_ex_data_index, this);
+	if (rc != 1)
+	{
+		L_WARN_OPENSSL("established_socket_ssl_enable:SSL_set_ex_data");
+		return false;
+	}
 	return true;
 }
 
