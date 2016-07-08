@@ -132,7 +132,7 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 {
 	assert(listening_socket != NULL);
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, "fd:%d", fd);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN fd:%d", fd);
 
 	bool ok = established_socket_init(
 		this,
@@ -154,7 +154,7 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 	established_socket_read_start(this);
 	established_socket_write_start(this);
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, TRACE_FMT, TRACE_ARGS);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return true;
 }
@@ -169,7 +169,7 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 		return false;
 	}
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, "fd:%d", fd);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN fd:%d", fd);
 
 	bool ok = established_socket_init(
 		this,
@@ -204,7 +204,7 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 
 	established_socket_write_set_event(this, CONNECT_WANT_WRITE);
 
-	L_TRACE(L_TRACEID_SOCK_STREAM, TRACE_FMT, TRACE_ARGS);
+	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return true;
 }
