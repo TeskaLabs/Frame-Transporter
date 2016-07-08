@@ -2,7 +2,8 @@ SUBDIRS=\
 	reply \
 	forward \
 	stun \
-	sfetch
+	sfetch \
+	sreply
 
 all: subdirs
 
