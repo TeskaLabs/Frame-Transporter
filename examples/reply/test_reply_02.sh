@@ -12,6 +12,6 @@ trap finish EXIT
 ./reply &
 sleep 0.2
 
-dd if=/dev/zero count=1024000 bs=1024| nc 127.0.0.1 12345  | pv -r > /dev/null
+dd if=/dev/zero count=1024000 bs=1024 | socat stdio tcp:127.0.0.1:12345  | pv -rb > /dev/null
 
 echo "TEST $0 OK"
