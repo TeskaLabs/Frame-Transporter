@@ -1093,7 +1093,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 		L_DEBUG("SSL connection has been shutdown");
 
 		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
-		if (rc != 0) L_WARN_ERRNO_P(errno, "shutdown()");
+		if ((rc != 0) && ( errno != ENOTCONN)) L_WARN_ERRNO_P(errno, "shutdown()");
 
 		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " completed", TRACE_ARGS);
 		return;
