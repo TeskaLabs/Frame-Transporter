@@ -270,7 +270,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 	// Initialize OpenSSL context
-	ssl_ctx = SSL_CTX_new(TLSv1_2_client_method());
+	ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 	if (ssl_ctx == NULL) return EXIT_FAILURE;
 
 	// Initialize a list for listening sockets
