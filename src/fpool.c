@@ -48,7 +48,7 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
-	L_DEBUG("Allocated frame pool zone of %zu bytes", this->mmap_size);
+	L_DEBUG("Allocated frame pool zone of %zu bytes, %zd frames", this->mmap_size, this->frames_total);
 	return this;
 }
 
