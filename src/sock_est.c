@@ -30,7 +30,6 @@ static void established_socket_write_unset_event(struct established_socket * thi
 
 static void established_socket_on_write_event(struct established_socket * this);
 static void established_socket_on_ssl_sent_shutdown_event(struct established_socket * this);
-static int established_socket_on_ssl_handshake_verify_callback(int preverify_ok, X509_STORE_CTX * ctx);
 
 ///
 
@@ -964,9 +963,7 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 		return false;
 	}
 
-	// Set verify callback
-	SSL_set_verify(this->ssl, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, established_socket_on_ssl_handshake_verify_callback);
-
+	// Set an socket reference
 	assert((libsccmn_config.sock_est_ssl_ex_data_index != -1) && (libsccmn_config.sock_est_ssl_ex_data_index != -2));
 	rc = SSL_set_ex_data(this->ssl, libsccmn_config.sock_est_ssl_ex_data_index, this);
 	if (rc != 1)
@@ -1056,21 +1053,6 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 			return;
 
 	}
-}
-
-
-static int established_socket_on_ssl_handshake_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
-{
-    SSL * ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
-    assert(ssl != NULL);
-    
-    struct established_socket * this = SSL_get_ex_data(ssl, libsccmn_config.sock_est_ssl_ex_data_index);
-    assert(this != NULL);
-    
- 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " preverify_ok: %d", TRACE_ARGS, preverify_ok);
-
-
-    return 0;
 }
 
 

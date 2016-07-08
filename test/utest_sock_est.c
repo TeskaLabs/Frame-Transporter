@@ -3,6 +3,7 @@
 ////
 
 struct established_socket established_sock;
+int sock_est_1_result_counter;
 
 ///
 
@@ -48,6 +49,8 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
 		frame_pool_return(frame);
+
+		sock_est_1_result_counter += 1;
 
 		established_socket_write_shutdown(established_sock);
 		return true;
@@ -98,6 +101,8 @@ START_TEST(sock_est_1_utest)
 	int rc;
 	bool ok;
 
+	sock_est_1_result_counter = 0;
+
 	struct context context;
 	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
@@ -137,6 +142,8 @@ START_TEST(sock_est_1_utest)
 	established_socket_fini(&established_sock);
 
 	context_fini(&context);
+
+	ck_assert_int_eq(sock_est_1_result_counter, 1);
 }
 END_TEST
 
@@ -358,7 +365,7 @@ struct established_socket_cb sock_est_ssl_1_cb =
 };
 
 
-START_TEST(sock_est_ssl_1_utest)
+START_TEST(sock_est_ssl_client_utest)
 {
 	struct established_socket sock;
 	bool ok;
@@ -399,7 +406,7 @@ START_TEST(sock_est_ssl_1_utest)
 	ck_assert_int_eq(ok, true);
 
 	int inf = 0, outf = 0;
-	pid_t pid = popen2("openssl s_server -accept 12345 -tls1_2 -key ./ssl/key.pem -cert ./ssl/cert.pem -msg -HTTP", &inf, &outf);
+	pid_t pid = popen2("openssl s_server -quiet -accept 12345 -tls1_2 -key ./ssl/key.pem -cert ./ssl/cert.pem -msg -HTTP", &inf, &outf);
 	ck_assert_int_ge(pid, 0);
 	ck_assert_int_ge(inf, 0);
 	ck_assert_int_ge(outf, 0);
@@ -475,6 +482,157 @@ END_TEST
 
 ///
 
+SSL_CTX * sock_est_ssl_server_ssl_ctx = NULL;
+int sock_est_ssl_server_utest_result_counter;
+
+bool sock_est_ssl_server_on_read(struct established_socket * established_sock, struct frame * frame)
+{
+	ck_assert_int_ne(frame->type, frame_type_FREE);
+
+	if (frame->type == frame_type_RAW_DATA)
+	{
+		ck_assert_int_eq(established_sock->syserror, 0);
+
+		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
+		frame_pool_return(frame);
+
+		sock_est_ssl_server_utest_result_counter += 1;
+
+		established_socket_write_shutdown(established_sock);
+		return true;
+	}
+
+
+	if (frame->type == frame_type_STREAM_END)
+	{
+		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
+
+		established_socket_write_shutdown(established_sock);
+		return false;
+	}
+
+	ck_abort();
+	return false;
+}
+
+
+static int sock_est_ssl_server_listen_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+	struct established_socket * this = established_socket_from_x509_store_ctx(ctx);
+	ck_assert_ptr_ne(this, NULL);
+
+    sock_est_ssl_server_utest_result_counter += 1;
+
+    return preverify_ok;
+}
+
+
+struct established_socket_cb sock_est_ssl_server_sock_cb = 
+{
+	.get_read_frame = get_read_frame_simple,
+	.read = sock_est_ssl_server_on_read,
+	.error = NULL
+};
+
+
+bool sock_est_ssl_server_listen_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+{
+	bool ok;
+
+	ok = established_socket_init_accept(&established_sock, &sock_est_ssl_server_sock_cb, listening_socket, fd, client_addr, client_addr_len);
+	ck_assert_int_eq(ok, true);
+
+	established_socket_set_read_partial(&established_sock, true);
+
+	// Initiate SSL
+	ok = established_socket_ssl_enable(&established_sock, sock_est_ssl_server_ssl_ctx);
+	ck_assert_int_eq(ok, true);
+
+	listening_socket_stop(listening_socket);
+
+	return true;
+}
+
+struct listening_socket_cb sock_est_ssl_server_listen_cb = 
+{
+	.accept = sock_est_ssl_server_listen_on_accept,
+};
+
+
+START_TEST(sock_est_ssl_server_utest)
+{
+	struct listening_socket listen_sock;
+	int rc;
+	bool ok;
+
+	sock_est_ssl_server_utest_result_counter = 0;
+
+	libsccmn_init();
+
+	struct context context;
+	ok = context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	// Initialize OpenSSL context
+	sock_est_ssl_server_ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+	ck_assert_ptr_ne(sock_est_ssl_server_ssl_ctx, NULL);
+
+	long ssloptions = SSL_OP_ALL | SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION | SSL_OP_NO_COMPRESSION
+	| SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_SINGLE_DH_USE;
+	SSL_CTX_set_options(sock_est_ssl_server_ssl_ctx, ssloptions);
+
+	rc = SSL_CTX_use_PrivateKey_file(sock_est_ssl_server_ssl_ctx, "./ssl/key.pem", SSL_FILETYPE_PEM);
+	ck_assert_int_eq(rc, 1);
+
+	rc = SSL_CTX_use_certificate_file(sock_est_ssl_server_ssl_ctx, "./ssl/cert.pem", SSL_FILETYPE_PEM);
+	ck_assert_int_eq(rc, 1);
+
+	rc = SSL_CTX_load_verify_locations(sock_est_ssl_server_ssl_ctx, "./ssl/cert.pem", NULL);
+	ck_assert_int_eq(rc, 1);
+
+	SSL_CTX_set_verify(sock_est_ssl_server_ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, sock_est_ssl_server_listen_verify_callback);
+
+	struct addrinfo * rp = NULL;
+	ok = resolve(&rp, "127.0.0.1", "12345");
+	ck_assert_int_eq(ok, true);
+	ck_assert_ptr_ne(rp, NULL);
+
+	ok = listening_socket_init(&listen_sock, &sock_est_ssl_server_listen_cb, &context, rp);
+	ck_assert_int_eq(ok, true);
+
+	freeaddrinfo(rp);
+
+	ok = listening_socket_start(&listen_sock);
+	ck_assert_int_eq(ok, true);
+
+	FILE * p = popen("openssl s_client -quiet -key ./ssl/key.pem -cert ./ssl/cert.pem -connect localhost:12345", "w");
+	ck_assert_ptr_ne(p, NULL);
+
+	fprintf(p, "1234\nABCDE\n");
+	fflush(p);
+
+	context_evloop_run(&context);
+
+	rc = pclose(p);
+	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
+	ck_assert_int_eq(rc, 0);
+
+	ok = listening_socket_stop(&listen_sock);
+	ck_assert_int_eq(ok, true);
+
+	listening_socket_fini(&listen_sock);
+
+	established_socket_fini(&established_sock);
+
+	context_fini(&context);
+
+	ck_assert_int_eq(sock_est_ssl_server_utest_result_counter, 2);
+}
+END_TEST
+
+///
+
 Suite * sock_est_tsuite(void)
 {
 	TCase *tc;
@@ -488,7 +646,8 @@ Suite * sock_est_tsuite(void)
 
 	tc = tcase_create("sock_est-ssl");
 	suite_add_tcase(s, tc);
-	tcase_add_test(tc, sock_est_ssl_1_utest);
+	tcase_add_test(tc, sock_est_ssl_client_utest);
+	tcase_add_test(tc, sock_est_ssl_server_utest);
 
 	return s;
 }

@@ -108,6 +108,21 @@ static inline void established_socket_set_read_partial(struct established_socket
 
 bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
 
+///
+
+static inline struct established_socket * established_socket_from_ssl(SSL * ssl)
+{
+    return SSL_get_ex_data(ssl, libsccmn_config.sock_est_ssl_ex_data_index);
+}
+
+// This function is to be used within SSL_CTX_set_verify() callback
+static inline struct established_socket * established_socket_from_x509_store_ctx(X509_STORE_CTX * ctx)
+{
+    SSL * ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+    assert(ssl != NULL);
+    return established_socket_from_ssl(ssl);
+}
+
 //
 
 struct frame * get_read_frame_simple(struct established_socket * this);
