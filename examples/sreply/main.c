@@ -41,7 +41,17 @@ static void established_sock_stop_each(struct ft_list_node * node, void * data)
 
 static void established_sock_node_fini_cb(struct ft_list_node * node)
 {
-	established_socket_fini((struct established_socket *)node->payload);
+	struct established_socket * sock = (struct established_socket *)node->payload;
+
+	L_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+		sock->stats.read_events,
+		sock->stats.write_events,
+		sock->stats.write_direct,
+		sock->stats.read_bytes,
+		sock->stats.write_bytes
+	);
+
+	established_socket_fini(sock);
 }
 
 ///
