@@ -30,6 +30,7 @@ static void established_socket_write_unset_event(struct established_socket * thi
 
 static void established_socket_on_write_event(struct established_socket * this);
 static void established_socket_on_ssl_sent_shutdown_event(struct established_socket * this);
+static int established_socket_on_ssl_handshake_verify_callback(int preverify_ok, X509_STORE_CTX * ctx);
 
 ///
 
@@ -328,11 +329,11 @@ void established_socket_on_connect_event(struct established_socket * this)
 
 	if (this->ssl != NULL)
 	{
+		assert(this->flags.ssl_status == 1);
+
 		// Initialize SSL handshake
 		established_socket_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
 		established_socket_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
-		
-		this->flags.ssl_status = 1;
 
 		L_DEBUG("SSL handshake started");
 
@@ -954,7 +955,7 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 		L_WARN_OPENSSL("established_socket_ssl_enable:SSL_new");
 		return false;
 	}
-
+	
 	// Link SSL with socket
 	int rc = SSL_set_fd(this->ssl, this->write_watcher.fd);
 	if (rc != 1)
@@ -963,6 +964,9 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 		return false;
 	}
 
+	// Set verify callback
+	SSL_set_verify(this->ssl, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, established_socket_on_ssl_handshake_verify_callback);
+
 	assert((libsccmn_config.sock_est_ssl_ex_data_index != -1) && (libsccmn_config.sock_est_ssl_ex_data_index != -2));
 	rc = SSL_set_ex_data(this->ssl, libsccmn_config.sock_est_ssl_ex_data_index, this);
 	if (rc != 1)
@@ -970,15 +974,19 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 		L_WARN_OPENSSL("established_socket_ssl_enable:SSL_set_ex_data");
 		return false;
 	}
+
+	// Initialize SSL handshake
+	established_socket_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
+	established_socket_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
+	established_socket_read_unset_event(this, READ_WANT_READ);
+	this->flags.ssl_status = 1;
+
 	return true;
 }
 
 
-void established_socket_on_ssl_handshake_event(struct established_socket * this)
+static void established_socket_on_ssl_handshake_connect_event(struct established_socket * this)
 {
-	assert(this != NULL);
-	assert(this->flags.ssl_status == 1);
-
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
 
@@ -1048,6 +1056,109 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 			return;
 
 	}
+}
+
+
+static int established_socket_on_ssl_handshake_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+    SSL * ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+    assert(ssl != NULL);
+    
+    struct established_socket * this = SSL_get_ex_data(ssl, libsccmn_config.sock_est_ssl_ex_data_index);
+    assert(this != NULL);
+    
+ 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " preverify_ok: %d", TRACE_ARGS, preverify_ok);
+
+
+    return 0;
+}
+
+
+static void established_socket_on_ssl_handshake_accept_event(struct established_socket * this)
+{
+	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	int rc;
+
+	rc = SSL_accept(this->ssl);
+	if (rc == 1) // Handshake is  completed
+	{
+		//TODO: long verify_result = SSL_get_verify_result(seacatcc_context.gwconn_ssl_handle);
+
+		L_DEBUG("SSL connection established");
+
+		// Wire I/O event callbacks
+		established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
+		established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
+
+		established_socket_read_start(this);
+		established_socket_write_start(this);
+
+		this->connected_at = ev_now(this->context->ev_loop);
+		this->flags.connecting = false;
+		this->flags.ssl_status = 2;
+		if (this->cbs->connected != NULL) this->cbs->connected(this);
+
+		// Simulate a write event to dump frames in the write queue
+		established_socket_on_write_event(this);
+
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
+		return;
+	}
+
+	int errno_con = errno;
+	int ssl_err = SSL_get_error(this->ssl, rc);
+	switch (ssl_err)
+	{
+		case SSL_ERROR_WANT_READ:
+			established_socket_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
+			established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_HANDSHAKE_WANT_READ (rc: %d)", TRACE_ARGS, rc);
+			return;
+
+		case SSL_ERROR_WANT_WRITE:
+			established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
+			established_socket_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_HANDSHAKE_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
+			return;
+
+		case SSL_ERROR_ZERO_RETURN:
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (zero ret)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
+			return;
+
+		case SSL_ERROR_SYSCALL:
+			L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (syscall)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
+			return;
+
+		case SSL_ERROR_SSL:
+			// SSL Handshake failed
+			L_WARN_OPENSSL("SSL error during handshake");
+			established_socket_error(this, errno_con == 0 ? EPERM : errno_con, "SSL connect (SSL error)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
+			return;
+
+		default:
+			// SSL Handshake failed (in a strange way)
+			L_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (unknown)");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+			return;
+	}
+}
+
+
+void established_socket_on_ssl_handshake_event(struct established_socket * this)
+{
+	assert(this != NULL);
+	assert(this->flags.ssl_status == 1);
+	assert(this->ssl != NULL);
+
+	if (this->flags.ssl_server)
+		established_socket_on_ssl_handshake_accept_event(this);
+	else 
+		established_socket_on_ssl_handshake_connect_event(this);
 
 }
 
