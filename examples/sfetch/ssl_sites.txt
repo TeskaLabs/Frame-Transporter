@@ -350,7 +350,6 @@ www.bls.gov 443
 oecd.org 443
 toplist.cz 443
 enom.com 443
-www.gesetze-im-internet.de 443
 chronoengine.com 443
 google.pl 443
 aliyun.com 443
