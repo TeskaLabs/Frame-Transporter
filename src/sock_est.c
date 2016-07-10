@@ -1079,6 +1079,10 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 				L_DEBUG("Server closed a connection during handshake");
 				errno_con = ENOTCONN;
 			}
+			else if ((rc == -1) && (errno_con == ECONNRESET))
+			{
+				L_DEBUG("Connection closed by server during handshake");
+			}
 			else
 			{
 				L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d, errno: %d, ssl_err: %lu, ssl_status: %d)", rc, errno_con, ERR_peek_error(), SSL_get_shutdown(this->ssl));
