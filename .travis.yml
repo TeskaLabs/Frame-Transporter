@@ -20,5 +20,4 @@ before_install:
     - (cd /tmp/check-0.10.0/ && ./configure --prefix=/usr && make && sudo make install)
     
 before_script:
-    - ulimit -l unlimited
     - cp doc/travis.rules.site rules.site
