@@ -1069,13 +1069,21 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (zero ret)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (SSL_ERROR_ZERO_RETURN)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
-			L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (syscall)");
+			if ((rc == 0) && (errno_con == 0))
+			{
+				L_DEBUG("Server closed a connection during handshake");
+				errno_con = ENOTCONN;
+			}
+			else
+			{
+				L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d, errno: %d, ssl_err: %lu, ssl_status: %d)", rc, errno_con, ERR_peek_error(), SSL_get_shutdown(this->ssl));
+			}
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (SSL_ERROR_SYSCALL)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
@@ -1084,7 +1092,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 				unsigned long ssl_err_tmp = ERR_peek_error();
 				L_WARN_OPENSSL("SSL error during handshake");
 				assert(errno_con == 0);
-				established_socket_error(this, 0, ssl_err_tmp, "SSL connect (SSL error)");
+				established_socket_error(this, 0, ssl_err_tmp, "SSL connect (SSL_ERROR_SSL)");
 			}
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
