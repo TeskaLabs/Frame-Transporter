@@ -30,7 +30,6 @@ addthis.com 443
 blogger.com 443
 myspace.com 443
 godaddy.com 443
-vk.com 443
 statcounter.com 443
 digg.com 443
 parallels.com 443
