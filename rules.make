@@ -18,7 +18,7 @@ CFLAGS+=-Wall -std=gnu99 -static
 CPPFLAGS+=-I $(ROOTDIR)/include
 LDLIBS+=-Wall
 
-.PHONY: clean all test subdirs
+.PHONY: clean all test subdirs rebuild
 
 # OpenSSL
 
@@ -86,3 +86,7 @@ endif
 ${LIB}: ${OBJS}
 	@echo " [AR]" $@
 	@$(AR) -cr $@ $^
+
+# Utility commands
+rebuild:
+	(cd $(ROOTDIR) && make clean all) && make clean all
