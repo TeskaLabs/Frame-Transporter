@@ -6,7 +6,8 @@ function finish
 	if [[ !  -z  ${JOBS}  ]] ; then
 		echo ${JOBS} | xargs kill ;
 	fi
-	rm -f /tmp/sc-test-reply-03.bin /tmp/sc-test-reply-03.chsum
+	rm -f /tmp/sc-test-reply-03.bin /tmp/sc-test-reply-03.chsum /tmp/sctext.tmp
+
 }
 trap finish EXIT
 

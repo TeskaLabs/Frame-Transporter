@@ -6,6 +6,7 @@ function finish
 	if [[ !  -z  ${JOBS}  ]] ; then
 		echo ${JOBS} | xargs kill ;
 	fi
+	rm -f /tmp/sctext.tmp
 }
 trap finish EXIT
 
