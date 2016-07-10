@@ -1,5 +1,7 @@
 #include "all.h"
 
+//TODO: Linux Huge Tables -> https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt / MAP_HUGETLB in mmap()
+
 struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 {
 	assert(frame_count > 0);
