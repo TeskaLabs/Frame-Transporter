@@ -710,7 +710,7 @@ static void established_socket_write_real(struct established_socket * this)
 
 	while (this->write_frames != NULL)
 	{
-		L_TRACE(L_TRACEID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, this->write_frames->type);
+		L_TRACE(L_TRACEID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%" PRIx64, TRACE_ARGS, this->write_frames->type);
 
 		if (this->write_frames->type == frame_type_STREAM_END)
 		{
