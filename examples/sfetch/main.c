@@ -81,6 +81,10 @@ int main(int argc, char const *argv[])
 
 	libsccmn_init();	
 
+	// Load nice OpenSSL error messages
+	SSL_load_error_strings();
+	ERR_load_crypto_strings();
+
 	// Initialize context
 	ok = context_init(&context);
 	if (!ok) return EXIT_FAILURE;
