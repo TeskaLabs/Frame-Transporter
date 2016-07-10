@@ -79,6 +79,8 @@ struct frame_dvec * frame_add_dvec(struct frame * this, size_t offset, size_t ca
 
 void frame_format_empty(struct frame * this)
 {
+	assert(this != NULL);
+
 	this->dvec_limit = 0;
 	this->dvec_position = 0;	
 }
