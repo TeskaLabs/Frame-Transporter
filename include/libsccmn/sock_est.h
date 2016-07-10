@@ -127,8 +127,6 @@ static inline struct established_socket * established_socket_from_x509_store_ctx
     return established_socket_from_ssl(ssl);
 }
 
-//
-
-struct frame * get_read_frame_simple(struct established_socket * this);
+struct frame * established_socket_get_read_frame_simple(struct established_socket * this);
 
 #endif // __LIBSCCMN_SOCK_EST_H__

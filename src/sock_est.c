@@ -1371,7 +1371,7 @@ end:
 
 ///
 
-struct frame * get_read_frame_simple(struct established_socket * this)
+struct frame * established_socket_get_read_frame_simple(struct established_socket * this)
 {
 	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_RAW_DATA);
 	if (frame == NULL) return NULL; // Out-of-frames situation

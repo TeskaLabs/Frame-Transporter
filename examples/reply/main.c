@@ -27,7 +27,7 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 
 struct established_socket_cb sock_est_sock_cb = 
 {
-	.get_read_frame = get_read_frame_simple,
+	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = on_read,
 	.error = NULL,
 };

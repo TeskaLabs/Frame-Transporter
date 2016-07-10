@@ -63,7 +63,7 @@ void sock_on_error(struct established_socket * established_sock)
 struct established_socket_cb sock_cb = 
 {
 	.connected = sock_on_connected,
-	.get_read_frame = get_read_frame_simple,
+	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_on_read,
 	.error = sock_on_error,
 };

@@ -183,7 +183,7 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 
 struct established_socket_cb sock_est_2_sock_cb = 
 {
-	.get_read_frame = get_read_frame_simple,
+	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_est_2_on_read,
 };
 
@@ -367,7 +367,7 @@ void sock_est_ssl_1_on_error(struct established_socket * established_sock)
 struct established_socket_cb sock_est_ssl_1_cb = 
 {
 	.connected = sock_est_ssl_1_on_connected,
-	.get_read_frame = get_read_frame_simple,
+	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_est_ssl_1_on_read,
 	.error = sock_est_ssl_1_on_error,
 };
@@ -542,7 +542,7 @@ static int sock_est_ssl_server_listen_verify_callback(int preverify_ok, X509_STO
 
 struct established_socket_cb sock_est_ssl_server_sock_cb = 
 {
-	.get_read_frame = get_read_frame_simple,
+	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_est_ssl_server_on_read,
 	.error = NULL
 };
