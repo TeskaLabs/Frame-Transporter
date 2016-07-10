@@ -273,7 +273,7 @@ static void established_socket_error(struct established_socket * this, int sys_e
 	if (sys_errno != 0)
 		L_WARN_ERRNO(sys_errno, "Socket system error when %s", when);
 	else
-		L_WARN("Socket SSL error %lu when %s", ssl_error, when);
+		L_WARN("Socket SSL error %lx when %s", ssl_error, when);
 
 	this->error.sys_errno = sys_errno;
 	this->error.ssl_error = ssl_error;
