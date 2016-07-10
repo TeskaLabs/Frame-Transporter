@@ -21,8 +21,8 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 
 	struct frame_pool_zone * this = p;
 	this->flags.freeable = freeable;
-	this->flags.erase_on_return = true;
-	this->flags.mlock_when_used = true;
+	this->flags.erase_on_return = false;
+	this->flags.mlock_when_used = false;
 	this->flags.free_on_hb = false;
 	this->mmap_size = mmap_size_frames+mmap_size_zone+mmap_size_fill;
 	this->next = NULL;
