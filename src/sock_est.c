@@ -33,7 +33,7 @@ static void established_socket_on_ssl_sent_shutdown_event(struct established_soc
 
 ///
 
-#define TRACE_FMT "fd:%d Rs:%c Rp:%c Rt:%c Re:%c%c%c%c Rw:%c Ws:%c Wo:%c Wr:%c We:%c%c%c%c%c Ww:%c c:%c a:%c ssl:%d%c E:%d"
+#define TRACE_FMT "fd:%d Rs:%c Rp:%c Rt:%c Re:%c%c%c%c Rw:%c Ws:%c Wo:%c Wr:%c We:%c%c%c%c%c Ww:%c c:%c a:%c ssl:%d%c E:(%d,%ld)"
 #define TRACE_ARGS \
 	this->read_watcher.fd, \
 	(this->flags.read_shutdown) ? 'Y' : '.', \
@@ -56,7 +56,7 @@ static void established_socket_on_ssl_sent_shutdown_event(struct established_soc
 	(this->flags.connecting) ? 'Y' : '.', \
 	(this->flags.active) ? 'Y' : '.', \
 	this->flags.ssl_status, this->ssl == NULL ? '.' : '*', \
-	this->syserror
+	this->error.sys_errno, this->error.ssl_error
 
 ///
 
@@ -85,7 +85,6 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->data = NULL;
 	this->cbs = cbs;
 	this->context = context;
-	this->syserror = 0;
 	this->read_frame = NULL;
 	this->write_frames = NULL;
 	this->write_frame_last = &this->write_frames;
@@ -103,6 +102,9 @@ static bool established_socket_init(struct established_socket * this, struct est
 	this->flags.ssl_status = 0;
 	this->flags.read_throttle = false;	
 	this->ssl = NULL;
+
+	this->error.sys_errno = 0;
+	this->error.ssl_error = 0;
 
 	assert(this->context->ev_loop != NULL);
 	this->created_at = ev_now(this->context->ev_loop);
@@ -264,11 +266,17 @@ void established_socket_fini(struct established_socket * this)
 
 ///
 
-static void established_socket_error(struct established_socket * this, int syserror, const char * when)
+static void established_socket_error(struct established_socket * this, int sys_errno, unsigned long ssl_error, const char * when)
 {
-	L_WARN_ERRNO(syserror, "System error when %s", when);
+	assert(((sys_errno == 0) && (ssl_error != 0)) || ((sys_errno != 0) && (ssl_error == 0)));
 
-	this->syserror = syserror;
+	if (sys_errno != 0)
+		L_WARN_ERRNO(sys_errno, "Socket system error when %s", when);
+	else
+		L_WARN("Socket SSL error %lu when %s", ssl_error, when);
+
+	this->error.sys_errno = sys_errno;
+	this->error.ssl_error = ssl_error;
 
 	if (this->cbs->error != NULL)
 		this->cbs->error(this);
@@ -308,18 +316,18 @@ void established_socket_on_connect_event(struct established_socket * this)
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, TRACE_FMT, TRACE_ARGS);
 
-	int optval = -1;
-	socklen_t optlen = sizeof(optval);
-	int rc = getsockopt(this->write_watcher.fd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
+	int errno_cmd = -1;
+	socklen_t optlen = sizeof(errno_cmd);
+	int rc = getsockopt(this->write_watcher.fd, SOL_SOCKET, SO_ERROR, &errno_cmd, &optlen);
 	if (rc != 0)
 	{
 		L_ERROR_ERRNO(errno, "getsockopt(SOL_SOCKET, SO_ERROR) for async connect");
 		return;
 	}
 
-	if (optval != 0)
+	if (errno_cmd != 0)
 	{
-		established_socket_error(this, optval, "connecting");
+		established_socket_error(this, errno_cmd, 0UL, "connecting");
 		return;
 	}
 
@@ -515,12 +523,13 @@ void established_socket_on_read_event(struct established_socket * this)
 						return;
 					}
 
-					established_socket_error(this, errno, "reading");
+					established_socket_error(this, errno, 0UL, "reading");
 				}
 				else
 				{
 					L_DEBUG("Peer closed a connection");
-					this->syserror = 0;
+					this->error.sys_errno = 0;
+					this->error.ssl_error = 0;
 				}
 
 				established_socket_read_shutdown(this);
@@ -557,22 +566,32 @@ void established_socket_on_read_event(struct established_socket * this)
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_READ_WANT_WRITE", TRACE_ARGS);
 						return;
 
+
 					case SSL_ERROR_ZERO_RETURN:
 						// This is a clean SSL_RECEIVED_SHUTDOWN (read is closed)
 						// The socket is still open
+
 						assert(rc == 0); // not sure what to do then rc < -1 ....
+
 						int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 						assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == SSL_RECEIVED_SHUTDOWN);
+						
 						L_DEBUG("SSL shutdown received");
-						this->syserror = 0;
+						this->error.sys_errno = 0;
+						this->error.ssl_error = 0;
+
 						// Now close also the TCP socket
 						rc = shutdown(this->write_watcher.fd, SHUT_RD);
 						if ((rc != 0) && (errno != ENOTCONN)) L_WARN_ERRNO_P(errno, "shutdown()");
+
 						established_socket_read_shutdown(this);
+
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL received shutdown (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 						return;
 
+
 					case SSL_ERROR_SYSCALL:
+
 						if (    ((rc ==  0) && (errno_read == 0)) \
 							 || ((rc == -1 )&& (errno_read == ECONNRESET)) \
 						   )
@@ -582,31 +601,41 @@ void established_socket_on_read_event(struct established_socket * this)
 							// rc==-1, errno_read == ECONNRESET -> Other side aborted() aka sent RST flag
 							int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 							assert((ssl_shutdown_status & SSL_RECEIVED_SHUTDOWN) == 0);
+
 							L_DEBUG("Connection closed by peer");
-							this->syserror = errno_read;
+							this->error.sys_errno = errno_read;
+							this->error.ssl_error = 0;
+
 							established_socket_read_shutdown(this);
 							L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL terminate (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 							return;
 						}
-						if (errno_read != 0)
+
+						else if (errno_read != 0)
 						{
-							this->syserror = errno_read;
-							established_socket_error(this, errno_read, "SSL read (syscall)");
+							established_socket_error(this, errno_read, 0UL, "SSL read (syscall)");
 						}
+
 						established_socket_read_shutdown(this);
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL (errno: %d, rc: %zd)", TRACE_ARGS, errno_read, rc);
 						return;
 
+
 					case SSL_ERROR_SSL:
-						L_ERROR_OPENSSL("SSL error during read");
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (SSL error)");
+						{
+							unsigned long ssl_err_tmp = ERR_peek_error();
+							L_ERROR_OPENSSL("SSL error during read");
+							assert(errno_read == 0); // Will see if we can survive this
+							established_socket_error(this, 0, ssl_err_tmp, "SSL read (SSL error)");
+						}
 						established_socket_read_shutdown(this);
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 						return;
 
+
 					default:
 						L_ERROR_P("Unexpected error %d  during read, closing", ssl_err);
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL read (unknown)");
+						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, 0UL, "SSL read (unknown)");
 						established_socket_read_shutdown(this);
 						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
 						return;
@@ -765,12 +794,15 @@ static void established_socket_write_real(struct established_socket * this)
 					return;
 				}
 
-				established_socket_error(this, errno, "writing");
+				established_socket_error(this, errno, 0UL, "writing");
 				return;
 			}
 			else if (rc == 0)
 			{
-				established_socket_error(this, ECONNRESET, "writing");
+				//TODO: Test if this is a best possible reaction
+				L_WARN("Zero write occured, will retry soon");
+				this->flags.write_ready = false;
+				established_socket_write_set_event(this, WRITE_WANT_WRITE);
 				return;
 			}
 		}
@@ -780,7 +812,7 @@ static void established_socket_write_real(struct established_socket * this)
 			rc = SSL_write(this->ssl, p_to_write, size_to_write);
 			if (rc <= 0)
 			{
-				int errno_read = errno;
+				int errno_write = errno;
 				int ssl_err = SSL_get_error(this->ssl, rc);
 				switch (ssl_err)
 				{
@@ -796,31 +828,38 @@ static void established_socket_write_real(struct established_socket * this)
 						return;
 
 					case SSL_ERROR_ZERO_RETURN:
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (zero ret)");
+						// This may well be also zero write because there is no IO buffer available - see zero write handling above
+						established_socket_error(this, errno_write == 0 ? ECONNRESET : errno_write, 0UL, "SSL write (zero ret)");
 						return;
 
 					case SSL_ERROR_SYSCALL:
-						if ((rc == 0) && (errno_read == 0))
+						if ((rc == 0) && (errno_write == 0))
 						{
 							// This is a quite standard way how SSL connection is closed (by peer)
-							L_DEBUG("Peer closed a connection");
+							L_DEBUG("SSL shutdown received");
+							this->error.sys_errno = 0;
+							this->error.ssl_error = 0;
 							established_socket_write_unset_event(this, WRITE_WANT_WRITE);
-							this->syserror = 0;
 						}
 						else
 						{
-							established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (syscall)");
+							established_socket_error(this, errno_write == 0 ? ECONNRESET : errno_write, 0UL, "SSL write (syscall)");
 						}
 						return;
 
 					case SSL_ERROR_SSL:
-						L_ERROR_OPENSSL("SSL error during write");
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (SSL error)");
+						{
+							unsigned long ssl_err_tmp = ERR_peek_error();
+							L_ERROR_OPENSSL("SSL error during write");
+							assert(errno_write == 0); // Will see if we can survive this
+							established_socket_error(this, 0, ssl_err_tmp, "SSL write (SSL error)");
+						}
 						return;
 
 					default:
 						L_WARN_P("Unexpected error %d  during write, closing", ssl_err);
-						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, "SSL write (unknown)");
+						established_socket_error(this, errno_write == 0 ? ECONNRESET : errno_write, 0UL, "SSL read (unknown)");
+						L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
 						return;
 
 				}
@@ -1030,25 +1069,29 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (zero ret)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (zero ret)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
 			L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (syscall)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (syscall)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SSL:
-			L_WARN_OPENSSL("SSL error during handshake");
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (SSL error)");
+			{
+				unsigned long ssl_err_tmp = ERR_peek_error();
+				L_WARN_OPENSSL("SSL error during handshake");
+				assert(errno_con == 0);
+				established_socket_error(this, 0, ssl_err_tmp, "SSL connect (SSL error)");
+			}
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
 
 		default:
 			L_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (unknown)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (unknown)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 
@@ -1104,27 +1147,31 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (zero ret)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (zero ret)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
 			L_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (syscall)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (syscall)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SSL:
 			// SSL Handshake failed
-			L_WARN_OPENSSL("SSL error during handshake");
-			established_socket_error(this, errno_con == 0 ? EPERM : errno_con, "SSL connect (SSL error)");
+			{
+				unsigned long ssl_err_tmp = ERR_peek_error();
+				L_WARN_OPENSSL("SSL error during handshake");
+				assert(errno_con == 0 );
+				established_socket_error(this, 0, ssl_err_tmp, "SSL connect (SSL error)");
+			}
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
 
 		default:
 			// SSL Handshake failed (in a strange way)
 			L_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
-			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, "SSL connect (unknown)");
+			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (unknown)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
@@ -1208,13 +1255,22 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_WRITE", TRACE_ARGS);
 			return;
 
+
+		case SSL_ERROR_SSL:
+			{
+				unsigned long ssl_err_tmp = ERR_peek_error();
+				L_ERROR_OPENSSL_P("Unexpected error %d  during SSL shutdown, closing", ssl_err);
+				assert(errno_ssl_cmd == 0);
+				established_socket_error(this, 0, ssl_err_tmp, "SSL shutdown (unknown)");
+			}
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+
 		case SSL_ERROR_ZERO_RETURN:
 		case SSL_ERROR_SYSCALL:
-		case SSL_ERROR_SSL:
 		default:
 			// What to do here ...
-			L_FATAL_P("Unexpected error %d  during SSL shutdown, closing", ssl_err);
-			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, "SSL shutdown (unknown)");
+			L_ERROR_P("Unexpected error %d  during SSL shutdown, closing", ssl_err);
+			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, 0UL, "SSL shutdown (unknown)");
 			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
@@ -1232,7 +1288,7 @@ static void established_socket_on_read(struct ev_loop * loop, struct ev_io * wat
 
 	if ((revents & EV_ERROR) != 0)
 	{
-		established_socket_error(this, ECONNRESET, "reading (libev)");
+		established_socket_error(this, ECONNRESET, 0UL, "reading (libev)");
 		goto end;
 	}
 
@@ -1279,7 +1335,7 @@ static void established_socket_on_write(struct ev_loop * loop, struct ev_io * wa
 
 	if ((revents & EV_ERROR) != 0)
 	{
-		established_socket_error(this, ECONNRESET, "writing (libev)");
+		established_socket_error(this, ECONNRESET, 0UL, "writing (libev)");
 		goto end;
 	}
 

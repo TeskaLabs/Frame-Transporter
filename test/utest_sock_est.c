@@ -45,7 +45,8 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_RAW_DATA)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
 
 		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
 		frame_pool_return(frame);
@@ -59,7 +60,8 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_STREAM_END)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
 		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
 		established_socket_write_shutdown(established_sock);
@@ -157,7 +159,9 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_RAW_DATA)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
+
 
 		return false;
 	}
@@ -165,7 +169,9 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 
 	if (frame->type == frame_type_STREAM_END)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
+
 
 		established_socket_write_shutdown(established_sock);
 		return false;
@@ -331,7 +337,9 @@ bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct
 
 	if (frame->type == frame_type_RAW_DATA)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
+
 
 		frame_flip(frame);
 		ck_assert_int_gt(frame_total_position_to_limit(frame), 0);
@@ -491,7 +499,9 @@ bool sock_est_ssl_server_on_read(struct established_socket * established_sock, s
 
 	if (frame->type == frame_type_RAW_DATA)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
+
 
 		ck_assert_int_eq(memcmp(frame->data, "1234\nABCDE\n", 11), 0);
 		frame_pool_return(frame);
@@ -505,7 +515,9 @@ bool sock_est_ssl_server_on_read(struct established_socket * established_sock, s
 
 	if (frame->type == frame_type_STREAM_END)
 	{
-		ck_assert_int_eq(established_sock->syserror, 0);
+		ck_assert_int_eq(established_sock->error.sys_errno, 0);
+		ck_assert_int_eq(established_sock->error.ssl_error, 0);
+
 		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
 		established_socket_write_shutdown(established_sock);

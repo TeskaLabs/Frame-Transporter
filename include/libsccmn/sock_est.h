@@ -51,7 +51,11 @@ struct established_socket
 	ev_tstamp read_shutdown_at;
 	ev_tstamp write_shutdown_at;
 
-	int syserror;
+	struct 
+	{
+		int sys_errno;
+		unsigned long ssl_error; // ERR_peek_error()
+	} error;
 
 	// Input
 	struct ev_io read_watcher;
