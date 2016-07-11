@@ -60,42 +60,70 @@ static inline void _log_openssl_err(char const level, const char * format, ...)
 	va_end(args);
 }
 
+#ifdef RELEASE
+#define L_TRACE(traceid, fmt, args...) do { if (0) _log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
+#else
 #define L_TRACE(traceid, fmt, args...) if (_log_traceid(traceid)) _log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
+#endif
+
+#ifdef RELEASE
+#define L_DEBUG(fmt, args...) do { if (0) _log('D', fmt, ## args); } while (0)
+#else
 #define L_DEBUG(fmt, args...) _log('D', fmt, ## args)
+#endif
 #define L_INFO(fmt, args...)  _log('I', fmt, ## args)
 #define L_WARN(fmt, args...)  _log('W', fmt, ## args)
 #define L_ERROR(fmt, args...) _log('E', fmt, ## args)
 #define L_FATAL(fmt, args...) _log('F', fmt, ## args)
 #define L_AUDIT(fmt, args...) _log('A', fmt, ## args)
 
+#ifdef RELEASE
+#define L_DEBUG_P(fmt, args...) do { if (0) _log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#else
 #define L_DEBUG_P(fmt, args...) _log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#endif
 #define L_INFO_P(fmt, args...)  _log('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_WARN_P(fmt, args...)  _log('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_ERROR_P(fmt, args...) _log('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_FATAL_P(fmt, args...) _log('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_AUDIT_P(fmt, args...) _log('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 
+#ifdef RELEASE
+#define L_DEBUG_ERRNO(errnum, fmt, args...) do { if (0) _log_errno(errnum, 'D', fmt, ## args); } while (0)
+#else
 #define L_DEBUG_ERRNO(errnum, fmt, args...) _log_errno(errnum, 'D', fmt, ## args)
+#endif
 #define L_INFO_ERRNO(errnum, fmt, args...)  _log_errno(errnum, 'I', fmt, ## args)
 #define L_WARN_ERRNO(errnum, fmt, args...)  _log_errno(errnum, 'W', fmt, ## args)
 #define L_ERROR_ERRNO(errnum, fmt, args...) _log_errno(errnum, 'E', fmt, ## args)
 #define L_FATAL_ERRNO(errnum, fmt, args...) _log_errno(errnum, 'F', fmt, ## args)
 #define L_AUDIT_ERRNO(errnum, fmt, args...) _log_errno(errnum, 'A', fmt, ## args)
 
-#define L_DEBUG_ERRNO_P(errnum, fmt, args...) _log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#ifdef RELEASE
+#define L_DEBUG_ERRNO_P(errnum, fmt, args...) do { if (0) _log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#else
 #define L_INFO_ERRNO_P(errnum, fmt, args...)  _log_errno(errnum, 'I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#endif
 #define L_WARN_ERRNO_P(errnum, fmt, args...)  _log_errno(errnum, 'W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_ERROR_ERRNO_P(errnum, fmt, args...) _log_errno(errnum, 'E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_FATAL_ERRNO_P(errnum, fmt, args...) _log_errno(errnum, 'F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_AUDIT_ERRNO_P(errnum, fmt, args...) _log_errno(errnum, 'A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 
+#ifdef RELEASE
+#define L_INFO_OPENSSL(fmt, args...) do { if (0) _log_openssl_err('I', fmt, ## args); } while (0)
+#else
 #define L_INFO_OPENSSL(fmt, args...)  _log_openssl_err('I', fmt, ## args)
+#endif
 #define L_WARN_OPENSSL(fmt, args...)  _log_openssl_err('W', fmt, ## args)
 #define L_ERROR_OPENSSL(fmt, args...) _log_openssl_err('E', fmt, ## args)
 #define L_FATAL_OPENSSL(fmt, args...) _log_openssl_err('F', fmt, ## args)
 #define L_AUDIT_OPENSSL(fmt, args...) _log_openssl_err('A', fmt, ## args)
 
+#ifdef RELEASE
+#define L_INFO_OPENSSL_P(fmt, args...) do { if (0) _log_openssl_err('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#else
 #define L_INFO_OPENSSL_P(fmt, args...)  _log_openssl_err('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#endif
 #define L_WARN_OPENSSL_P(fmt, args...)  _log_openssl_err('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_ERROR_OPENSSL_P(fmt, args...) _log_openssl_err('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
 #define L_FATAL_OPENSSL_P(fmt, args...) _log_openssl_err('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
