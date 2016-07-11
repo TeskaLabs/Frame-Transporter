@@ -51,6 +51,9 @@ void frame_pool_fini(struct frame_pool *, struct heartbeat * heartbeat);
 
 void frame_pool_set_alloc_advise(struct frame_pool *, frame_pool_zone_alloc_advice alloc_advise);
 
+size_t frame_pool_available_frames_count(struct frame_pool *);
+size_t frame_pool_zones_count(struct frame_pool *);
+
 
 struct frame * frame_pool_borrow_real(struct frame_pool *, uint64_t frame_type, const char * file, unsigned int line);
 #define frame_pool_borrow(pool, frame_type) frame_pool_borrow_real(pool, frame_type, __FILE__, __LINE__)

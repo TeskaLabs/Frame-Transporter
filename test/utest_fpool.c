@@ -5,10 +5,17 @@
 START_TEST(fpool_alloc_up_utest)
 {
 	bool ok;
+	size_t x;
 
 	struct context context;
 	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
+
+	x = frame_pool_available_frames_count(&context.frame_pool);
+	ck_assert_int_eq(x, 0);	
+
+	x = frame_pool_zones_count(&context.frame_pool);
+	ck_assert_int_eq(x, 0);	
 
 	const int frame_count = 32;
 	struct frame * frames[frame_count];
@@ -23,6 +30,12 @@ START_TEST(fpool_alloc_up_utest)
 			ck_assert_ptr_ne(frames[j], frames[i]);
 	}
 
+	x = frame_pool_zones_count(&context.frame_pool);
+	ck_assert_int_eq(x, 2);
+
+	x = frame_pool_available_frames_count(&context.frame_pool);
+	ck_assert_int_gt(x, 100);
+
 	for (int i = 0; i<frame_count; i += 1)
 	{
 		frame_pool_return(frames[i]);
@@ -36,10 +49,17 @@ END_TEST
 START_TEST(fpool_alloc_down_utest)
 {
 	bool ok;
+	size_t x;
 
 	struct context context;
 	ok = context_init(&context);
 	ck_assert_int_eq(ok, true);
+
+	x = frame_pool_available_frames_count(&context.frame_pool);
+	ck_assert_int_eq(x, 0);	
+
+	x = frame_pool_zones_count(&context.frame_pool);
+	ck_assert_int_eq(x, 0);	
 
 	const int frame_count = 32;
 	struct frame * frames[frame_count];
@@ -80,6 +100,12 @@ START_TEST(fpool_alloc_down_utest)
 		for (int j = 0; j < i; j += 1)
 			ck_assert_ptr_ne(frames[j], frames[i]);
 	}
+
+	x = frame_pool_zones_count(&context.frame_pool);
+	ck_assert_int_eq(x, 2);
+
+	x = frame_pool_available_frames_count(&context.frame_pool);
+	ck_assert_int_gt(x, 100);
 
 	for (int i = frame_count-1; i>=0; i -= 1)
 	{

@@ -236,3 +236,29 @@ void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbea
 		frame_pool_zone_del(zone_free);
 	}
 }
+
+size_t frame_pool_available_frames_count(struct frame_pool * this)
+{
+	assert(this != NULL);
+	size_t count = 0;
+
+	for (struct frame_pool_zone * zone = this->zones; zone != NULL; zone = zone->next)
+	{
+		count += zone->frames_total - zone->frames_used;
+	}
+
+	return count;
+}
+
+size_t frame_pool_zones_count(struct frame_pool * this)
+{
+	assert(this != NULL);
+	size_t count = 0;
+
+	for (struct frame_pool_zone * zone = this->zones; zone != NULL; zone = zone->next)
+	{
+		count += 1;
+	}
+
+	return count;
+}
