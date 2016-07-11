@@ -730,6 +730,8 @@ void established_socket_write_stop(struct established_socket * this)
 
 static void established_socket_write_real(struct established_socket * this)
 {
+	ssize_t rc;
+
 	assert(this != NULL);
 	assert(this->flags.write_ready == true);
 	assert(this->flags.connecting == false);
@@ -737,9 +739,20 @@ static void established_socket_write_real(struct established_socket * this)
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);	
 
+	unsigned int write_loop = 0;
 	while (this->write_frames != NULL)
 	{
 		L_TRACE(L_TRACEID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, (unsigned long long)this->write_frames->type);
+
+		if (write_loop > libsccmn_config.sock_est_max_read_loops)
+		{
+			// Maximum write loops per event loop iteration reached
+			this->flags.write_ready = false;
+			established_socket_write_set_event(this, WRITE_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " max loops", TRACE_ARGS);
+			return; 
+		}
+		write_loop += 1;
 
 		if (this->write_frames->type == frame_type_STREAM_END)
 		{
@@ -778,8 +791,6 @@ static void established_socket_write_real(struct established_socket * this)
 		assert(size_to_write > 0);
 
 		const void * p_to_write = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position;
-
-		ssize_t rc;
 
 		if (this->ssl == NULL)
 		{
