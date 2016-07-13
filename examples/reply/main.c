@@ -5,6 +5,7 @@
 
 ///
 
+struct context context;
 struct exiting_watcher watcher;
 
 ///
@@ -40,7 +41,17 @@ static void established_sock_stop_each(struct ft_list_node * node, void * data)
 
 static void established_sock_node_fini_cb(struct ft_list_node * node)
 {
-	established_socket_fini((struct established_socket *)node->payload);
+	struct established_socket * sock = (struct established_socket *)node->payload;
+
+	L_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+		sock->stats.read_events,
+		sock->stats.write_events,
+		sock->stats.write_direct,
+		sock->stats.read_bytes,
+		sock->stats.write_bytes
+	);
+
+	established_socket_fini(sock);	
 }
 
 ///
@@ -122,14 +133,30 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 
 static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 {
+	size_t avail = frame_pool_available_frames_count(&context.frame_pool);
+	bool throttle = avail < 8;
+
+	if (throttle)
+	{
+		// We can still allocated new zone
+		if (frame_pool_zones_count(&context.frame_pool) < 2) throttle = false;
+	}
+
 	// Check all established socket and remove closed ones
 restart:
 	for (struct ft_list_node * node = established_socks.head; node != NULL; node = node->next)
 	{
-		if (established_socket_is_shutdown((struct established_socket *)node->payload))
+		struct established_socket * sock = (struct established_socket *)node->payload;
+
+		if (established_socket_is_shutdown(sock))
 		{
 			ft_list_remove(&established_socks, node);
 			goto restart;
+		}
+
+		if (((!throttle) && (sock->flags.read_throttle == true)) || ((throttle) && (sock->flags.read_throttle == false)))
+		{
+			established_socket_read_throttle(sock, throttle);
 		}
 	}
 }
@@ -138,9 +165,10 @@ int main(int argc, char const *argv[])
 {
 	bool ok;
 	int rc;
-	struct context context;
 
 	logging_set_verbose(true);
+	//libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
+
 	libsccmn_init();
 	
 	// Initializa context
