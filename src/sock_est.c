@@ -920,11 +920,19 @@ void established_socket_on_write_event(struct established_socket * this)
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	this->stats.write_events += 1;
-
 	this->flags.write_ready = true;
-	established_socket_write_unset_event(this, WRITE_WANT_WRITE);
+	
 	if (this->write_frames != NULL)
+	{
+		this->write_events &= ~WRITE_WANT_WRITE; // Just pretend that we are stopping a watcher
 		established_socket_write_real(this);
+		if (this->write_events == 0) // Now do it for real if needed
+			established_socket_write_unset_event(this, WRITE_WANT_WRITE);
+	}
+	else
+	{
+		established_socket_write_unset_event(this, WRITE_WANT_WRITE);
+	}
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
