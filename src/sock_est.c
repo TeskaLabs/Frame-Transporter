@@ -366,7 +366,6 @@ void established_socket_on_connect_event(struct established_socket * this)
 
 ///
 
-
 void established_socket_read_set_event(struct established_socket * this, enum read_event event)
 {
 	this->read_events |= event;
@@ -886,6 +885,7 @@ static void established_socket_write_real(struct established_socket * this)
 			// Not all data has been written, wait for next write event
 			this->flags.write_ready = false;
 			established_socket_write_set_event(this, WRITE_WANT_WRITE);
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " partial", TRACE_ARGS);
 			return; 
 		}
 		assert(frame_dvec->position == frame_dvec->limit);
@@ -908,6 +908,7 @@ static void established_socket_write_real(struct established_socket * this)
 		}
 	}
 
+	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 	return;
 }
 
