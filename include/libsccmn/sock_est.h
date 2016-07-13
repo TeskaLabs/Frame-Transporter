@@ -112,6 +112,8 @@ static inline void established_socket_set_read_partial(struct established_socket
 
 bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
 
+void established_socket_diag(struct established_socket *);
+
 ///
 
 static inline struct established_socket * established_socket_from_ssl(SSL * ssl)

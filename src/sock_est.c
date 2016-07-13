@@ -1400,6 +1400,12 @@ end:
 	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 }
 
+void established_socket_diag(struct established_socket * this)
+{
+	assert(this != NULL);
+	fprintf(stderr, TRACE_FMT "\n", TRACE_ARGS);
+}
+
 ///
 
 struct frame * established_socket_get_read_frame_simple(struct established_socket * this)
