@@ -18,7 +18,7 @@ CFLAGS+=-Wall -std=gnu99 -static
 CPPFLAGS+=-I $(ROOTDIR)/include
 LDLIBS+=-Wall
 
-.PHONY: clean all test subdirs rebuild
+.PHONY: clean all subdirs ${CLEANSUBDIRS} ${SUBDIRS}
 
 # OpenSSL
 
