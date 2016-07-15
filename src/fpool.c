@@ -264,7 +264,7 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 			alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
 		} while (alloc_size > hugetbl_size);
 
-		L_INFO("Hugetbl page will be used for frame pool zone (huge table size: %ld)", hugetbl_size);
+		L_DEBUG("Hugetbl page will be used for frame pool zone (huge table size: %ld)", hugetbl_size);
 
 		struct frame_pool_zone * ret = frame_pool_zone_new_mmap(this, frame_count, false,  MAP_PRIVATE | MAP_ANON | MAP_HUGETLB);
 		if (ret != NULL) return ret;
