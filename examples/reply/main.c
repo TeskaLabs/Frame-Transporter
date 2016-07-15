@@ -176,7 +176,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 #ifdef MAP_HUGETLB
-	L_INFO("Using huge table!");
+	L_INFO("Using hugetbl pages!");
 	frame_pool_set_alloc_advise(&context.frame_pool, frame_pool_zone_alloc_advice_hugetlb);
 #endif
 
