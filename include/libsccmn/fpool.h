@@ -20,21 +20,19 @@ struct frame_pool_zone
 		unsigned int free_on_hb : 1; // If true, zone will be removed during next heartbeat
 	} flags;
 
+	size_t alloc_size;
 	size_t frames_total;
 	size_t frames_used;
 
-	ev_tstamp free_at;
-
-	size_t mmap_size;
+	ev_tstamp free_at;	
 
 	struct frame * available_frames;
-
 	struct frame * low_frame;
 	struct frame * high_frame;
 	struct frame frames[];
 };
 
-struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable);
+bool frame_pool_zone_init(struct frame_pool_zone *, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable);
 
 
 typedef struct frame_pool_zone * (* frame_pool_zone_alloc_advice)(struct frame_pool *);
@@ -50,6 +48,8 @@ bool frame_pool_init(struct frame_pool *, struct heartbeat * heartbeat);
 void frame_pool_fini(struct frame_pool *, struct heartbeat * heartbeat);
 
 void frame_pool_set_alloc_advise(struct frame_pool *, frame_pool_zone_alloc_advice alloc_advise);
+struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this);
+struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool * this);
 
 size_t frame_pool_available_frames_count(struct frame_pool *);
 size_t frame_pool_zones_count(struct frame_pool *);

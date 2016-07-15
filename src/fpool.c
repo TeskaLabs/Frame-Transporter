@@ -2,31 +2,18 @@
 
 //TODO: Linux Huge Tables -> https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt / MAP_HUGETLB in mmap()
 
-struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
+bool frame_pool_zone_init(struct frame_pool_zone * this, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable)
 {
+	assert(this != NULL);
 	assert(frame_count > 0);
+	assert((void *)this < (void *)data);
+	assert(((void *)this + alloc_size) > (void *)data);
 
-	size_t mmap_size_frames = frame_count * FRAME_SIZE;
-	assert((mmap_size_frames % MEMPAGE_SIZE) == 0);
-
-	size_t mmap_size_zone = sizeof(struct frame_pool_zone) + frame_count * sizeof(struct frame);
-	size_t mmap_size_fill = MEMPAGE_SIZE - (mmap_size_zone % MEMPAGE_SIZE);
-	if (mmap_size_fill == MEMPAGE_SIZE) mmap_size_fill = 0;
-	assert(((mmap_size_frames+mmap_size_zone+mmap_size_fill) % MEMPAGE_SIZE) == 0);
-
-	void * p = mmap(NULL, mmap_size_frames+mmap_size_zone+mmap_size_fill, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-	if (p == MAP_FAILED)
-	{
-		L_ERROR_ERRNO(errno, "Failed to allocate frame pool memory (%zu bytes)", mmap_size_frames+mmap_size_zone+mmap_size_fill);
-		return NULL;
-	}
-
-	struct frame_pool_zone * this = p;
 	this->flags.freeable = freeable;
 	this->flags.erase_on_return = false;
 	this->flags.mlock_when_used = false;
 	this->flags.free_on_hb = false;
-	this->mmap_size = mmap_size_frames+mmap_size_zone+mmap_size_fill;
+	this->alloc_size = alloc_size;
 	this->next = NULL;
 
 	this->frames_total = frame_count;
@@ -35,7 +22,7 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 	this->low_frame = &this->frames[0];
 	this->high_frame = &this->frames[this->frames_total-1];
 
-	uint8_t * frame_data = p + (mmap_size_zone + mmap_size_fill);
+	uint8_t * frame_data = data;
 	for(int i=0; i<this->frames_total; i+=1)
 	{
 		struct frame * frame = &this->frames[i];
@@ -50,8 +37,9 @@ struct frame_pool_zone * frame_pool_zone_new(size_t frame_count, bool freeable)
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
-	L_DEBUG("Allocated frame pool zone of %zu bytes, %zd frames", this->mmap_size, this->frames_total);
-	return this;
+	L_DEBUG("Allocated frame pool zone of %zu bytes, %zd frames", this->alloc_size, this->frames_total);
+
+	return true;
 }
 
 static void frame_pool_zone_del(struct frame_pool_zone * this)
@@ -72,8 +60,10 @@ static void frame_pool_zone_del(struct frame_pool_zone * this)
 		abort();
 	}
 
-	L_DEBUG("Deallocating frame pool zone of %zu bytes", this->mmap_size);
-	munmap(this, this->mmap_size);
+	L_DEBUG("Deallocating frame pool zone of %zu bytes", this->alloc_size);
+
+	//TODO: configure actual free() call; rename frame_pool_zone_del to frame_pool_zone_fini and implement virtual frame_pool_zone_fini
+	munmap(this, this->alloc_size);
 }
 
 
@@ -112,7 +102,6 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint
 //
 
 static void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now);
-static struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this);
 
 
 bool frame_pool_init(struct frame_pool * this, struct heartbeat * heartbeat)
@@ -178,12 +167,53 @@ struct frame * frame_pool_borrow_real(struct frame_pool * this, uint64_t frame_t
 }
 
 
+struct frame_pool_zone * frame_pool_zone_new_mmap(struct frame_pool * frame_pool, size_t frame_count, bool freeable, int mmap_flags)
+{
+	size_t mmap_size_frames = frame_count * FRAME_SIZE;
+	assert((mmap_size_frames % MEMPAGE_SIZE) == 0);
+
+	size_t mmap_size_zone = sizeof(struct frame_pool_zone) + frame_count * sizeof(struct frame);
+	size_t mmap_size_fill = MEMPAGE_SIZE - (mmap_size_zone % MEMPAGE_SIZE);
+	if (mmap_size_fill == MEMPAGE_SIZE) mmap_size_fill = 0;
+	size_t alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
+	assert((alloc_size % MEMPAGE_SIZE) == 0);
+	
+
+	void * p = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, mmap_flags, -1, 0);
+	if (p == MAP_FAILED)
+	{
+		L_ERROR_ERRNO(errno, "Failed to allocate frame pool memory (%zu bytes)", alloc_size);
+		return NULL;
+	}
+
+	struct frame_pool_zone * this = p;
+	uint8_t * data = p + (mmap_size_zone + mmap_size_fill);
+
+	bool ok = frame_pool_zone_init(this, data, alloc_size, frame_count, freeable);
+	if (!ok)
+	{
+		munmap(p, alloc_size);
+		return NULL;
+	}
+
+	return this;
+}
+
+
 struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this)
 {
-	if (this->zones == NULL) return frame_pool_zone_new(16, false); // Allocate first, low-memory zone
-	if (this->zones->next == NULL) return frame_pool_zone_new(2045, true); // Allocate second, high-memory zone
+	if (this->zones == NULL) return frame_pool_zone_new_mmap(this, 16, false,  MAP_PRIVATE | MAP_ANON); // Allocate first, low-memory zone
+	if (this->zones->next == NULL) return frame_pool_zone_new_mmap(this, 2045, true,  MAP_PRIVATE | MAP_ANON); // Allocate second, high-memory zone
 	return NULL;
 }
+
+
+#ifndef MAP_HUGETLB
+struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool * this)
+{
+	return frame_pool_zone_alloc_advice_default(this);
+}
+#endif
 
 
 void frame_pool_set_alloc_advise(struct frame_pool * this, frame_pool_zone_alloc_advice alloc_advise)
