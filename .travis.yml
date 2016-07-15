@@ -1,8 +1,8 @@
 language: c
 script:
     - make clean all
+    - make examples
     - make test
-    - (cd examples && make clean all)
     - (cd examples/reply/ && ./test_reply_01.sh)
     - (cd examples/reply/ && ./test_reply_02.sh)
     - (cd examples/reply/ && ./test_reply_03.sh)
