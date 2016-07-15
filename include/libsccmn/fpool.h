@@ -34,6 +34,7 @@ struct frame_pool_zone
 
 bool frame_pool_zone_init(struct frame_pool_zone *, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable);
 
+struct frame_pool_zone * frame_pool_zone_new_mmap(struct frame_pool * frame_pool, size_t frame_count, bool freeable, int mmap_flags);
 
 typedef struct frame_pool_zone * (* frame_pool_zone_alloc_advice)(struct frame_pool *);
 

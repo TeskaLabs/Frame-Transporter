@@ -119,10 +119,10 @@ END_TEST
 
 int frame_pool_zone_alloc_advice_custom_counter = 0;
 
-static struct frame_pool_zone * frame_pool_zone_alloc_advice_custom(struct frame_pool * this)
+static struct frame_pool_zone * frame_pool_zone_alloc_advice_custom(struct frame_pool * frame_pool)
 {
 	frame_pool_zone_alloc_advice_custom_counter += 1;
-	return frame_pool_zone_new(1, true);
+	return frame_pool_zone_new_mmap(frame_pool, 1, true, MAP_PRIVATE | MAP_ANON);
 }
 
 START_TEST(fpool_alloc_custom_advice_utest)
