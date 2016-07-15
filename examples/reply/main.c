@@ -175,6 +175,11 @@ int main(int argc, char const *argv[])
 	ok = context_init(&context);
 	if (!ok) return EXIT_FAILURE;
 
+#ifdef MAP_HUGETLB
+	L_INFO("Using huge table!");
+	frame_pool_set_alloc_advise(&context.frame_pool, frame_pool_zone_alloc_advice_hugetlb);
+#endif
+
 	// Initialize a list for listening sockets
 	ok = ft_list_init(&listen_socks, listen_sock_node_fini_cb);
 	if (!ok) return EXIT_FAILURE;
