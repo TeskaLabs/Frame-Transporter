@@ -219,7 +219,7 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 
 ///
 
-static void ft_listener_list_on_remove(struct ft_list * list, struct ft_node * node)
+static void ft_listener_list_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
 	assert(list != NULL);
 
@@ -239,7 +239,7 @@ bool ft_listener_list_start(struct ft_list * list)
 	assert(list != NULL);
 
 	bool ok;
-	for (struct ft_node * node = list->head; node != NULL; node = node->right)
+	for (struct ft_list_node * node = list->head; node != NULL; node = node->next)
 	{
 		ok = listening_socket_start((struct listening_socket *)node->data);
 		if (!ok) return false;
@@ -252,7 +252,7 @@ bool ft_listener_list_stop(struct ft_list * list)
 	assert(list != NULL);
 
 	bool ok;
-	for (struct ft_node * node = list->head; node != NULL; node = node->right)
+	for (struct ft_list_node * node = list->head; node != NULL; node = node->next)
 	{
 		ok = listening_socket_stop((struct listening_socket *)node->data);
 		if (!ok) return false;
@@ -319,13 +319,13 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct listening_
 	for (struct addrinfo * rp = rp_list; rp != NULL; rp = rp->ai_next)
 	{
 
-		struct ft_node * new_node = ft_node_new(sizeof(struct listening_socket));
+		struct ft_list_node * new_node = ft_list_node_new(sizeof(struct listening_socket));
 		if (new_node == NULL) return false;
 
 		bool ok = listening_socket_init((struct listening_socket *)new_node->data, cbs, context, rp);
 		if (!ok) 
 		{
-			ft_node_del(new_node);
+			ft_list_node_del(new_node);
 			continue;
 		}
 

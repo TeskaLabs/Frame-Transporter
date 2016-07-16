@@ -80,7 +80,7 @@ struct established_socket_cb sock_est_stream_out_cb =
 	.error = on_error,
 };
 
-static void stream_pairs_on_remove(struct ft_list * list, struct ft_node * node)
+static void stream_pairs_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
 	struct stream_pair * pair = (struct stream_pair *)&node->data;
 
@@ -110,7 +110,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 {
 	bool ok;
 
-	struct ft_node * new_node = ft_node_new(sizeof(struct stream_pair));
+	struct ft_list_node * new_node = ft_list_node_new(sizeof(struct stream_pair));
 	if (new_node == NULL) return false;
 
 	struct stream_pair * pair = (struct stream_pair *)&new_node->data;
@@ -119,7 +119,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	ok = established_socket_init_accept(&pair->stream_in, &sock_est_stream_in_cb, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
-		ft_node_del(new_node);
+		ft_list_node_del(new_node);
 		return false;
 	}
 	pair->stream_in.data = pair;
@@ -129,7 +129,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	ok = established_socket_init_connect(&pair->stream_out, &sock_est_stream_out_cb, listening_socket->context, target_addr);
 	if (!ok)
 	{
-		ft_node_del(new_node);
+		ft_list_node_del(new_node);
 		return false;
 	}
 	pair->stream_out.data = pair;
@@ -147,7 +147,7 @@ struct listening_socket_cb sock_listen_sock_cb =
 
 ///
 
-static void stream_pairs_stop_each(struct ft_node * node, void * data)
+static void stream_pairs_stop_each(struct ft_list_node * node, void * data)
 {
 	struct stream_pair * pair = (struct stream_pair *)&node->data;
 	established_socket_read_stop(&pair->stream_in);
@@ -167,7 +167,7 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 {
 restart:
-	for (struct ft_node * node = stream_pairs.head; node != NULL; node = node->right)
+	FT_LIST_FOR(&stream_pairs, node)
 	{
 		struct stream_pair * pair = (struct stream_pair *)&node->data;
 		if (established_socket_is_shutdown(&pair->stream_in) || established_socket_is_shutdown(&pair->stream_out))

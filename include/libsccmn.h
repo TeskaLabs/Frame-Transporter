@@ -49,7 +49,6 @@ struct context;
 #include <libsccmn/fpool.h>
 #include <libsccmn/context.h>
 
-#include <libsccmn/cols/node.h>
 #include <libsccmn/cols/list.h>
 
 #include <libsccmn/sock_listen.h>

@@ -34,14 +34,14 @@ struct established_socket_cb sock_est_sock_cb =
 	.error = NULL,
 };
 
-static void established_sock_stop_each(struct ft_node * node, void * data)
+static void established_sock_stop_each(struct ft_list_node * node, void * data)
 {
 	struct established_socket * stream = (struct established_socket *)node->data;
 	established_socket_read_stop(stream);
 	established_socket_write_stop(stream);
 }
 
-static void streams_on_remove(struct ft_list * list, struct ft_node * node)
+static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
 	struct established_socket * stream = (struct established_socket *)node->data;
 
@@ -62,7 +62,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 {
 	bool ok;
 
-	struct ft_node * new_node = ft_node_new(sizeof(struct established_socket));
+	struct ft_list_node * new_node = ft_list_node_new(sizeof(struct established_socket));
 	if (new_node == NULL) return false;
 
 	struct established_socket * stream = (struct established_socket *)&new_node->data;
@@ -70,7 +70,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	ok = established_socket_init_accept(stream, &sock_est_sock_cb, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
-		ft_node_del(new_node);
+		ft_list_node_del(new_node);
 		return false;
 	}
 
@@ -109,7 +109,7 @@ static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 
 	// Check all established socket and remove closed ones
 restart:
-	for (struct ft_node * node = streams.head; node != NULL; node = node->right)
+	FT_LIST_FOR(&streams, node)
 	{
 		struct established_socket * sock = (struct established_socket *)node->data;
 

@@ -27,7 +27,7 @@ void ft_list_on_remove(struct ft_list * this, ft_list_on_remove_callback callbac
 }
 
 
-void ft_list_add(struct ft_list * this, struct ft_node * node)
+void ft_list_add(struct ft_list * this, struct ft_list_node * node)
 {
 	if (this->size == 0)
 	{
@@ -37,8 +37,8 @@ void ft_list_add(struct ft_list * this, struct ft_node * node)
 
 	else
 	{
-		node->left = this->tail;
-		this->tail->right = node;
+		node->prev = this->tail;
+		this->tail->next = node;
 		this->tail = node;
 	}
 
@@ -48,30 +48,30 @@ void ft_list_add(struct ft_list * this, struct ft_node * node)
 
 //
 
-static void ft_list_unlink(struct ft_list * this, struct ft_node * node)
+static void ft_list_unlink(struct ft_list * this, struct ft_list_node * node)
 {
-	if (node->left != NULL)
-		node->left->right = node->right;
+	if (node->prev != NULL)
+		node->prev->next = node->next;
 
-	if (node->left == NULL)
-		this->head = node->right;
+	if (node->prev == NULL)
+		this->head = node->next;
 
-	if (node->right == NULL)
-		this->tail = node->left;
+	if (node->next == NULL)
+		this->tail = node->prev;
 
-	if (node->right != NULL)
-		node->right->left = node->left;
+	if (node->next != NULL)
+		node->next->prev = node->prev;
 
 	this->size -= 1;
 
-	node->left = NULL;
-	node->right = NULL;
+	node->prev = NULL;
+	node->next = NULL;
 
 	if (this->on_remove_callback != NULL) this->on_remove_callback(this, node);
-	ft_node_del(node);
+	ft_list_node_del(node);
 }
 
-bool ft_list_remove(struct ft_list * this, struct ft_node * node)
+bool ft_list_remove(struct ft_list * this, struct ft_list_node * node)
 {
 	//TODO: First seek for node to confirm that it is a part of the list
 	ft_list_unlink(this, node);
