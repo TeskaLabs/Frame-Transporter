@@ -27,19 +27,10 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 	return true;
 }
 
-struct established_socket_cb sock_est_sock_cb = 
+struct ft_stream_delegate stream_delegate = 
 {
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = on_read,
-	.error = NULL,
 };
-
-static void established_sock_stop_each(struct ft_list_node * node, void * data)
-{
-	struct established_socket * stream = (struct established_socket *)node->data;
-	established_socket_read_stop(stream);
-	established_socket_write_stop(stream);
-}
 
 static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
@@ -67,7 +58,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 
 	struct established_socket * stream = (struct established_socket *)&new_node->data;
 
-	ok = established_socket_init_accept(stream, &sock_est_sock_cb, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(stream, &stream_delegate, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
@@ -92,7 +83,13 @@ struct listening_socket_cb sock_listen_sock_cb =
 
 static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
 {
-	ft_list_each(&streams, established_sock_stop_each, NULL);
+	FT_LIST_FOR(&streams, node)
+	{
+		struct established_socket * stream = (struct established_socket *)node->data;
+		established_socket_read_stop(stream);
+		established_socket_write_stop(stream);
+	}
+
 	ft_listener_list_stop(&listeners);
 }
 
@@ -125,6 +122,8 @@ restart:
 		}
 	}
 }
+
+///
 
 int main(int argc, char const *argv[])
 {

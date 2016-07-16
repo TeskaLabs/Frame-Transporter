@@ -72,7 +72,7 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 	return false;
 }
 
-struct established_socket_cb sock_est_1_sock_cb = 
+struct ft_stream_delegate sock_est_1_sock_delegate = 
 {
 	.get_read_frame = sock_est_1_on_get_read_frame,
 	.read = sock_est_1_on_read,
@@ -83,7 +83,7 @@ bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &sock_est_1_sock_cb, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(&established_sock, &sock_est_1_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
 	listening_socket_stop(listening_socket);
@@ -181,9 +181,8 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 	return false;
 }
 
-struct established_socket_cb sock_est_2_sock_cb = 
+struct ft_stream_delegate sock_est_2_sock_delegate = 
 {
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_est_2_on_read,
 };
 
@@ -191,7 +190,7 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &sock_est_2_sock_cb, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(&established_sock, &sock_est_2_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
 	established_socket_set_read_partial(&established_sock, true);
@@ -264,7 +263,7 @@ void sock_est_conn_fail_on_error(struct established_socket * established_sock)
 }
 
 
-struct established_socket_cb sock_est_conn_fail_cb = 
+struct ft_stream_delegate sock_est_conn_fail_delegate = 
 {
 	.connected = NULL,
 	.get_read_frame = NULL,
@@ -286,7 +285,7 @@ START_TEST(sock_est_conn_fail_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = established_socket_init_connect(&sock, &sock_est_conn_fail_cb, &context, rp);
+	ok = established_socket_init_connect(&sock, &sock_est_conn_fail_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -364,10 +363,9 @@ void sock_est_ssl_1_on_error(struct established_socket * established_sock)
 }
 
 
-struct established_socket_cb sock_est_ssl_1_cb = 
+struct ft_stream_delegate sock_est_ssl_1_delegate = 
 {
 	.connected = sock_est_ssl_1_on_connected,
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_est_ssl_1_on_read,
 	.error = sock_est_ssl_1_on_error,
 };
@@ -425,7 +423,7 @@ START_TEST(sock_est_ssl_client_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = established_socket_init_connect(&sock, &sock_est_ssl_1_cb, &context, rp);
+	ok = established_socket_init_connect(&sock, &sock_est_ssl_1_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -540,9 +538,8 @@ static int sock_est_ssl_server_listen_verify_callback(int preverify_ok, X509_STO
 }
 
 
-struct established_socket_cb sock_est_ssl_server_sock_cb = 
+struct ft_stream_delegate sock_est_ssl_server_sock_delegate = 
 {
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = sock_est_ssl_server_on_read,
 	.error = NULL
 };
@@ -552,7 +549,7 @@ bool sock_est_ssl_server_listen_on_accept(struct listening_socket * listening_so
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &sock_est_ssl_server_sock_cb, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(&established_sock, &sock_est_ssl_server_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
 	established_socket_set_read_partial(&established_sock, true);

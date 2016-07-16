@@ -37,12 +37,12 @@ struct addrinfo * resolve(const char * host, const char * port)
 
 ///
 
-void sock_on_connected(struct established_socket * this)
+void on_connected(struct established_socket * this)
 {
 	established_socket_read_start(this);
 }
 
-bool sock_on_read(struct established_socket * established_sock, struct frame * frame)
+bool on_read(struct established_socket * established_sock, struct frame * frame)
 {
 	if (frame->type == frame_type_RAW_DATA)
 	{
@@ -54,18 +54,17 @@ bool sock_on_read(struct established_socket * established_sock, struct frame * f
 	return true;
 }
 
-void sock_on_error(struct established_socket * established_sock)
+void on_error(struct established_socket * established_sock)
 {
 	L_FATAL("Error on the socket");
 	exit(EXIT_FAILURE);
 }
 
-struct established_socket_cb sock_cb = 
+struct ft_stream_delegate stream_delegate = 
 {
-	.connected = sock_on_connected,
-	.get_read_frame = established_socket_get_read_frame_simple,
-	.read = sock_on_read,
-	.error = sock_on_error,
+	.connected = on_connected,
+	.read = on_read,
+	.error = on_error,
 };
 
 ///
@@ -112,7 +111,7 @@ int main(int argc, char const *argv[])
 	}
 
 
-	ok = established_socket_init_connect(&sock, &sock_cb, &context, target_addr);
+	ok = established_socket_init_connect(&sock, &stream_delegate, &context, target_addr);
 	if (!ok) return EXIT_FAILURE;
 
 	freeaddrinfo(target_addr);

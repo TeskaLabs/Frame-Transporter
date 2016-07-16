@@ -3,12 +3,10 @@
 
 struct established_socket;
 
-struct established_socket_cb
+struct ft_stream_delegate
 {
-	struct frame * (*get_read_frame)(struct established_socket *);
-
-	// True as a return value means, that the frame has been handed over to upstream protocol
-	bool (*read)(struct established_socket *, struct frame * frame);
+	struct frame * (*get_read_frame)(struct established_socket *); // If NULL, then simple frame will be used
+	bool (*read)(struct established_socket *, struct frame * frame); // True as a return value means, that the frame has been handed over to upstream protocol
 
 	void (*connected)(struct established_socket *); // Called when connect() is successfully established; can be NULL
 
@@ -20,6 +18,7 @@ struct established_socket_cb
 struct established_socket
 {
 	// Common fields
+	struct ft_stream_delegate * delegate;
 	struct context * context;
 
 	struct
@@ -43,8 +42,6 @@ struct established_socket
 
 	struct sockaddr_storage ai_addr;
 	socklen_t ai_addrlen;
-
-	struct established_socket_cb * cbs;
 
 	ev_tstamp created_at;
 	ev_tstamp connected_at;
@@ -85,8 +82,8 @@ struct established_socket
 	void * data;
 };
 
-bool established_socket_init_accept(struct established_socket *, struct established_socket_cb * cbs, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
-bool established_socket_init_connect(struct established_socket *, struct established_socket_cb * cbs, struct context * context, const struct addrinfo * addr);
+bool established_socket_init_accept(struct established_socket *, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
+bool established_socket_init_connect(struct established_socket *, struct ft_stream_delegate * delegate, struct context * context, const struct addrinfo * addr);
 void established_socket_fini(struct established_socket *);
 
 void established_socket_read_start(struct established_socket *);
@@ -128,7 +125,5 @@ static inline struct established_socket * established_socket_from_x509_store_ctx
     assert(ssl != NULL);
     return established_socket_from_ssl(ssl);
 }
-
-struct frame * established_socket_get_read_frame_simple(struct established_socket * this);
 
 #endif // __LIBSCCMN_SOCK_EST_H__

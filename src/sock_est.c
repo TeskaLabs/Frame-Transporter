@@ -60,10 +60,11 @@ static void established_socket_on_ssl_sent_shutdown_event(struct established_soc
 
 ///
 
-static bool established_socket_init(struct established_socket * this, struct established_socket_cb * cbs, int fd, struct context * context, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
+static bool established_socket_init(struct established_socket * this, struct ft_stream_delegate * delegate, struct context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
 {
 	assert(this != NULL);
-	assert(cbs != NULL);
+	assert(delegate != NULL);
+	assert(context != NULL);
 
 	// Disable Nagle
 #ifdef TCP_NODELAY
@@ -83,7 +84,7 @@ static bool established_socket_init(struct established_socket * this, struct est
 	if (!res) L_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	this->data = NULL;
-	this->cbs = cbs;
+	this->delegate = delegate;
 	this->context = context;
 	this->read_frame = NULL;
 	this->write_frames = NULL;
@@ -130,17 +131,15 @@ static bool established_socket_init(struct established_socket * this, struct est
 	return true;
 }
 
-bool established_socket_init_accept(struct established_socket * this, struct established_socket_cb * cbs, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+bool established_socket_init_accept(struct established_socket * this, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	assert(listening_socket != NULL);
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN fd:%d", fd);
 
 	bool ok = established_socket_init(
-		this,
-		cbs,
+		this, delegate, listening_socket->context, 
 		fd,
-		listening_socket->context, 
 		peer_addr, peer_addr_len,
 		listening_socket->ai_family,
 		listening_socket->ai_socktype,
@@ -162,7 +161,7 @@ bool established_socket_init_accept(struct established_socket * this, struct est
 }
 
 
-bool established_socket_init_connect(struct established_socket * this, struct established_socket_cb * cbs, struct context * context, const struct addrinfo * addr)
+bool established_socket_init_connect(struct established_socket * this, struct ft_stream_delegate * delegate, struct context * context, const struct addrinfo * addr)
 {
 	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 	if (fd < 0)
@@ -174,10 +173,8 @@ bool established_socket_init_connect(struct established_socket * this, struct es
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN fd:%d", fd);
 
 	bool ok = established_socket_init(
-		this,
-		cbs,
+		this, delegate, context,
 		fd,
-		context, 
 		addr->ai_addr, addr->ai_addrlen,
 		addr->ai_family,
 		addr->ai_socktype,
@@ -219,7 +216,7 @@ void established_socket_fini(struct established_socket * this)
 
 	L_DEBUG("Socket finalized");
 
-	if(this->cbs->fini != NULL) this->cbs->fini(this);	
+	if(this->delegate->fini != NULL) this->delegate->fini(this);	
 
 	established_socket_read_stop(this);
 	established_socket_write_stop(this);
@@ -278,8 +275,8 @@ static void established_socket_error(struct established_socket * this, int sys_e
 	this->error.sys_errno = sys_errno;
 	this->error.ssl_error = ssl_error;
 
-	if (this->cbs->error != NULL)
-		this->cbs->error(this);
+	if (this->delegate->error != NULL)
+		this->delegate->error(this);
 
 	this->flags.read_shutdown = true;
 	this->flags.write_shutdown = true;
@@ -356,7 +353,7 @@ void established_socket_on_connect_event(struct established_socket * this)
 
 	this->connected_at = ev_now(this->context->ev_loop);
 	this->flags.connecting = false;
-	if (this->cbs->connected != NULL) this->cbs->connected(this);
+	if (this->delegate->connected != NULL) this->delegate->connected(this);
 
 	// Simulate a write event to dump frames in the write queue
 	established_socket_on_write_event(this);
@@ -431,7 +428,7 @@ static bool established_socket_uplink_read_stream_end(struct established_socket 
 		return false;
 	}
 
-	bool upstreamed = this->cbs->read(this, frame);
+	bool upstreamed = this->delegate->read(this, frame);
 	if (!upstreamed) frame_pool_return(frame);
 
 	return true;
@@ -451,7 +448,7 @@ static void established_socket_read_shutdown(struct established_socket * this)
 	if (frame_total_start_to_position(this->read_frame) > 0)
 	{
 		L_WARN("Partial read due to read shutdown (%zd bytes)", frame_total_start_to_position(this->read_frame));
-		bool upstreamed = this->cbs->read(this, this->read_frame);
+		bool upstreamed = this->delegate->read(this, this->read_frame);
 		if (!upstreamed) frame_pool_return(this->read_frame);
 	}
 	this->read_frame = NULL;
@@ -486,7 +483,16 @@ void established_socket_on_read_event(struct established_socket * this)
 	{
 		if (this->read_frame == NULL)
 		{
-			this->read_frame = this->cbs->get_read_frame(this);
+			if (this->delegate->get_read_frame != NULL)
+			{
+				this->read_frame = this->delegate->get_read_frame(this);
+			}
+			else
+			{
+				this->read_frame = frame_pool_borrow(&this->context->frame_pool, frame_type_RAW_DATA);
+				if (this->read_frame != NULL) frame_format_simple(this->read_frame);
+			}
+
 			if (this->read_frame == NULL)
 			{
 				L_WARN("Out of frames when reading, throttling");
@@ -653,7 +659,7 @@ void established_socket_on_read_event(struct established_socket * this)
 			// Not all expected data arrived
 			if (this->flags.read_partial == true)
 			{
-				bool upstreamed = this->cbs->read(this, this->read_frame);
+				bool upstreamed = this->delegate->read(this, this->read_frame);
 				if (upstreamed) this->read_frame = NULL;
 			}
 			established_socket_read_set_event(this, READ_WANT_READ);
@@ -667,7 +673,7 @@ void established_socket_on_read_event(struct established_socket * this)
 		if (!ok)
 		{
 			// All dvecs in the frame are filled with data
-			bool upstreamed = this->cbs->read(this, this->read_frame);
+			bool upstreamed = this->delegate->read(this, this->read_frame);
 			if (upstreamed) this->read_frame = NULL;
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
@@ -678,7 +684,7 @@ void established_socket_on_read_event(struct established_socket * this)
 		}
 		else if (this->flags.read_partial == true)
 		{
-			bool upstreamed = this->cbs->read(this, this->read_frame);
+			bool upstreamed = this->delegate->read(this, this->read_frame);
 			if (upstreamed) this->read_frame = NULL;
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
@@ -1063,7 +1069,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 		this->connected_at = ev_now(this->context->ev_loop);
 		this->flags.connecting = false;
 		this->flags.ssl_status = 2;
-		if (this->cbs->connected != NULL) this->cbs->connected(this);
+		if (this->delegate->connected != NULL) this->delegate->connected(this);
 
 		// Simulate a write event to dump frames in the write queue
 		established_socket_on_write_event(this);
@@ -1153,7 +1159,7 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 		this->connected_at = ev_now(this->context->ev_loop);
 		this->flags.connecting = false;
 		this->flags.ssl_status = 2;
-		if (this->cbs->connected != NULL) this->cbs->connected(this);
+		if (this->delegate->connected != NULL) this->delegate->connected(this);
 
 		// Simulate a write event to dump frames in the write queue
 		established_socket_on_write_event(this);
@@ -1407,12 +1413,3 @@ void established_socket_diag(struct established_socket * this)
 	fprintf(stderr, TRACE_FMT "\n", TRACE_ARGS);
 }
 
-///
-
-struct frame * established_socket_get_read_frame_simple(struct established_socket * this)
-{
-	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_RAW_DATA);
-	if (frame == NULL) return NULL; // Out-of-frames situation
-	frame_format_simple(frame);
-	return frame;
-}

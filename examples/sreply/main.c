@@ -28,9 +28,8 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 	return true;
 }
 
-struct established_socket_cb sock_est_sock_cb = 
+struct ft_stream_delegate stream_delegate = 
 {
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = on_read,
 	.error = NULL,
 };
@@ -68,7 +67,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 
 	struct established_socket * established_sock = (struct established_socket *)&new_node->data;
 
-	ok = established_socket_init_accept(established_sock, &sock_est_sock_cb, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(established_sock, &stream_delegate, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);

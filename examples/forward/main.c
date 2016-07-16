@@ -64,17 +64,15 @@ void on_error(struct established_socket * established_sock)
 	established_socket_write_shutdown(&pair->stream_out);
 }
 
-struct established_socket_cb sock_est_stream_in_cb = 
+struct ft_stream_delegate stream_in_delegate = 
 {
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = on_read_in_to_out,
 	.error = on_error,
 };
 
 
-struct established_socket_cb sock_est_stream_out_cb = 
+struct ft_stream_delegate stream_out_delegate = 
 {
-	.get_read_frame = established_socket_get_read_frame_simple,
 	.read = on_read_out_to_in,
 	.connected = on_connected,
 	.error = on_error,
@@ -116,7 +114,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	struct stream_pair * pair = (struct stream_pair *)&new_node->data;
 
 	// Initialize connection on the incoming connection
-	ok = established_socket_init_accept(&pair->stream_in, &sock_est_stream_in_cb, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(&pair->stream_in, &stream_in_delegate, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
@@ -126,7 +124,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	established_socket_set_read_partial(&pair->stream_in, true);
 
 	// Initialize connection on the outgoing connection
-	ok = established_socket_init_connect(&pair->stream_out, &sock_est_stream_out_cb, listening_socket->context, target_addr);
+	ok = established_socket_init_connect(&pair->stream_out, &stream_out_delegate, listening_socket->context, target_addr);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
