@@ -24,7 +24,7 @@
 
 static const char base32_cb32[] =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-int base32_encode(char * buf, size_t * buflen, const void * data, size_t size)
+int ft_base32_encode(char * buf, size_t * buflen, const void * data, size_t size)
 {
 	unsigned char *udata = (unsigned char *) data;
 	int iout = 0;   /* to-be-filled output char */

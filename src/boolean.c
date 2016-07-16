@@ -1,6 +1,6 @@
 #include "all.h"
 
-bool parse_boolean(const char * value)
+bool ft_parse_bool(const char * value)
 {
 	if (strcasecmp(value, "yes") == 0) return true;
 	if (strcasecmp(value, "true") == 0) return true;

@@ -74,7 +74,7 @@ bool ft_fd_cloexec(int fd);
 
 
 // Boolean parser
-bool parse_boolean(const char * value);
+bool ft_parse_bool(const char * value);
 
 
 /*
@@ -86,6 +86,6 @@ bool parse_boolean(const char * value);
  * return value    : #bytes filled in buf   (excluding \0)
  * sets *buflen to : #bytes encoded from data
  */
-int base32_encode(char * buf, size_t * buflen, const void * data, size_t size);
+int ft_base32_encode(char * buf, size_t * buflen, const void * data, size_t size);
 
 #endif // __LIBSCCMN_H__
