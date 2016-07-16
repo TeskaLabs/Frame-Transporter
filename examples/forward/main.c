@@ -145,18 +145,16 @@ struct listening_socket_cb sock_listen_sock_cb =
 
 ///
 
-static void stream_pairs_stop_each(struct ft_list_node * node, void * data)
-{
-	struct stream_pair * pair = (struct stream_pair *)&node->data;
-	established_socket_read_stop(&pair->stream_in);
-	established_socket_write_stop(&pair->stream_in);
-	established_socket_read_stop(&pair->stream_out);
-	established_socket_write_stop(&pair->stream_out);
-}
-
 static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
 {
-	ft_list_each(&stream_pairs, stream_pairs_stop_each, NULL);
+	FT_LIST_FOR(&stream_pairs, node)
+	{
+		struct stream_pair * pair = (struct stream_pair *)&node->data;
+		established_socket_read_stop(&pair->stream_in);
+		established_socket_write_stop(&pair->stream_in);
+		established_socket_read_stop(&pair->stream_out);
+		established_socket_write_stop(&pair->stream_out);
+	}
 	ft_listener_list_stop(&listeners);
 }
 

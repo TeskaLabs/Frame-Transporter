@@ -34,13 +34,6 @@ struct ft_stream_delegate stream_delegate =
 	.error = NULL,
 };
 
-static void established_sock_stop_each(struct ft_list_node * node, void * data)
-{
-	struct established_socket * stream = (struct established_socket *)node->data;
-	established_socket_read_stop(stream);
-	established_socket_write_stop(stream);
-}
-
 static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
 	struct established_socket * stream = (struct established_socket *)node->data;
@@ -95,7 +88,12 @@ struct listening_socket_cb sock_listen_sock_cb =
 
 static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
 {
-	ft_list_each(&streams, established_sock_stop_each, NULL);
+	FT_LIST_FOR(&streams, node)
+	{
+		struct established_socket * stream = (struct established_socket *)node->data;
+		established_socket_read_stop(stream);
+		established_socket_write_stop(stream);
+	}
 	ft_listener_list_stop(&listeners);
 }
 

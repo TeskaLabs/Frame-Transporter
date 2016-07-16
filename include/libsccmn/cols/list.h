@@ -55,13 +55,4 @@ void ft_list_remove_all(struct ft_list *);
 
 #define FT_LIST_FOR(LIST, NODE) for (struct ft_list_node * NODE = (LIST)->head; NODE != NULL; NODE = NODE->next)
 
-typedef void (* ft_list_each_callback)(struct ft_list_node * node, void * data);
-static inline void ft_list_each(struct ft_list * this, ft_list_each_callback callback, void * data)
-{
-	FT_LIST_FOR(this, node)
-	{
-		callback(node, data);
-	}
-}
-
 #endif // __FT_COLS_LIST_H__
