@@ -215,7 +215,7 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 		int fd = open("/proc/meminfo", O_RDONLY);
 		if (fd < 0)
 		{
-			L_WARN_ERRNO(errno, "open(%s), disabling hugetbl support", "/proc/meminfo");
+			L_WARN_ERRNO(errno, "open(%s), disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 
@@ -225,12 +225,12 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 
 		if (len < 0)
 		{
-			L_ERROR_ERRNO(readerr, "read(%s), disabling hugetbl support", "/proc/meminfo");
+			L_ERROR_ERRNO(readerr, "read(%s), disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		if (len == sizeof(buffer))
 		{
-			L_ERROR("File '%s' is too large, disabling hugetbl support", "/proc/meminfo");
+			L_ERROR("File '%s' is too large, disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		buffer[len] = '\0';
@@ -238,20 +238,20 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 		char * p = strstr(buffer, "Hugepagesize:");
 		if (p == NULL)
 		{
-			L_ERROR("File '%s' doesn't contain hugetbl page size, disabling hugetbl support", "/proc/meminfo");
+			L_ERROR("File '%s' doesn't contain hugetlb page size, disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		p += strlen("Hugepagesize:");
 
 		char * q;
-		long hugetbl_size = strtol(p, &q, 0);
+		long hugetlb_size = strtol(p, &q, 0);
 		if (!isspace(*q))
 		{
-			L_ERROR("File '%s' parsing error, disabling hugetbl support", "/proc/meminfo");
+			L_ERROR("File '%s' parsing error, disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
-		hugetbl_size *= 1024;
-		int frame_count = (hugetbl_size - MEMPAGE_SIZE) / FRAME_SIZE;
+		hugetlb_size *= 1024;
+		int frame_count = (hugetlb_size - MEMPAGE_SIZE) / FRAME_SIZE;
 
 		size_t alloc_size;
 		frame_count += 1;
@@ -262,13 +262,13 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 			size_t mmap_size_fill = MEMPAGE_SIZE - (mmap_size_zone % MEMPAGE_SIZE);
 			if (mmap_size_fill == MEMPAGE_SIZE) mmap_size_fill = 0;
 			alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
-		} while (alloc_size > hugetbl_size);
+		} while (alloc_size > hugetlb_size);
 
-		L_DEBUG("Hugetbl page will be used for frame pool zone (huge table size: %ld)", hugetbl_size);
+		L_DEBUG("Hugetlb page will be used for frame pool zone (huge table size: %ld)", hugetlb_size);
 
 		struct frame_pool_zone * ret = frame_pool_zone_new_mmap(this, frame_count, false,  MAP_PRIVATE | MAP_ANON | MAP_HUGETLB);
 		if (ret != NULL) return ret;
-		L_WARN("Hugetbl support disabled");
+		L_WARN("Hugetlb support disabled");
 	}
 
 cont_default:
