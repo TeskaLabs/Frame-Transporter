@@ -9,23 +9,23 @@ Prefix: *ft_*
 
 | Type | Returns | Name | Arguments |
 |------|--------------|------|-----------|
-| Function | `...` | `ft_<verb>` | `(...)` |
-| Macro | `...` | `FT_<VERB>` | `(...)` |
-| + specialization | `...` | `ft_<verb>_<spec>` | `(...)` |
-| Object |  | `struct ft_<noun>` |
-| Class (Not used) |  | `struct ft_class_<noun>` |
-| Constructor | `struct ft_<noun> * ` | `ft_<noun>_new` | `(...)` |
-| + specialization | `struct ft_<noun> * ` | `ft_<noun>_new_<spec>` | `(...)` |
-| Destructor | `void ` | `ft_<noun>_del` | `(struct ft_<noun> * this)` |
-| Initialiser | `bool ` | `ft_<noun>_init` | `(struct ft_<noun> * this, ...)` |
-| + specialization | `bool ` | `ft_<noun>_init_<spec>` | `(struct ft_<noun> * this, ...)` |
-| Finalizer | `void ` | `ft_<noun>_fini` | `(struct ft_<noun> * this)` |
-| Factory | `struct ft_<noun> * ` | `ft_<...>_create_<noun>` | `(...)` |
-| + specialization | `struct ft_<noun> * ` | `ft_<...>_create_<spec>_<noun>` | `(...)` |
-| Methods | `void ` | `ft_<noun>_<verb>` | `(struct ft_<noun> * this, ...)` |
-| Delegate | | `struct ft_<noun>_delegate` |
-| - member | | `ft_<noun>.delegate` |
- 
+| Function | ... | ft\_[verb] | (...) |
+| Macro | ... | FT\_[VERB] | (...) |
+| + specialization | ... | ft\_[verb]\_[spec] | (...) |
+| Object |  | struct ft\_[noun] |
+| Class (Not used) |  | struct ft_class\_[noun] |
+| Constructor | struct ft\_[noun] \* | ft\_[noun]\_new | (...) |
+| + specialization | struct ft\_[noun] \*  | ft\_[noun]\_new\_[spec] | (...) |
+| Destructor | void | ft\_[noun]\_del | (struct ft\_[noun] \* this) |
+| Initialiser | bool | ft\_[noun]\_init | (struct ft\_[noun] \* this, ...) |
+| + specialization | bool | ft\_[noun]\_init\_[spec] | (struct ft\_[noun] \* this, ...) |
+| Finalizer | void | ft\_[noun]\_fini | (struct ft\_[noun] \* this) |
+| Factory | struct ft\_[noun2] \* | ft\_[noun]\_create\_[noun2] | (...) |
+| + specialization | struct ft\_[noun2] * | ft\_[noun]\_create\_[spec]\_[noun2] | (...) |
+| Methods | ... | ft\_[noun]\_[verb] | (struct ft\_[noun] \* this, ...) |
+| + specialization | ... | ft\_[noun]\_[verb]\_[spec] | (struct ft\_[noun] \* this, ...) |
+| Delegate | | struct ft\_[noun]\_delegate |
+| - member | | ft\_[noun].delegate |
 
 
 ### Objects
@@ -55,5 +55,8 @@ An initializer is code that runs on an object after a constructor or static allo
 A finalizer is executed during object destruction, prior to the object being deallocated, and is complementary to an initializer.
 
 
+### Delegate
+
+TODO
 
  
