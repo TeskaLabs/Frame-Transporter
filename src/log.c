@@ -40,7 +40,7 @@ inline static ev_tstamp log_get_tstamp()
 
 ///
 
-void log_entry_process(struct log_entry * le, int le_message_length)
+void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
@@ -63,7 +63,7 @@ void log_entry_process(struct log_entry * le, int le_message_length)
 	libsccmn_config.log_flush_counter += 1;
 }
 
-static inline int log_entry_format(struct log_entry * le, char level,const char * format, va_list args)
+static inline int log_entry_format(struct ft_logrecord * le, char level,const char * format, va_list args)
 {
 	le->timestamp = log_get_tstamp();
 	le->pid = getpid();
@@ -79,14 +79,14 @@ static inline int log_entry_format(struct log_entry * le, char level,const char 
 
 void _log_v(const char level, const char * format, va_list args)
 {
-	static struct log_entry le;
+	static struct ft_logrecord le;
 	int le_message_length = log_entry_format(&le, level, format, args);
-	log_entry_process(&le, le_message_length);
+	ft_logrecord_process(&le, le_message_length);
 }
 
 void _log_errno_v(int errnum, const char level, const char * format, va_list args)
 {
-	static struct log_entry le;
+	static struct ft_logrecord le;
 	int le_message_length = log_entry_format(&le, level, format, args);
 
 	if (le_message_length > 0)
@@ -108,12 +108,12 @@ void _log_errno_v(int errnum, const char level, const char * format, va_list arg
 
 	le_message_length += snprintf(le.message + le_message_length, sizeof(le.message)-le_message_length, " (%d)", errnum);
 
-	log_entry_process(&le, le_message_length);
+	ft_logrecord_process(&le, le_message_length);
 }
 
 void _log_openssl_err_v(const char level, const char * format, va_list args)
 {
-	static struct log_entry le;
+	static struct ft_logrecord le;
 	int le_message_length = log_entry_format(&le, level, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
@@ -136,7 +136,7 @@ void _log_openssl_err_v(const char level, const char * format, va_list args)
 		le_message_length += len;
 	}
 
-	log_entry_process(&le, le_message_length);
+	ft_logrecord_process(&le, le_message_length);
 }
 
 

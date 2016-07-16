@@ -159,7 +159,7 @@ static inline void logging_set_verbose(bool v)
 
 ///
 
-struct log_entry
+struct ft_logrecord
 {
 	double timestamp;
 	pid_t pid;
@@ -167,7 +167,7 @@ struct log_entry
 	char message[4096];
 };
 
-void log_entry_process(struct log_entry * le, int le_message_length);
+void ft_logrecord_process(struct ft_logrecord * le, int le_message_length);
 
 ///
 
