@@ -22,7 +22,7 @@ bool sock_listen_utest_accept_cb(struct listening_socket * listening_socket, int
 	return false;
 }
 
-struct listening_socket_cb sock_listen_cb = 
+struct ft_listener_delegate listener_delegate = 
 {
 	.accept = sock_listen_utest_accept_cb,
 };
@@ -45,7 +45,7 @@ START_TEST(sock_listen_single_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&sock, &sock_listen_cb, &context, rp);
+	ok = listening_socket_init(&sock, &listener_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 	ck_assert_int_eq(sock.stats.accept_events, 0);
 

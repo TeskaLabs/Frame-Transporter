@@ -5,18 +5,21 @@ static void listening_socket_on_io(struct ev_loop *loop, struct ev_io *watcher, 
 
 ///
 
-bool listening_socket_init(struct listening_socket * this, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * ai)
+bool listening_socket_init(struct listening_socket * this, struct ft_listener_delegate * delegate, struct context * context, struct addrinfo * ai)
 {
 	int rc;
 	int fd = -1;
 
-	assert(cbs != NULL);
+	assert(this != NULL);
+	assert(delegate != NULL);
 	assert(context != NULL);
-	this->context = context;
+	
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
 
+	this->delegate = delegate;
+	this->context = context;
 	this->listening = false;
 	this->data = NULL;
-	this->cbs = cbs;
 	this->backlog = libsccmn_config.sock_listen_backlog;
 
 	this->ai_family = ai->ai_family;
@@ -47,6 +50,7 @@ bool listening_socket_init(struct listening_socket * this, struct listening_sock
 			{
 				L_WARN("Unsupported family: %d", this->ai_family);
 				// This is not a failure
+				L_TRACE(FT_TRACE_ID_LISTENER, "END EAI_FAMILY");
 				return false;
 			}
 
@@ -97,10 +101,13 @@ bool listening_socket_init(struct listening_socket * this, struct listening_sock
 	this->watcher.data = this;
 
 	L_DEBUG("Listening on %s", addrstr);
+	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", fd);
 	return true;
 
 error_exit:
 	if (fd >= 0) close(fd);
+
+	L_TRACE(FT_TRACE_ID_LISTENER, "END error");
 	return false;
 }
 
@@ -108,6 +115,8 @@ error_exit:
 void listening_socket_fini(struct listening_socket * this)
 {
 	int rc;
+
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
 	if (this->watcher.fd >= 0)
 	{
@@ -124,6 +133,8 @@ void listening_socket_fini(struct listening_socket * this)
 		rc = unlink(un->sun_path);
 		if (rc != 0) L_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
 	}
+
+	L_TRACE(FT_TRACE_ID_LISTENER, "END");
 }
 
 
@@ -131,9 +142,12 @@ bool listening_socket_start(struct listening_socket * this)
 {
 	int rc;
 
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+
 	if (this->watcher.fd < 0)
 	{
 		L_WARN("Listening on socket that is not open!");
+		L_TRACE(FT_TRACE_ID_LISTENER, "END not open fd:%d", this->watcher.fd);
 		return false;
 	}
 
@@ -143,25 +157,31 @@ bool listening_socket_start(struct listening_socket * this)
 		if (rc != 0)
 		{
 			L_ERROR_ERRNO_P(errno, "listen(%d, %d)", this->watcher.fd, this->backlog);
+			L_TRACE(FT_TRACE_ID_LISTENER, "END listen error fd:%d", this->watcher.fd);
 			return false;
 		}
 		this->listening = true;
 	}
 
 	ev_io_start(this->context->ev_loop, &this->watcher);
+	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 	return true;
 }
 
 
 bool listening_socket_stop(struct listening_socket * this)
 {
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+
 	if (this->watcher.fd < 0)
 	{
 		L_WARN("Listening (stop) on socket that is not open!");
+		L_TRACE(FT_TRACE_ID_LISTENER, "END not open fd:%d", this->watcher.fd);
 		return false;
 	}
 
 	ev_io_stop(this->context->ev_loop, &this->watcher);
+	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 	return true;
 }
 
@@ -171,13 +191,20 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	struct listening_socket * this = watcher->data;
 	assert(this != NULL);
 
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+
 	if (revents & EV_ERROR)
 	{
 		L_ERROR("Listen socket (accept) got invalid event");
+		L_TRACE(FT_TRACE_ID_LISTENER, "END ev error fd:%d", this->watcher.fd);
 		return;
 	}
 
-	if ((revents & EV_READ) == 0) return;
+	if ((revents & EV_READ) == 0)
+	{
+		L_TRACE(FT_TRACE_ID_LISTENER, "END noop fd:%d", this->watcher.fd);
+		return;
+	}
 
 	this->stats.accept_events += 1;
 
@@ -188,14 +215,21 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	int client_socket = accept(watcher->fd, (struct sockaddr *)&client_addr, &client_len);
 	if (client_socket < 0)
 	{
-		if ((errno == EAGAIN) || (errno==EWOULDBLOCK)) return;
-		L_ERROR_ERRNO(errno, "Accept on listening socket");
+		if ((errno == EAGAIN) || (errno==EWOULDBLOCK))
+		{
+			L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
+			return;
+		}
+		int errnum = errno;
+		L_ERROR_ERRNO(errnum, "Accept on listening socket");
+		L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d errno:%d", this->watcher.fd, errnum);
 		return;
 	}
 
-	if (this->cbs->accept == NULL)
+	if (this->delegate->accept == NULL)
 	{
 		close(client_socket);
+		L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d ", this->watcher.fd);
 		return;
 	}
 
@@ -212,9 +246,10 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	}
 */
 
-	bool ok = this->cbs->accept(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
+	bool ok = this->delegate->accept(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
 	if (!ok) close(client_socket);
 
+	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d cfd:%d ok:%c", this->watcher.fd, client_socket, ok ? 'Y' : 'N');
 }
 
 ///
@@ -260,14 +295,16 @@ bool ft_listener_list_stop(struct ft_list * list)
 	return true;
 }
 
-int ft_listener_list_extend(struct ft_list * list, struct listening_socket_cb * cbs, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
+int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate * delegate, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
 {
 	assert(list != NULL);
-	assert(cbs != NULL);
+	assert(delegate != NULL);
 	assert(context != NULL);
 
 	int rc;
 	struct addrinfo hints;
+
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = ai_family;
@@ -287,7 +324,7 @@ int ft_listener_list_extend(struct ft_list * list, struct listening_socket_cb * 
 		hints.ai_addr = (struct sockaddr *)&un;
 		hints.ai_addrlen = sizeof(un);
 
-		rc = ft_listener_list_extend_by_addrinfo(list, cbs, context, &hints);
+		rc = ft_listener_list_extend_by_addrinfo(list, delegate, context, &hints);
 	}
 
 	else
@@ -301,31 +338,40 @@ int ft_listener_list_extend(struct ft_list * list, struct listening_socket_cb * 
 			return -1;
 		}
 
-		rc = ft_listener_list_extend_by_addrinfo(list, cbs, context, res);
+		rc = ft_listener_list_extend_by_addrinfo(list, delegate, context, res);
 
 		freeaddrinfo(res);
 	}
 
+	L_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
+
 	return rc;
 }
 
-int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * rp_list)
+int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listener_delegate * delegate, struct context * context, struct addrinfo * rp_list)
 {
 	assert(list != NULL);
-	assert(cbs != NULL);
+	assert(delegate != NULL);
 	assert(context != NULL);
+
+	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
 
 	int rc = 0;
 	for (struct addrinfo * rp = rp_list; rp != NULL; rp = rp->ai_next)
 	{
 
 		struct ft_list_node * new_node = ft_list_node_new(sizeof(struct listening_socket));
-		if (new_node == NULL) return false;
+		if (new_node == NULL)
+		{
+			L_WARN("Failed to allocate memory for a new listener");
+			continue;
+		}
 
-		bool ok = listening_socket_init((struct listening_socket *)new_node->data, cbs, context, rp);
+		bool ok = listening_socket_init((struct listening_socket *)new_node->data, delegate, context, rp);
 		if (!ok) 
 		{
 			ft_list_node_del(new_node);
+			L_WARN("Failed to initialize a new listener");
 			continue;
 		}
 
@@ -333,5 +379,8 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct listening_
 
 		rc += 1;
 	}
+
+	L_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
+
 	return rc;
 }

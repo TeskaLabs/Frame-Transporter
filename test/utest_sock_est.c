@@ -91,7 +91,7 @@ bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 	return true;
 }
 
-struct listening_socket_cb sock_est_1_listen_cb = 
+struct ft_listener_delegate utest_1_listener_delegate = 
 {
 	.accept = sock_est_1_on_accept,
 };
@@ -115,7 +115,7 @@ START_TEST(sock_est_1_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &sock_est_1_listen_cb, &context, rp);
+	ok = listening_socket_init(&listen_sock, &utest_1_listener_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -181,7 +181,7 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 	return false;
 }
 
-struct ft_stream_delegate sock_est_2_sock_delegate = 
+struct ft_stream_delegate utest_2_listener_delegate = 
 {
 	.read = sock_est_2_on_read,
 };
@@ -190,7 +190,7 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &sock_est_2_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
+	ok = established_socket_init_accept(&established_sock, &utest_2_listener_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
 	established_socket_set_read_partial(&established_sock, true);
@@ -202,7 +202,7 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 	return true;
 }
 
-struct listening_socket_cb sock_est_2_listen_cb = 
+struct ft_listener_delegate sock_est_2_listen_cb = 
 {
 	.accept = sock_est_2_on_accept,
 };
@@ -563,7 +563,7 @@ bool sock_est_ssl_server_listen_on_accept(struct listening_socket * listening_so
 	return true;
 }
 
-struct listening_socket_cb sock_est_ssl_server_listen_cb = 
+struct ft_listener_delegate utest_ssl_server_listener_delegate = 
 {
 	.accept = sock_est_ssl_server_listen_on_accept,
 };
@@ -607,7 +607,7 @@ START_TEST(sock_est_ssl_server_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &sock_est_ssl_server_listen_cb, &context, rp);
+	ok = listening_socket_init(&listen_sock, &utest_ssl_server_listener_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);

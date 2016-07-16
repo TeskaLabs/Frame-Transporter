@@ -138,7 +138,7 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	return true;
 }
 
-struct listening_socket_cb sock_listen_sock_cb =
+struct ft_listener_delegate listener_delegate =
 {
 	.accept = on_accept_cb,
 };
@@ -224,10 +224,10 @@ int main(int argc, char const *argv[])
 	// Prepare listening socket(s)
 	ft_listener_list_init(&listeners);
 
-	rc = ft_listener_list_extend(&listeners, &sock_listen_sock_cb, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
+	rc = ft_listener_list_extend(&listeners, &listener_delegate, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
 	if (rc < 0) return EXIT_FAILURE;
 
-	rc = ft_listener_list_extend(&listeners, &sock_listen_sock_cb, &context, AF_UNIX, SOCK_STREAM, "/tmp/sctext.tmp", NULL);
+	rc = ft_listener_list_extend(&listeners, &listener_delegate, &context, AF_UNIX, SOCK_STREAM, "/tmp/sctext.tmp", NULL);
 	if (rc < 0) return EXIT_FAILURE;
 
 	// Registed check handler

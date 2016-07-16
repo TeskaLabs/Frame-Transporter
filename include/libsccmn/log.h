@@ -16,6 +16,7 @@ enum log_trace_ids
 {
 	L_TRACEID_SOCK_STREAM = 0x0001,
 	L_TRACEID_EVENT_LOOP = 0x0002,
+	FT_TRACE_ID_LISTENER = 0x0004,
 };
 
 static inline bool _log_traceid(unsigned int traceid)
