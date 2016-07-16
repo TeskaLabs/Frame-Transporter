@@ -44,8 +44,12 @@ bool listening_socket_stop(struct listening_socket *);
 
 ///
 
-typedef bool (*listening_socket_getaddrinfo_cb)(void * data, struct context * context, struct addrinfo * addrinfo);
+bool ft_listener_list_init(struct ft_list *);
 
-int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb, void * data, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port);
+int ft_listener_list_extend(struct ft_list *, struct listening_socket_cb * cbs, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port);
+int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * rp_list);
+
+bool ft_listener_list_start(struct ft_list *);
+bool ft_listener_list_stop(struct ft_list *);
 
 #endif //__LIBSCCMN_SOCK_LISTEN_H__

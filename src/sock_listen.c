@@ -219,11 +219,53 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 
 ///
 
-int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb cb, void * data, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
+static void ft_listener_list_on_remove(struct ft_list * list, struct ft_node * node)
 {
-	assert(cb != NULL);
+	assert(list != NULL);
+
+	listening_socket_fini((struct listening_socket *)node->data);
+}
+
+bool ft_listener_list_init(struct ft_list * list)
+{
+	assert(list != NULL);
+
+	return ft_list_init(list, ft_listener_list_on_remove);
+}
+
+
+bool ft_listener_list_start(struct ft_list * list)
+{
+	assert(list != NULL);
 
 	bool ok;
+	for (struct ft_node * node = list->head; node != NULL; node = node->right)
+	{
+		ok = listening_socket_start((struct listening_socket *)node->data);
+		if (!ok) return false;
+	}
+	return true;
+}
+
+bool ft_listener_list_stop(struct ft_list * list)
+{
+	assert(list != NULL);
+
+	bool ok;
+	for (struct ft_node * node = list->head; node != NULL; node = node->right)
+	{
+		ok = listening_socket_stop((struct listening_socket *)node->data);
+		if (!ok) return false;
+	}
+	return true;
+}
+
+int ft_listener_list_extend(struct ft_list * list, struct listening_socket_cb * cbs, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
+{
+	assert(list != NULL);
+	assert(cbs != NULL);
+	assert(context != NULL);
+
 	int rc;
 	struct addrinfo hints;
 
@@ -245,8 +287,7 @@ int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb cb, void
 		hints.ai_addr = (struct sockaddr *)&un;
 		hints.ai_addrlen = sizeof(un);
 
-		ok = cb(data, context, &hints);
-		rc = ok ? 1 : 0;
+		rc = ft_listener_list_extend_by_addrinfo(list, cbs, context, &hints);
 	}
 
 	else
@@ -260,15 +301,37 @@ int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb cb, void
 			return -1;
 		}
 
-		int rc = 0;
-		for (struct addrinfo * rp = res; rp != NULL; rp = rp->ai_next)
-		{
-			ok = cb(data, context, rp);
-			rc += ok ? 1 : 0;
-		}
+		rc = ft_listener_list_extend_by_addrinfo(list, cbs, context, res);
 
 		freeaddrinfo(res);
 	}
 
+	return rc;
+}
+
+int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * rp_list)
+{
+	assert(list != NULL);
+	assert(cbs != NULL);
+	assert(context != NULL);
+
+	int rc = 0;
+	for (struct addrinfo * rp = rp_list; rp != NULL; rp = rp->ai_next)
+	{
+
+		struct ft_node * new_node = ft_node_new(sizeof(struct listening_socket));
+		if (new_node == NULL) return false;
+
+		bool ok = listening_socket_init((struct listening_socket *)new_node->data, cbs, context, rp);
+		if (!ok) 
+		{
+			ft_node_del(new_node);
+			continue;
+		}
+
+		ft_list_add(list, new_node);
+
+		rc += 1;
+	}
 	return rc;
 }

@@ -88,49 +88,12 @@ struct listening_socket_cb sock_listen_sock_cb =
 	.accept = on_accept_cb,
 };
 
-static bool on_resolve_listen_cb(void * data, struct context * context, struct addrinfo * addrinfo)
-{
-	struct ft_node * new_node = ft_node_new(sizeof(struct listening_socket));
-	if (new_node == NULL) return false;
-
-	struct listening_socket * listener = (struct listening_socket *)new_node->data;
-
-	bool ok = listening_socket_init(listener, &sock_listen_sock_cb, context, addrinfo);
-	if (!ok) 
-	{
-		ft_node_del(new_node);
-		return false;
-	}
-
-	ft_list_add(&listeners, new_node);
-
-	return true;
-}
-
-static void listeners_on_remove(struct ft_list * list, struct ft_node * node)
-{
-	listening_socket_fini((struct listening_socket *)node->data);
-}
-
-static void listen_sock_start_each(struct ft_node * node, void * data)
-{
-	listening_socket_start((struct listening_socket *)node->data);
-}
-
-static void listen_sock_stop_each(struct ft_node * node, void * data)
-{
-	listening_socket_stop((struct listening_socket *)node->data);
-}
-
 ///
 
 static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
 {
-	// Stop established sockets
 	ft_list_each(&streams, established_sock_stop_each, NULL);
-
-	// Stop listening sockets
-	ft_list_each(&listeners, listen_sock_stop_each, NULL);
+	ft_listener_list_stop(&listeners);
 }
 
 static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
@@ -183,14 +146,15 @@ int main(int argc, char const *argv[])
 #endif
 
 	// Initialize a list for listening sockets
-	ft_list_init(&listeners, listeners_on_remove);
 	ft_list_init(&streams, streams_on_remove);
 
 	// Prepare listening socket(s)
-	rc = listening_socket_create_getaddrinfo(on_resolve_listen_cb, NULL, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
+	ft_listener_list_init(&listeners);
+
+	rc = ft_listener_list_extend(&listeners, &sock_listen_sock_cb, &context, AF_INET, SOCK_STREAM, "127.0.0.1", "12345");
 	if (rc < 0) return EXIT_FAILURE;
 
-	rc = listening_socket_create_getaddrinfo(on_resolve_listen_cb, NULL, &context, AF_UNIX, SOCK_STREAM, "/tmp/sctext.tmp", NULL);
+	rc = ft_listener_list_extend(&listeners, &sock_listen_sock_cb, &context, AF_UNIX, SOCK_STREAM, "/tmp/sctext.tmp", NULL);
 	if (rc < 0) return EXIT_FAILURE;
 
 	// Registed check handler
@@ -200,7 +164,7 @@ int main(int argc, char const *argv[])
 	ev_unref(context.ev_loop);
 
 	// Start listening
-	ft_list_each(&listeners, listen_sock_start_each, NULL);
+	ft_listener_list_start(&listeners);
 
 	// Register exiting watcher
 	context_exiting_watcher_add(&context, &watcher, on_exiting_cb);
