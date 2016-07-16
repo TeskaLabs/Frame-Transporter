@@ -16,7 +16,7 @@ bool set_tcp_keepalive(int fd)
 
 	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0)
 	{
-	    //TODO: L_ERROR_ERRNO(errno, "Error activating SO_KEEPALIVE on client socket");
+	    L_WARN_ERRNO(errno, "Error activating SO_KEEPALIVE on a socket (fd: %d)", fd);
 	    return false;
 	}
 
@@ -26,7 +26,7 @@ bool set_tcp_keepalive(int fd)
 	optlen = sizeof(optval);
 	if(setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &optval, optlen) < 0)
 	{
-		//TODO: L_WARN_ERRNO(errno, "Error setting TCP_KEEPIDLE on client socket");
+		L_WARN_ERRNO(errno, "Error setting TCP_KEEPIDLE on a socket (fd: %d)", fd);
 	}
 #endif
 
