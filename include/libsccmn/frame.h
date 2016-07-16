@@ -23,6 +23,7 @@ struct frame_dvec
 	struct frame * frame;
 
 	// 0 (+ offset) <= position <= limit <= capacity
+	// Vector length is defined as limit - position
 
 	// 
 	// The offset is never negative and is inside a frame
@@ -40,6 +41,7 @@ struct frame_dvec
 	// The capacity is never negative and never changes.
 	size_t capacity;
 };
+
 
 static inline void frame_dvec_position_add(struct frame_dvec * this, size_t position_delta)
 {
