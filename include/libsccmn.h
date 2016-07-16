@@ -69,7 +69,7 @@ pid_t pidfile_is_running(void);
 
 // File descriptor related functions
 bool ft_fd_nonblock(int fd);
-bool set_tcp_keepalive(int fd);
+bool ft_socket_keepalive(int fd);
 bool ft_fd_cloexec(int fd);
 
 

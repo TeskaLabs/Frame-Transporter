@@ -9,7 +9,7 @@ bool ft_fd_nonblock(int fd)
 }
 
 
-bool set_tcp_keepalive(int fd)
+bool ft_socket_keepalive(int fd)
 {
 	int optval = 1;
 	socklen_t optlen = sizeof(optval);
