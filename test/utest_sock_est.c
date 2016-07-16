@@ -397,7 +397,7 @@ START_TEST(sock_est_ssl_client_utest)
 	rc = EVP_DigestInit_ex(sock_est_ssl_1_mdctx, EVP_sha256(), NULL);
 	ck_assert_int_eq(rc, 1);
 
-	libsccmn_init();
+	ft_initialise();
 
 //	libsccmn_config.log_verbose = true;
 //	libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
@@ -577,7 +577,7 @@ START_TEST(sock_est_ssl_server_utest)
 
 	sock_est_ssl_server_utest_result_counter = 0;
 
-	libsccmn_init();
+	ft_initialise();
 
 	struct context context;
 	ok = context_init(&context);

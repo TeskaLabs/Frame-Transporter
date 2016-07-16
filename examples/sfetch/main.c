@@ -78,7 +78,7 @@ int main(int argc, char const *argv[])
 	//logging_set_verbose(true);
 	//libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;
 
-	libsccmn_init();	
+	ft_initialise();	
 
 	// Load nice OpenSSL error messages
 	SSL_load_error_strings();

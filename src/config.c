@@ -32,7 +32,7 @@ struct libsccmn_config libsccmn_config =
 };
 
 
-void libsccmn_init(void)
+void ft_initialise(void)
 {
 	assert(libsccmn_config.initialized == false);
 

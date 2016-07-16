@@ -55,7 +55,7 @@ struct context;
 #include <libsccmn/sock_est.h>
 
 // Global init function
-void libsccmn_init(void); // Call this at very beginning
+void ft_initialise(void); // Call this at very beginning
 
 // Daemonise functions
 // context can be NULL
