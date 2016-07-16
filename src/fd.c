@@ -1,6 +1,6 @@
 #include "all.h"
 
-bool set_socket_nonblocking(int fd)
+bool ft_fd_nonblock(int fd)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
   	if (flags < 0) return false;
@@ -34,7 +34,7 @@ bool set_tcp_keepalive(int fd)
 }
 
 
-bool set_close_on_exec(int fd)
+bool ft_fd_cloexec(int fd)
 {
 	// Fetch flags
 	int flags = fcntl(fd, F_GETFD);

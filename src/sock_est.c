@@ -80,7 +80,7 @@ static bool established_socket_init(struct established_socket * this, struct ft_
 	if (rc_tcp_cwnd == -1) L_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_CWND)");
 #endif
 
-	bool res = set_socket_nonblocking(fd);
+	bool res = ft_fd_nonblock(fd);
 	if (!res) L_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	this->data = NULL;

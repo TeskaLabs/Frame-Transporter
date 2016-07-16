@@ -68,9 +68,9 @@ pid_t pidfile_is_running(void);
 
 
 // File descriptor related functions
-bool set_socket_nonblocking(int fd);
+bool ft_fd_nonblock(int fd);
 bool set_tcp_keepalive(int fd);
-bool set_close_on_exec(int fd);
+bool ft_fd_cloexec(int fd);
 
 
 // Boolean parser

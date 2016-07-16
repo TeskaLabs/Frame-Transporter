@@ -79,7 +79,7 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 		goto error_exit;
 	}
 
-	bool res = set_socket_nonblocking(fd);
+	bool res = ft_fd_nonblock(fd);
 	if (!res) L_WARN_ERRNO(errno, "Failed when setting listen socket to non-blocking mode");
 
 #if TCP_DEFER_ACCEPT
