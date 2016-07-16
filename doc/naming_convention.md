@@ -13,7 +13,7 @@ Prefix: *ft_*
 | Macro | ... | FT\_[VERB] | (...) |
 | + specialization | ... | ft\_[verb]\_[spec] | (...) |
 | Object |  | struct ft\_[noun] |
-| Class (Not used) |  | struct ft_class\_[noun] |
+| Class |  | struct ft\_[noun]\_class |
 | Constructor | struct ft\_[noun] \* | ft\_[noun]\_new | (...) |
 | + specialization | struct ft\_[noun] \*  | ft\_[noun]\_new\_[spec] | (...) |
 | Destructor | void | ft\_[noun]\_del | (struct ft\_[noun] \* this) |
@@ -22,8 +22,12 @@ Prefix: *ft_*
 | Finalizer | void | ft\_[noun]\_fini | (struct ft\_[noun] \* this) |
 | Factory | struct ft\_[noun2] \* | ft\_[noun]\_create\_[noun2] | (...) |
 | + specialization | struct ft\_[noun2] * | ft\_[noun]\_create\_[spec]\_[noun2] | (...) |
-| Methods | ... | ft\_[noun]\_[verb] | (struct ft\_[noun] \* this, ...) |
+| Method | ... | ft\_[noun]\_[verb] | (struct ft\_[noun] \* this, ...) |
 | + specialization | ... | ft\_[noun]\_[verb]\_[spec] | (struct ft\_[noun] \* this, ...) |
+| Getter | ... | ft\_[noun]\_get\_[subject] | (struct ft\_[noun] \* this) |
+| + boolean | bool | ft\_[noun]\_is\_[subject] | (struct ft\_[noun] \* this) |
+| Setter | void | ft\_[noun]\_set\_[subject] | (struct ft\_[noun] \* this, ... value) |
+| Counter | int / size_t / ... | ft\_[noun]\_count\_[subject] | (struct ft\_[noun] \* this) |
 | Delegate | | struct ft\_[noun]\_delegate |
 | - member | | ft\_[noun].delegate |
 
