@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_SOCK_LISTEN_H__
-#define __LIBSCCMN_SOCK_LISTEN_H__
+#ifndef FT_SOCK_LISTENER_H
+#define FT_SOCK_LISTENER_H
 
 struct listening_socket;
 
@@ -52,4 +52,4 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct ft_listener_del
 bool ft_listener_list_start(struct ft_list *);
 bool ft_listener_list_stop(struct ft_list *);
 
-#endif //__LIBSCCMN_SOCK_LISTEN_H__
+#endif // FT_SOCK_LISTENER_H

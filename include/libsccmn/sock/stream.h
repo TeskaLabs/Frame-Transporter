@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_SOCK_EST_H__
-#define __LIBSCCMN_SOCK_EST_H__
+#ifndef FT_SOCK_STREAM_H
+#define FT_SOCK_STREAM_H
 
 struct established_socket;
 
@@ -126,4 +126,4 @@ static inline struct established_socket * established_socket_from_x509_store_ctx
     return established_socket_from_ssl(ssl);
 }
 
-#endif // __LIBSCCMN_SOCK_EST_H__
+#endif // FT_SOCK_STREAM_H

@@ -51,8 +51,8 @@ struct context;
 
 #include <libsccmn/cols/list.h>
 
-#include <libsccmn/sock_listen.h>
-#include <libsccmn/sock_est.h>
+#include <libsccmn/sock/listener.h>
+#include <libsccmn/sock/stream.h>
 
 // Global init function
 void ft_initialise(void); // Call this at very beginning

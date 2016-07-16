@@ -8,8 +8,8 @@ OBJS=\
 	config.o \
 	log.o \
 	daemon.o \
-	sock_listen.o \
-	sock_est.o \
+	sock/listener.o \
+	sock/stream.o \
 	heartbeat.o \
 	frame.o \
 	fpool.o \
