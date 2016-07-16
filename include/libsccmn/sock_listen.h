@@ -48,21 +48,4 @@ typedef bool (*listening_socket_getaddrinfo_cb)(void * data, struct context * co
 
 int listening_socket_create_getaddrinfo(listening_socket_getaddrinfo_cb, void * data, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port);
 
-/*
-struct listening_socket_chain
-{
-	struct listening_socket_chain * next;
-	struct listening_socket listening_socket;
-};
-
-int listening_socket_chain_extend_getaddrinfo(struct listening_socket_chain ** chain, struct listening_socket_cb * cbs, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port);
-int listening_socket_chain_extend(struct listening_socket_chain ** chain, struct listening_socket_cb * cbs, struct context * context, struct addrinfo * addrinfo);
-void listening_socket_chain_del(struct listening_socket_chain *);
-
-void listening_socket_chain_start(struct listening_socket_chain *);
-void listening_socket_chain_stop(struct listening_socket_chain *);
-
-void listening_socket_chain_set_data(struct listening_socket_chain *, void * data);
-*/
-
 #endif //__LIBSCCMN_SOCK_LISTEN_H__
