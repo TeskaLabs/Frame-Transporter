@@ -118,7 +118,7 @@ static void sigchld(int s)
 
 ///
 
-pid_t daemonise(struct context * context)
+pid_t ft_deamonise(struct context * context)
 {
 	pid_t pid;
 	int pipe_fds[2] = {-1, -1};
@@ -361,7 +361,7 @@ pid_t daemonise(struct context * context)
 		close(pipe_fds[0]);
 		errno = saved_errno;
 
-		L_DEBUG("Daemonised");
+		L_DEBUG("ft_deamonised");
 		pidfile_set_filename(NULL); // Prevent removal od the PID file
 
 		if ((context !=  NULL) && (context->ev_loop != NULL))
