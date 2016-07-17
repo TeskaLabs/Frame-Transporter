@@ -80,12 +80,12 @@ static inline void frame_pool_return(struct frame * frame)
 	if (zone->flags.mlock_when_used)
 	{
 		rc = munlock(frame->data, frame->capacity);
-		if (rc != 0) L_WARN_ERRNO(errno, "munlock in frame pool return");
+		if (rc != 0) FT_WARN_ERRNO(errno, "munlock in frame pool return");
 	}
 
 	// Advise that we will use it
 	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);
-	if (rc != 0) L_WARN_ERRNO(errno, "posix_madvise in frame pool return");
+	if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool return");
 
 }
 

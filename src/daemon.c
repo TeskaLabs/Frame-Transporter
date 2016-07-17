@@ -104,7 +104,7 @@ static int move_fd_up(int *fd)
 	{
 		if ((*fd = dup(*fd)) < 0)
 		{
-			L_ERROR_ERRNO(errno, "dup()");
+			FT_ERROR_ERRNO(errno, "dup()");
 			return -1;
 		}
 	}
@@ -132,25 +132,25 @@ pid_t ft_deamonise(struct context * context)
 
 	if (sigemptyset(&ss_new) < 0)
 	{
-		L_ERROR_ERRNO(errno, "sigemptyset() failed");
+		FT_ERROR_ERRNO(errno, "sigemptyset() failed");
 		return (pid_t) -1;
 	}
 
 	if (sigaddset(&ss_new, SIGCHLD) < 0)
 	{
-		L_ERROR_ERRNO(errno, "sigaddset() failed");
+		FT_ERROR_ERRNO(errno, "sigaddset() failed");
 		return (pid_t) -1;
 	}
 
 	if (sigaction(SIGCHLD, &sa_new, &sa_old) < 0)
 	{
-		L_ERROR_ERRNO(errno, "sigaction() failed");
+		FT_ERROR_ERRNO(errno, "sigaction() failed");
 		return (pid_t) -1;
 	}
 
 	if (sigprocmask(SIG_UNBLOCK, &ss_new, &ss_old) < 0)
 	{
-		L_ERROR_ERRNO(errno, "sigprocmask() failed");
+		FT_ERROR_ERRNO(errno, "sigprocmask() failed");
 
 		saved_errno = errno;
 		sigaction(SIGCHLD, &sa_old, NULL);
@@ -161,7 +161,7 @@ pid_t ft_deamonise(struct context * context)
 
 	if (pipe(pipe_fds) < 0)
 	{
-		L_ERROR_ERRNO(errno, "pipe() failed");
+		FT_ERROR_ERRNO(errno, "pipe() failed");
 
 		saved_errno = errno;
 		sigaction(SIGCHLD, &sa_old, NULL);
@@ -173,7 +173,7 @@ pid_t ft_deamonise(struct context * context)
 
 	if ((pid = fork()) < 0)
 	{ /* First fork */
-		L_ERROR_ERRNO(errno, "First fork() failed");
+		FT_ERROR_ERRNO(errno, "First fork() failed");
 
 		saved_errno = errno;
 		close(pipe_fds[0]);
@@ -196,7 +196,7 @@ pid_t ft_deamonise(struct context * context)
 
 		if (close(pipe_fds[0]) < 0)
 		{
-			L_ERROR_ERRNO(errno, "close() failed");
+			FT_ERROR_ERRNO(errno, "close() failed");
 			goto fail;
 		}
 
@@ -211,19 +211,19 @@ pid_t ft_deamonise(struct context * context)
 
 		if (_null_open(O_RDONLY, 0) < 0)
 		{
-			L_ERROR_ERRNO(errno,"Failed to open /dev/null for STDIN");
+			FT_ERROR_ERRNO(errno,"Failed to open /dev/null for STDIN");
 			goto fail;
 		}
 
 		if (_null_open(O_WRONLY, 1) < 0)
 		{
-			L_ERROR_ERRNO(errno, "Failed to open /dev/null for STDOUT");
+			FT_ERROR_ERRNO(errno, "Failed to open /dev/null for STDOUT");
 			goto fail;
 		}
 
 		if (_null_open(O_WRONLY, 2) < 0)
 		{
-			L_ERROR_ERRNO(errno, "Failed to open /dev/null for STDERR");
+			FT_ERROR_ERRNO(errno, "Failed to open /dev/null for STDERR");
 			goto fail;
 		}
 
@@ -233,7 +233,7 @@ pid_t ft_deamonise(struct context * context)
 		 * process group leader because we just forked. */
 		if (setsid() < 0)
 		{
-			L_ERROR_ERRNO(errno, "setsid() failed");
+			FT_ERROR_ERRNO(errno, "setsid() failed");
 			goto fail;
 		}
 
@@ -242,14 +242,14 @@ pid_t ft_deamonise(struct context * context)
 
 		if (chdir("/") < 0)
 		{
-			L_ERROR_ERRNO(errno, "chdir() failed");
+			FT_ERROR_ERRNO(errno, "chdir() failed");
 			goto fail;
 		}
 */
 
 		if ((pid = fork()) < 0)
 		{ /* Second fork */
-			L_ERROR_ERRNO(errno, "Second fork() failed");
+			FT_ERROR_ERRNO(errno, "Second fork() failed");
 			goto fail;
 		}
 
@@ -264,44 +264,44 @@ pid_t ft_deamonise(struct context * context)
 
 			if (sigaction(SIGCHLD, &sa_old, NULL) < 0)
 			{
-				L_ERROR_ERRNO(errno, "close() failed");
+				FT_ERROR_ERRNO(errno, "close() failed");
 				goto fail;
 			}
 
 			if (sigprocmask(SIG_SETMASK, &ss_old, NULL) < 0)
 			{
-				L_ERROR_ERRNO(errno, "sigprocmask() failed");
+				FT_ERROR_ERRNO(errno, "sigprocmask() failed");
 				goto fail;
 			}
 
 			if (signal(SIGTTOU, SIG_IGN) == SIG_ERR)
 			{
-				L_ERROR_ERRNO(errno, "signal(SIGTTOU, SIG_IGN) failed");
+				FT_ERROR_ERRNO(errno, "signal(SIGTTOU, SIG_IGN) failed");
 				goto fail;
 			}
 
 			if (signal(SIGTTIN, SIG_IGN) == SIG_ERR)
 			{
-				L_ERROR_ERRNO(errno, "signal(SIGTTIN, SIG_IGN) failed");
+				FT_ERROR_ERRNO(errno, "signal(SIGTTIN, SIG_IGN) failed");
 				goto fail;
 			}
 
 			if (signal(SIGTSTP, SIG_IGN) == SIG_ERR)
 			{
-				L_ERROR_ERRNO(errno, "signal(SIGTSTP, SIG_IGN) failed");
+				FT_ERROR_ERRNO(errno, "signal(SIGTSTP, SIG_IGN) failed");
 				goto fail;
 			}
 
 			dpid = getpid();
 			if (atomic_write(pipe_fds[1], &dpid, sizeof(dpid)) != sizeof(dpid))
 			{
-				L_ERROR_ERRNO(errno, "write() failed");
+				FT_ERROR_ERRNO(errno, "write() failed");
 				goto fail;
 			}
 
 			if (close(pipe_fds[1]) < 0)
 			{
-				L_ERROR_ERRNO(errno, "close() failed");
+				FT_ERROR_ERRNO(errno, "close() failed");
 				goto fail;
 			}
 
@@ -320,7 +320,7 @@ pid_t ft_deamonise(struct context * context)
 		dpid = (pid_t) -1;
 
 		if (atomic_write(pipe_fds[1], &dpid, sizeof(dpid)) != sizeof(dpid))
-			L_ERROR_ERRNO(errno, "Failed to write error PID");
+			FT_ERROR_ERRNO(errno, "Failed to write error PID");
 
 		close(pipe_fds[1]);
 		_exit(0);
@@ -349,7 +349,7 @@ pid_t ft_deamonise(struct context * context)
 
 		if (atomic_read(pipe_fds[0], &dpid, sizeof(dpid)) != sizeof(dpid))
 		{
-			L_ERROR("Failed to read daemon PID.");
+			FT_ERROR("Failed to read daemon PID.");
 			dpid = (pid_t) -1;
 			errno = EINVAL;
 		}
@@ -361,7 +361,7 @@ pid_t ft_deamonise(struct context * context)
 		close(pipe_fds[0]);
 		errno = saved_errno;
 
-		L_DEBUG("ft_deamonised");
+		FT_DEBUG("ft_deamonised");
 		pidfile_set_filename(NULL); // Prevent removal od the PID file
 
 		if ((context !=  NULL) && (context->ev_loop != NULL))
@@ -404,7 +404,7 @@ static int pidfile_lock(int fd, int enable)
 				return 0;
 		}
 
-		L_ERROR_ERRNO(errno, "fcntl(F_SETLKW) failed");
+		FT_ERROR_ERRNO(errno, "fcntl(F_SETLKW) failed");
 		return -1;
 	}
 
@@ -433,7 +433,7 @@ bool pidfile_create(void)
 	fd = open(libsccmn_config.pid_file, O_CREAT | O_RDWR, 0644);
 	if (fd < 0)
 	{
-		L_ERROR_ERRNO(errno, "pidfile_create/open(%s)", libsccmn_config.pid_file);
+		FT_ERROR_ERRNO(errno, "pidfile_create/open(%s)", libsccmn_config.pid_file);
 		return false;
 	}
 
@@ -452,7 +452,7 @@ bool pidfile_create(void)
 	if (write(fd, t, l) != l)
 	{
 		int saved_errno = errno;
-		L_ERROR_ERRNO(saved_errno, "pidfile_create / write()");
+		FT_ERROR_ERRNO(saved_errno, "pidfile_create / write()");
 		unlink(libsccmn_config.pid_file);
 		errno = saved_errno;
 		goto finish;
@@ -487,7 +487,7 @@ bool pidfile_remove(void)
 	int rc = unlink(libsccmn_config.pid_file);
 	if (rc != 0)
 	{
-		L_ERROR_ERRNO(errno, "pidfile_remove / unlink(%s)", libsccmn_config.pid_file);
+		FT_ERROR_ERRNO(errno, "pidfile_remove / unlink(%s)", libsccmn_config.pid_file);
 	}
 
 	return rc == 0;
@@ -507,14 +507,14 @@ pid_t pidfile_is_running(void)
 
 	if (libsccmn_config.pid_file == NULL)
 	{
-		L_ERROR("Pid file location is not specified.");
+		FT_ERROR("Pid file location is not specified.");
         goto finish;
     }
 
     if ((fd = open(libsccmn_config.pid_file, O_RDWR, 0644)) < 0) {
         if ((fd = open(libsccmn_config.pid_file, O_RDONLY, 0644)) < 0) {
             if (errno != ENOENT)
-                L_ERROR_ERRNO(errno, "Failed to open PID file");
+                FT_ERROR_ERRNO(errno, "Failed to open PID file");
 
             goto finish;
         }
@@ -525,7 +525,7 @@ pid_t pidfile_is_running(void)
 
     if ((l = read(fd, txt, sizeof(txt)-1)) < 0) {
         int saved_errno = errno;
-        L_ERROR_ERRNO(errno, "daemon_pid_file_is_running / read()");
+        FT_ERROR_ERRNO(errno, "daemon_pid_file_is_running / read()");
         unlink(libsccmn_config.pid_file);
         errno = saved_errno;
         goto finish;
@@ -539,7 +539,7 @@ pid_t pidfile_is_running(void)
     pid = (pid_t) lpid;
 
     if (errno != 0 || !e || *e || (long) pid != lpid) {
-        L_WARN("PID file corrupt, removing. (%s)", libsccmn_config.pid_file);
+        FT_WARN("PID file corrupt, removing. (%s)", libsccmn_config.pid_file);
         unlink(libsccmn_config.pid_file);
         errno = EINVAL;
         goto finish;
@@ -547,7 +547,7 @@ pid_t pidfile_is_running(void)
 
     if (kill(pid, 0) != 0 && errno != EPERM) {
         int saved_errno = errno;
-        L_ERROR_ERRNO(errno, "Process %lu died", (unsigned long) pid);
+        FT_ERROR_ERRNO(errno, "Process %lu died", (unsigned long) pid);
         unlink(libsccmn_config.pid_file);
         errno = saved_errno;
         goto finish;

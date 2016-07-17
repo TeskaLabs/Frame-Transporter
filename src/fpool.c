@@ -35,7 +35,7 @@ bool frame_pool_zone_init(struct frame_pool_zone * this, uint8_t * data, size_t 
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
-	L_DEBUG("Allocated frame pool zone of %zu bytes, %zd frames", this->alloc_size, this->frames_total);
+	FT_DEBUG("Allocated frame pool zone of %zu bytes, %zd frames", this->alloc_size, this->frames_total);
 
 	return true;
 }
@@ -47,18 +47,18 @@ static void frame_pool_zone_del(struct frame_pool_zone * this)
 
 	if (this->frames_used > 0)
 	{
-		L_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %zd)", this->frames_used);
+		FT_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %zd)", this->frames_used);
 		for(int i=0; i<this->frames_total; i+=1)
 		{
 			if (this->frames[i].type != frame_type_FREE)
 			{
-				L_FATAL("Unreturned frame #%d allocated at %s:%d", i+1, this->frames[i].borrowed_by_file, this->frames[i].borrowed_by_line);
+				FT_FATAL("Unreturned frame #%d allocated at %s:%d", i+1, this->frames[i].borrowed_by_file, this->frames[i].borrowed_by_line);
 			}
 		}
 		abort();
 	}
 
-	L_DEBUG("Deallocating frame pool zone of %zu bytes", this->alloc_size);
+	FT_DEBUG("Deallocating frame pool zone of %zu bytes", this->alloc_size);
 
 	//TODO: configure actual free() call; rename frame_pool_zone_del to frame_pool_zone_fini and implement virtual frame_pool_zone_fini
 	munmap(this, this->alloc_size);
@@ -87,12 +87,12 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint
 	if (frame->zone->flags.mlock_when_used)
 	{
 		rc = mlock(frame->data, frame->capacity);
-		if (rc != 0) L_WARN_ERRNO(errno, "mlock in frame pool borrow");
+		if (rc != 0) FT_WARN_ERRNO(errno, "mlock in frame pool borrow");
 	}
 
 	// Advise that we will use it
 	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
-	if (rc != 0) L_WARN_ERRNO(errno, "posix_madvise in frame pool borrow");
+	if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool borrow");
 
 	return frame;
 }
@@ -150,14 +150,14 @@ struct frame * frame_pool_borrow_real(struct frame_pool * this, uint64_t frame_t
 	*last_zone_next = this->alloc_advise(this);
 	if (*last_zone_next == NULL)
 	{
-		L_WARN("Frame pool ran out of memory");
+		FT_WARN("Frame pool ran out of memory");
 		return NULL;
 	}
 
 	frame = frame_pool_zone_borrow(*last_zone_next, frame_type, file, line);
 	if (frame == NULL)
 	{
-		L_WARN("Frame pool ran out of memory (2)");
+		FT_WARN("Frame pool ran out of memory (2)");
 		return NULL;
 	}
 
@@ -180,7 +180,7 @@ struct frame_pool_zone * frame_pool_zone_new_mmap(struct frame_pool * frame_pool
 	void * p = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, mmap_flags, -1, 0);
 	if (p == MAP_FAILED)
 	{
-		L_ERROR_ERRNO(errno, "Failed to allocate frame pool memory (%zu bytes)", alloc_size);
+		FT_ERROR_ERRNO(errno, "Failed to allocate frame pool memory (%zu bytes)", alloc_size);
 		return NULL;
 	}
 
@@ -215,7 +215,7 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 		int fd = open("/proc/meminfo", O_RDONLY);
 		if (fd < 0)
 		{
-			L_WARN_ERRNO(errno, "open(%s), disabling hugetlb support", "/proc/meminfo");
+			FT_WARN_ERRNO(errno, "open(%s), disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 
@@ -225,12 +225,12 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 
 		if (len < 0)
 		{
-			L_ERROR_ERRNO(readerr, "read(%s), disabling hugetlb support", "/proc/meminfo");
+			FT_ERROR_ERRNO(readerr, "read(%s), disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		if (len == sizeof(buffer))
 		{
-			L_ERROR("File '%s' is too large, disabling hugetlb support", "/proc/meminfo");
+			FT_ERROR("File '%s' is too large, disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		buffer[len] = '\0';
@@ -238,7 +238,7 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 		char * p = strstr(buffer, "Hugepagesize:");
 		if (p == NULL)
 		{
-			L_ERROR("File '%s' doesn't contain hugetlb page size, disabling hugetlb support", "/proc/meminfo");
+			FT_ERROR("File '%s' doesn't contain hugetlb page size, disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		p += strlen("Hugepagesize:");
@@ -247,7 +247,7 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 		long hugetlb_size = strtol(p, &q, 0);
 		if (!isspace(*q))
 		{
-			L_ERROR("File '%s' parsing error, disabling hugetlb support", "/proc/meminfo");
+			FT_ERROR("File '%s' parsing error, disabling hugetlb support", "/proc/meminfo");
 			goto cont_default;
 		}
 		hugetlb_size *= 1024;
@@ -264,11 +264,11 @@ struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool 
 			alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
 		} while (alloc_size > hugetlb_size);
 
-		L_DEBUG("Hugetlb page will be used for frame pool zone (huge table size: %ld)", hugetlb_size);
+		FT_DEBUG("Hugetlb page will be used for frame pool zone (huge table size: %ld)", hugetlb_size);
 
 		struct frame_pool_zone * ret = frame_pool_zone_new_mmap(this, frame_count, false,  MAP_PRIVATE | MAP_ANON | MAP_HUGETLB);
 		if (ret != NULL) return ret;
-		L_WARN("Hugetlb support disabled");
+		FT_WARN("Hugetlb support disabled");
 	}
 
 cont_default:
@@ -277,7 +277,7 @@ cont_default:
 #else
 struct frame_pool_zone * frame_pool_zone_alloc_advice_hugetlb(struct frame_pool * this)
 {
-	L_DEBUG("Huge table frame pool allocator is not available");
+	FT_DEBUG("Huge table frame pool allocator is not available");
 	return frame_pool_zone_alloc_advice_default(this);
 }
 #endif

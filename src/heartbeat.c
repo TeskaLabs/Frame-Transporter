@@ -124,7 +124,7 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 		double delta = (now - this->last_beat) - w->repeat;
 		if (delta > libsccmn_config.lag_detector_sensitivity)
 		{
-			L_WARN("Lag (~ %.2lf sec.) detected", delta);
+			FT_WARN("Lag (~ %.2lf sec.) detected", delta);
 		}
 	}
 	this->last_beat = now;

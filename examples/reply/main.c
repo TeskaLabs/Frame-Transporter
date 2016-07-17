@@ -20,7 +20,7 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 	bool ok = established_socket_write(established_sock, frame);
 	if (!ok)
 	{
-		L_ERROR("Cannot write a frame!");
+		FT_ERROR("Cannot write a frame!");
 		frame_pool_return(frame);
 	}
 
@@ -36,7 +36,7 @@ static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
 	struct established_socket * stream = (struct established_socket *)node->data;
 
-	L_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+	FT_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
 		stream->stats.read_events,
 		stream->stats.write_events,
 		stream->stats.write_direct,
@@ -142,7 +142,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 #ifdef MAP_HUGETLB
-	L_INFO("Using hugetlb pages!");
+	FT_INFO("Using hugetlb pages!");
 	frame_pool_set_alloc_advise(&context.frame_pool, frame_pool_zone_alloc_advice_hugetlb);
 #endif
 

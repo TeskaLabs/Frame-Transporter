@@ -10,6 +10,6 @@ bool ft_parse_bool(const char * value)
 	if (strcasecmp(value, "false") == 0) return false;
 	if (strcasecmp(value, "0") == 0) return false;
 
-	//TODO: L_WARN("Invalid boolean value: '%s'", in_value);
+	FT_WARN("Invalid boolean value: '%s'", value);
 	return false;
 }

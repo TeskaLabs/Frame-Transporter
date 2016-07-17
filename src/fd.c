@@ -16,7 +16,7 @@ bool ft_socket_keepalive(int fd)
 
 	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0)
 	{
-	    L_WARN_ERRNO(errno, "Error activating SO_KEEPALIVE on a socket (fd: %d)", fd);
+	    FT_WARN_ERRNO(errno, "Error activating SO_KEEPALIVE on a socket (fd: %d)", fd);
 	    return false;
 	}
 
@@ -26,7 +26,7 @@ bool ft_socket_keepalive(int fd)
 	optlen = sizeof(optval);
 	if(setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &optval, optlen) < 0)
 	{
-		L_WARN_ERRNO(errno, "Error setting TCP_KEEPIDLE on a socket (fd: %d)", fd);
+		FT_WARN_ERRNO(errno, "Error setting TCP_KEEPIDLE on a socket (fd: %d)", fd);
 	}
 #endif
 
@@ -40,7 +40,7 @@ bool ft_fd_cloexec(int fd)
 	int flags = fcntl(fd, F_GETFD);
 	if (flags == -1)
 	{
-		//TODO: L_ERROR_ERRNO(errno, "close-on-exec/fcntl(F_GETFD)");
+		FT_ERROR_ERRNO(errno, "close-on-exec/fcntl(F_GETFD)");
 		return false;
 	}
 
@@ -51,7 +51,7 @@ bool ft_fd_cloexec(int fd)
 	int rc = fcntl(fd, F_SETFD, flags);
 	if (rc == -1)   
 	{
-		//TODO: L_ERROR_ERRNO(errno, "close-on-exec/fcntl(F_SETFD)");
+		FT_ERROR_ERRNO(errno, "close-on-exec/fcntl(F_SETFD)");
 		return false;
 	}
 

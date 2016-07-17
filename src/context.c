@@ -48,7 +48,7 @@ bool context_init(struct context * this)
 		if (libsccmn_config.sock_est_ssl_ex_data_index == -1)
 		{
 			libsccmn_config.sock_est_ssl_ex_data_index = -2;
-			L_ERROR_OPENSSL("SSL_get_ex_new_index");
+			FT_ERROR_OPENSSL("SSL_get_ex_new_index");
 			return false;
 		}
 	}
@@ -100,20 +100,20 @@ void context_evloop_run(struct context * this)
 {
 	assert(this != NULL);
 
-	L_TRACE(L_TRACEID_EVENT_LOOP, "event loop start");
+	FT_TRACE(L_TRACEID_EVENT_LOOP, "event loop start");
 
 #if ((EV_VERSION_MINOR > 11) && (EV_VERSION_MAJOR >= 4))
 	bool run=true;
 	while (run)
 	{
 		run = ev_run(this->ev_loop, 0);
-		if (run) L_TRACE(L_TRACEID_EVENT_LOOP, "event loop continue");
+		if (run) FT_TRACE(L_TRACEID_EVENT_LOOP, "event loop continue");
 	}
 #else
 	ev_run(this->ev_loop, 0);
 #endif
 
-	L_TRACE(L_TRACEID_EVENT_LOOP, "event loop stop");
+	FT_TRACE(L_TRACEID_EVENT_LOOP, "event loop stop");
 }
 
 ///

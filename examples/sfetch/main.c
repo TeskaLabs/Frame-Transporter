@@ -28,7 +28,7 @@ struct addrinfo * resolve(const char * host, const char * port)
 	rc = getaddrinfo(host, port, &hints, &res);
 	if (rc != 0)
 	{
-		L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
+		FT_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
 		return NULL;
 	}
 
@@ -52,7 +52,7 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 
 void on_error(struct established_socket * established_sock)
 {
-	L_FATAL("Error on the socket");
+	FT_FATAL("Error on the socket");
 	exit(EXIT_FAILURE);
 }
 
@@ -91,17 +91,17 @@ int main(int argc, char const *argv[])
 	// Resolve target
 	if (argc == 3)
 	{
-		L_INFO("Target set to %s %s", argv[1], argv[2]);
+		FT_INFO("Target set to %s %s", argv[1], argv[2]);
 		target_addr = resolve( argv[1], argv[2]);
 	}
 	else
 	{
-		L_INFO("Target set to www.teskalabs.com 443");
+		FT_INFO("Target set to www.teskalabs.com 443");
 		target_addr = resolve("www.teskalabs.com", "443");
 	}
 	if (target_addr == NULL)
 	{
-		L_ERROR("Cannot resolve target");
+		FT_ERROR("Cannot resolve target");
 		return EXIT_FAILURE;
 	}
 

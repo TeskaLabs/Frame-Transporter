@@ -461,7 +461,7 @@ START_TEST(sock_est_ssl_client_utest)
 
 	context_evloop_run(&context);
 
-	L_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+	FT_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
 		sock.stats.read_events,
 		sock.stats.write_events,
 		sock.stats.write_direct,

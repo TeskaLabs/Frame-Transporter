@@ -10,7 +10,7 @@ bool sock_listen_utest_accept_cb(struct listening_socket * listening_socket, int
 
 	char buffer[1024];
 	int rc = read(fd, buffer, sizeof(buffer));
-	if (rc < 0) L_WARN_ERRNO_P(errno, ">>>>> '%d'\n", rc);
+	if (rc < 0) FT_WARN_ERRNO_P(errno, ">>>>> '%d'\n", rc);
 	else if (rc > 0)
 	{
 		buffer[rc] = '\0';

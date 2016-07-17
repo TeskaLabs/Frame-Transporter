@@ -29,7 +29,7 @@ bool on_read_in_to_out(struct established_socket * established_sock, struct fram
 	bool ok = established_socket_write(&pair->stream_out, frame);
 	if (!ok)
 	{
-		L_ERROR_P("Cannot write a frame!");
+		FT_ERROR_P("Cannot write a frame!");
 		frame_pool_return(frame);
 	}
 
@@ -43,7 +43,7 @@ bool on_read_out_to_in(struct established_socket * established_sock, struct fram
 	bool ok = established_socket_write(&pair->stream_in, frame);
 	if (!ok)
 	{
-		L_ERROR_P("Cannot write a frame!");
+		FT_ERROR_P("Cannot write a frame!");
 		frame_pool_return(frame);
 	}
 
@@ -75,7 +75,7 @@ static void stream_pairs_on_remove(struct ft_list * list, struct ft_list_node * 
 {
 	struct stream_pair * pair = (struct stream_pair *)&node->data;
 
-	L_INFO("Stats  IN: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+	FT_INFO("Stats  IN: Re:%u We:%u+%u Rb:%lu Wb:%lu",
 		pair->stream_in.stats.read_events,
 		pair->stream_in.stats.write_events,
 		pair->stream_in.stats.write_direct,
@@ -83,7 +83,7 @@ static void stream_pairs_on_remove(struct ft_list * list, struct ft_list_node * 
 		pair->stream_in.stats.write_bytes
 	);
 
-	L_INFO("Stats OUT: Re:%u We:%u+%u Rb:%lu Wb:%lu",
+	FT_INFO("Stats OUT: Re:%u We:%u+%u Rb:%lu Wb:%lu",
 		pair->stream_out.stats.read_events,
 		pair->stream_out.stats.write_events,
 		pair->stream_out.stats.write_direct,
@@ -192,7 +192,7 @@ struct addrinfo * resolve(const char * host, const char * port)
 	rc = getaddrinfo(host, port, &hints, &res);
 	if (rc != 0)
 	{
-		L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
+		FT_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
 		return NULL;
 	}
 
@@ -240,17 +240,17 @@ int main(int argc, char const *argv[])
 	// Resolve target
 	if (argc == 3)
 	{
-		L_INFO("Target set to %s %s", argv[1], argv[2]);
+		FT_INFO("Target set to %s %s", argv[1], argv[2]);
 		target_addr = resolve( argv[1], argv[2]);
 	}
 	else
 	{
-		L_INFO("Target set to www.teskalabs.com 443");
+		FT_INFO("Target set to www.teskalabs.com 443");
 		target_addr = resolve("www.teskalabs.com", "443");
 	}
 	if (target_addr == NULL)
 	{
-		L_ERROR("Cannot resolve target");
+		FT_ERROR("Cannot resolve target");
 		return EXIT_FAILURE;
 	}
 

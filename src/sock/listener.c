@@ -14,7 +14,7 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 	assert(delegate != NULL);
 	assert(context != NULL);
 	
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
 
 	this->delegate = delegate;
 	this->context = context;
@@ -48,13 +48,13 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 		{
 			if (rc == EAI_FAMILY)
 			{
-				L_WARN("Unsupported family: %d", this->ai_family);
+				FT_WARN("Unsupported family: %d", this->ai_family);
 				// This is not a failure
-				L_TRACE(FT_TRACE_ID_LISTENER, "END EAI_FAMILY");
+				FT_TRACE(FT_TRACE_ID_LISTENER, "END EAI_FAMILY");
 				return false;
 			}
 
-			L_WARN("Problem occured when resolving listen socket: %s", gai_strerror(rc));
+			FT_WARN("Problem occured when resolving listen socket: %s", gai_strerror(rc));
 			snprintf(addrstr, sizeof(addrstr)-1, "? ?");
 		}
 
@@ -66,7 +66,7 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 	fd = socket(this->ai_family, this->ai_socktype, this->ai_protocol);
 	if (fd < 0)
 	{
-		L_ERROR_ERRNO(errno, "Failed creating listen socket");
+		FT_ERROR_ERRNO(errno, "Failed creating listen socket");
 		goto error_exit;
 	}
 
@@ -75,39 +75,39 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
 	if (rc == -1)
 	{
-		L_ERROR_ERRNO(errno, "Failed when setting option SO_REUSEADDR to listen socket");
+		FT_ERROR_ERRNO(errno, "Failed when setting option SO_REUSEADDR to listen socket");
 		goto error_exit;
 	}
 
 	bool res = ft_fd_nonblock(fd);
-	if (!res) L_WARN_ERRNO(errno, "Failed when setting listen socket to non-blocking mode");
+	if (!res) FT_WARN_ERRNO(errno, "Failed when setting listen socket to non-blocking mode");
 
 #if TCP_DEFER_ACCEPT
 	// See http://www.techrepublic.com/article/take-advantage-of-tcp-ip-options-to-optimize-data-transmission/
 	int timeout = 1;
 	rc = setsockopt(fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
-	if (rc == -1) L_WARN_ERRNO(errno, "Failed when setting option TCP_DEFER_ACCEPT to listen socket");
+	if (rc == -1) FT_WARN_ERRNO(errno, "Failed when setting option TCP_DEFER_ACCEPT to listen socket");
 #endif // TCP_DEFER_ACCEPT
 
 	// Bind socket
 	rc = bind(fd, (const struct sockaddr *)&this->ai_addr, this->ai_addrlen);
 	if (rc != 0)
 	{
-		L_ERROR_ERRNO(errno, "bind to %s ", addrstr);
+		FT_ERROR_ERRNO(errno, "bind to %s ", addrstr);
 		goto error_exit;
 	}
 
 	ev_io_init(&this->watcher, listening_socket_on_io, fd, EV_READ);
 	this->watcher.data = this;
 
-	L_DEBUG("Listening on %s", addrstr);
-	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", fd);
+	FT_DEBUG("Listening on %s", addrstr);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", fd);
 	return true;
 
 error_exit:
 	if (fd >= 0) close(fd);
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "END error");
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END error");
 	return false;
 }
 
@@ -116,13 +116,13 @@ void listening_socket_fini(struct listening_socket * this)
 {
 	int rc;
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
 	if (this->watcher.fd >= 0)
 	{
 		ev_io_stop(this->context->ev_loop, &this->watcher);
 		rc = close(this->watcher.fd);
-		if (rc != 0) L_ERROR_ERRNO(errno, "close()");
+		if (rc != 0) FT_ERROR_ERRNO(errno, "close()");
 		this->watcher.fd = -1;
 	}
 
@@ -131,10 +131,10 @@ void listening_socket_fini(struct listening_socket * this)
 		struct sockaddr_un * un = (struct sockaddr_un *)&this->ai_addr;
 		
 		rc = unlink(un->sun_path);
-		if (rc != 0) L_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
+		if (rc != 0) FT_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
 	}
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "END");
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END");
 }
 
 
@@ -142,12 +142,12 @@ bool _ft_listener_cntl_start(struct listening_socket * this)
 {
 	int rc;
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
 	if (this->watcher.fd < 0)
 	{
-		L_WARN("Listening on socket that is not open!");
-		L_TRACE(FT_TRACE_ID_LISTENER, "END not open fd:%d", this->watcher.fd);
+		FT_WARN("Listening on socket that is not open!");
+		FT_TRACE(FT_TRACE_ID_LISTENER, "END not open fd:%d", this->watcher.fd);
 		return false;
 	}
 
@@ -156,32 +156,32 @@ bool _ft_listener_cntl_start(struct listening_socket * this)
 		rc = listen(this->watcher.fd, this->backlog);
 		if (rc != 0)
 		{
-			L_ERROR_ERRNO_P(errno, "listen(%d, %d)", this->watcher.fd, this->backlog);
-			L_TRACE(FT_TRACE_ID_LISTENER, "END listen error fd:%d", this->watcher.fd);
+			FT_ERROR_ERRNO_P(errno, "listen(%d, %d)", this->watcher.fd, this->backlog);
+			FT_TRACE(FT_TRACE_ID_LISTENER, "END listen error fd:%d", this->watcher.fd);
 			return false;
 		}
 		this->listening = true;
 	}
 
 	ev_io_start(this->context->ev_loop, &this->watcher);
-	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 	return true;
 }
 
 
 bool _ft_listener_cntl_stop(struct listening_socket * this)
 {
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
 	if (this->watcher.fd < 0)
 	{
-		L_WARN("Listening (stop) on socket that is not open!");
-		L_TRACE(FT_TRACE_ID_LISTENER, "END not open fd:%d", this->watcher.fd);
+		FT_WARN("Listening (stop) on socket that is not open!");
+		FT_TRACE(FT_TRACE_ID_LISTENER, "END not open fd:%d", this->watcher.fd);
 		return false;
 	}
 
 	ev_io_stop(this->context->ev_loop, &this->watcher);
-	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 	return true;
 }
 
@@ -191,18 +191,18 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	struct listening_socket * this = watcher->data;
 	assert(this != NULL);
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
 	if (revents & EV_ERROR)
 	{
-		L_ERROR("Listen socket (accept) got invalid event");
-		L_TRACE(FT_TRACE_ID_LISTENER, "END ev error fd:%d", this->watcher.fd);
+		FT_ERROR("Listen socket (accept) got invalid event");
+		FT_TRACE(FT_TRACE_ID_LISTENER, "END ev error fd:%d", this->watcher.fd);
 		return;
 	}
 
 	if ((revents & EV_READ) == 0)
 	{
-		L_TRACE(FT_TRACE_ID_LISTENER, "END noop fd:%d", this->watcher.fd);
+		FT_TRACE(FT_TRACE_ID_LISTENER, "END noop fd:%d", this->watcher.fd);
 		return;
 	}
 
@@ -217,19 +217,19 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	{
 		if ((errno == EAGAIN) || (errno==EWOULDBLOCK))
 		{
-			L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
+			FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 			return;
 		}
 		int errnum = errno;
-		L_ERROR_ERRNO(errnum, "Accept on listening socket");
-		L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d errno:%d", this->watcher.fd, errnum);
+		FT_ERROR_ERRNO(errnum, "Accept on listening socket");
+		FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d errno:%d", this->watcher.fd, errnum);
 		return;
 	}
 
 	if (this->delegate->accept == NULL)
 	{
 		close(client_socket);
-		L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d ", this->watcher.fd);
+		FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d ", this->watcher.fd);
 		return;
 	}
 
@@ -240,7 +240,7 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	rc = getnameinfo((struct sockaddr *)&client_addr, client_len, host, sizeof(host), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
 	if (rc != 0)
 	{
-		L_WARN("Failed to resolve address of accepted connection: %s", gai_strerror(rc));
+		FT_WARN("Failed to resolve address of accepted connection: %s", gai_strerror(rc));
 		strcpy(host, "?");
 		strcpy(port, "?");
 	}
@@ -249,7 +249,7 @@ static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher,
 	bool ok = this->delegate->accept(this, client_socket, (const struct sockaddr *)&client_addr, client_len);
 	if (!ok) close(client_socket);
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d cfd:%d ok:%c", this->watcher.fd, client_socket, ok ? 'Y' : 'N');
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d cfd:%d ok:%c", this->watcher.fd, client_socket, ok ? 'Y' : 'N');
 }
 
 ///
@@ -291,7 +291,7 @@ int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate *
 	int rc;
 	struct addrinfo hints;
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = ai_family;
@@ -321,7 +321,7 @@ int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate *
 		rc = getaddrinfo(host, port, &hints, &res);
 		if (rc != 0)
 		{
-			L_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
+			FT_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
 			return -1;
 		}
 
@@ -330,7 +330,7 @@ int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate *
 		freeaddrinfo(res);
 	}
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
 
 	return rc;
 }
@@ -341,7 +341,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 	assert(delegate != NULL);
 	assert(context != NULL);
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
 
 	int rc = 0;
 	for (struct addrinfo * rp = rp_list; rp != NULL; rp = rp->ai_next)
@@ -350,7 +350,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 		struct ft_list_node * new_node = ft_list_node_new(sizeof(struct listening_socket));
 		if (new_node == NULL)
 		{
-			L_WARN("Failed to allocate memory for a new listener");
+			FT_WARN("Failed to allocate memory for a new listener");
 			continue;
 		}
 
@@ -358,7 +358,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 		if (!ok) 
 		{
 			ft_list_node_del(new_node);
-			L_WARN("Failed to initialize a new listener");
+			FT_WARN("Failed to initialize a new listener");
 			continue;
 		}
 
@@ -367,7 +367,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 		rc += 1;
 	}
 
-	L_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
 
 	return rc;
 }

@@ -59,7 +59,7 @@ struct frame_dvec * frame_add_dvec(struct frame * this, size_t offset, size_t ca
 	//Test if there is enough space in the frame
 	if (((uint8_t *)dvec - this->data) < (offset + capacity))
 	{
-		L_ERROR("Cannot accomodate that dvec in the current frame.");
+		FT_ERROR("Cannot accomodate that dvec in the current frame.");
 		return NULL;
 	}
 

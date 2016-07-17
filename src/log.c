@@ -142,7 +142,7 @@ void _log_openssl_err_v(const char level, const char * format, va_list args)
 
 static void logging_libev_on_syserr(const char * msg)
 {
-	L_WARN("LibEv: %s", msg);
+	FT_WARN("LibEv: %s", msg);
 }
 
 ///
@@ -200,26 +200,26 @@ bool logging_reopen()
 
 	if (libsccmn_config.log_filename == NULL)
 	{
-		L_WARN("Log file name is not specified");
+		FT_WARN("Log file name is not specified");
 		return false;
 	}
 
 	FILE * f = fopen(libsccmn_config.log_filename, "a");
 	if (f == NULL)
 	{
-		L_ERROR_ERRNO(errno, "Error when opening log file '%s'", libsccmn_config.log_filename);
+		FT_ERROR_ERRNO(errno, "Error when opening log file '%s'", libsccmn_config.log_filename);
 		return false;
 	}
 
 	bool reopen = (libsccmn_config.log_f != NULL);
 	if (reopen)
 	{
-		L_INFO("Log file is closed");
+		FT_INFO("Log file is closed");
 		fclose(libsccmn_config.log_f);
 	}
 
 	libsccmn_config.log_f = f;
-	L_INFO("Log file is %s", reopen ? "reopen" : "open");
+	FT_INFO("Log file is %s", reopen ? "reopen" : "open");
 
 	return true;
 }
