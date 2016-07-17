@@ -59,10 +59,10 @@ void ft_initialise(void); // Call this at very beginning
 
 pid_t ft_deamonise(struct context * context); // context can be NULL
 
-void pidfile_set_filename(const char * fname);
-bool pidfile_create(void);
-bool pidfile_remove(void);
-pid_t pidfile_is_running(void);
+void ft_pidfile_filename(const char * fname);
+bool ft_pidfile_create(void);
+bool ft_pidfile_remove(void);
+pid_t ft_pidfile_is_running(void);
 
 
 // File descriptor related functions

@@ -362,7 +362,7 @@ pid_t ft_deamonise(struct context * context)
 		errno = saved_errno;
 
 		FT_DEBUG("ft_deamonised");
-		pidfile_set_filename(NULL); // Prevent removal od the PID file
+		ft_pidfile_filename(NULL); // Prevent removal od the PID file
 
 		if ((context !=  NULL) && (context->ev_loop != NULL))
 			ev_loop_fork(context->ev_loop);
@@ -373,7 +373,7 @@ pid_t ft_deamonise(struct context * context)
 
 ///
 
-void pidfile_set_filename(const char * fname)
+void ft_pidfile_filename(const char * fname)
 {
 	if (libsccmn_config.pid_file != NULL)
 	{
@@ -412,7 +412,7 @@ static int pidfile_lock(int fd, int enable)
 }
 
 
-bool pidfile_create(void)
+bool ft_pidfile_create(void)
 {
 	int fd = -1;
 	int ret = -1;
@@ -433,7 +433,7 @@ bool pidfile_create(void)
 	fd = open(libsccmn_config.pid_file, O_CREAT | O_RDWR, 0644);
 	if (fd < 0)
 	{
-		FT_ERROR_ERRNO(errno, "pidfile_create/open(%s)", libsccmn_config.pid_file);
+		FT_ERROR_ERRNO(errno, "ft_pidfile_create/open(%s)", libsccmn_config.pid_file);
 		return false;
 	}
 
@@ -452,7 +452,7 @@ bool pidfile_create(void)
 	if (write(fd, t, l) != l)
 	{
 		int saved_errno = errno;
-		FT_ERROR_ERRNO(saved_errno, "pidfile_create / write()");
+		FT_ERROR_ERRNO(saved_errno, "ft_pidfile_create / write()");
 		unlink(libsccmn_config.pid_file);
 		errno = saved_errno;
 		goto finish;
@@ -479,7 +479,7 @@ finish:
 }
 
 
-bool pidfile_remove(void)
+bool ft_pidfile_remove(void)
 {
 	if (libsccmn_config.pid_file == NULL)
 		return true;
@@ -487,7 +487,7 @@ bool pidfile_remove(void)
 	int rc = unlink(libsccmn_config.pid_file);
 	if (rc != 0)
 	{
-		FT_ERROR_ERRNO(errno, "pidfile_remove / unlink(%s)", libsccmn_config.pid_file);
+		FT_ERROR_ERRNO(errno, "ft_pidfile_remove / unlink(%s)", libsccmn_config.pid_file);
 	}
 
 	return rc == 0;
@@ -495,7 +495,7 @@ bool pidfile_remove(void)
 
 ///
 
-pid_t pidfile_is_running(void)
+pid_t ft_pidfile_is_running(void)
 {
     static char txt[256];
     int fd = -1, locked = -1;

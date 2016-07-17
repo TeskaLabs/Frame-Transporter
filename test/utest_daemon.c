@@ -6,12 +6,12 @@ START_TEST(pidfile_nofile_utest)
 {
 	bool ok;
 
-	pidfile_set_filename(NULL);
+	ft_pidfile_filename(NULL);
 
-	ok = pidfile_create();
+	ok = ft_pidfile_create();
 	ck_assert_int_eq(ok, true);
 
-	ok = pidfile_remove();
+	ok = ft_pidfile_remove();
 	ck_assert_int_eq(ok, true);
 }
 END_TEST
@@ -21,15 +21,15 @@ START_TEST(pidfile_wfile_utest)
 {
 	bool ok;
 
-	pidfile_set_filename("./pidfile.pid");
+	ft_pidfile_filename("./pidfile.pid");
 
-	ok = pidfile_create();
+	ok = ft_pidfile_create();
 	ck_assert_int_eq(ok, true);
 
-	ok = pidfile_remove();
+	ok = ft_pidfile_remove();
 	ck_assert_int_eq(ok, true);
 
-	pidfile_set_filename(NULL);
+	ft_pidfile_filename(NULL);
 
 	errno = 0;
 	unlink("./pidfile.pid");
