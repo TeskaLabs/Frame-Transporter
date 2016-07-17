@@ -46,10 +46,10 @@ struct ft_context;
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
-#include <ft/fpool/vec.h>
-#include <ft/fpool/frame.h>
-#include <ft/fpool/zone.h>
-#include <ft/fpool/fpool.h>
+#include <ft/mempool/vec.h>
+#include <ft/mempool/frame.h>
+#include <ft/mempool/zone.h>
+#include <ft/mempool/pool.h>
 #include <ft/context.h>
 
 #include <ft/sock/listener.h>

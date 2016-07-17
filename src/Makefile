@@ -10,9 +10,9 @@ OBJS=\
 	daemon.o \
 	sock/listener.o \
 	sock/stream.o \
-	fpool/frame.o \
-	fpool/fpool.o \
-	fpool/zone.o \
+	mempool/frame.o \
+	mempool/pool.o \
+	mempool/zone.o \
 	context.o \
 	cols/list.o \
 
