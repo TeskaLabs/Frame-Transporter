@@ -44,7 +44,7 @@ bool context_init(struct context * this)
 
 	if (ft_config.sock_est_ssl_ex_data_index == -2)
 	{
-		ft_config.sock_est_ssl_ex_data_index = SSL_get_ex_new_index(0, "libsccmn_ptr", NULL, NULL, NULL);	
+		ft_config.sock_est_ssl_ex_data_index = SSL_get_ex_new_index(0, "ft_stream_ptr", NULL, NULL, NULL);	
 		if (ft_config.sock_est_ssl_ex_data_index == -1)
 		{
 			ft_config.sock_est_ssl_ex_data_index = -2;
