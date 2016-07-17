@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 bool ft_parse_bool(const char * value)
 {

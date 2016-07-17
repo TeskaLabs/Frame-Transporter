@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 struct libsccmn_config libsccmn_config =
 {

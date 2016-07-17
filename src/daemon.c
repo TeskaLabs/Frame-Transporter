@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 /***
   This file is modified version of dfork.c from libdaemon.

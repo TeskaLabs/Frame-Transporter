@@ -1,4 +1,4 @@
-#include "../all.h"
+#include "../_ft_internal.h"
 
 // TODO: Conceptual: Consider implementing readv() and writev() versions for more complicated frame formats
 // TODO: Consider adding a support for HTTPS proxy

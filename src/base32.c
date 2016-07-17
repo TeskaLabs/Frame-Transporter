@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "all.h"
+#include "_ft_internal.h"
 
 static const char base32_cb32[] =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 

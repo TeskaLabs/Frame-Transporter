@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 static void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents);
 

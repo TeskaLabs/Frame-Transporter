@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 bool frame_pool_zone_init(struct frame_pool_zone * this, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable)
 {

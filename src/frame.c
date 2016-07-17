@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct frame_pool_zone * zone)
 {

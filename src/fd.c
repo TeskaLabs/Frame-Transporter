@@ -1,4 +1,4 @@
-#include "all.h"
+#include "_ft_internal.h"
 
 bool ft_fd_nonblock(int fd)
 {

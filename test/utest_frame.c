@@ -1,5 +1,5 @@
 #include "testutils.h"
-#include <../src/all.h>
+#include <../src/_ft_internal.h>
 
 ////
 

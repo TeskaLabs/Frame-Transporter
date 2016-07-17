@@ -1,4 +1,4 @@
-#include "../all.h"
+#include "../_ft_internal.h"
 
 
 bool ft_list_init(struct ft_list * this, ft_list_on_remove_callback on_remove_callback)
