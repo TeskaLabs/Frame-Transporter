@@ -37,7 +37,7 @@ void ft_initialise(void)
 	assert(libsccmn_config.initialized == false);
 
 	// Initialize logging
-	_logging_init();
+	_ft_log_initialise();
 
 	// Initialize OpenSSL
 	SSL_library_init();

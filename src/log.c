@@ -2,9 +2,9 @@
 
 ///
 
-static const char * log_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+static const char * _ft_log_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
-static inline const char * log_levelname(char level)
+static inline const char * _ft_log_levelname(char level)
 {
 	static const char * lln_TRACE = "TRACE";
 	static const char * lln_DEBUG = "DEBUG";
@@ -31,11 +31,11 @@ static inline const char * log_levelname(char level)
 
 ///
 
-static struct context * logging_context = NULL;
+static struct context * _ft_log_context = NULL;
 
-inline static ev_tstamp log_get_tstamp()
+inline static ev_tstamp _ft_log_get_tstamp()
 {
-	return ((logging_context != NULL) && (logging_context->ev_loop != NULL)) ? ev_now(logging_context->ev_loop) : ev_time();
+	return ((_ft_log_context != NULL) && (_ft_log_context->ev_loop != NULL)) ? ev_now(_ft_log_context->ev_loop) : ev_time();
 }
 
 ///
@@ -52,20 +52,20 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 
 	fprintf(libsccmn_config.log_f != NULL ? libsccmn_config.log_f : stderr, 
 		"%s %02d %04d %02d:%02d:%02d.%03d %s %7d %s: %.*s\n",
-		log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
+		_ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 		tmp.tm_zone,
 		le->pid,
-		log_levelname(le->level),
+		_ft_log_levelname(le->level),
 		le_message_length, le->message
 	);
 
 	libsccmn_config.log_flush_counter += 1;
 }
 
-static inline int log_entry_format(struct ft_logrecord * le, char level,const char * format, va_list args)
+static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const char * format, va_list args)
 {
-	le->timestamp = log_get_tstamp();
+	le->timestamp = _ft_log_get_tstamp();
 	le->pid = getpid();
 	le->level = level;
 
@@ -77,17 +77,17 @@ static inline int log_entry_format(struct ft_logrecord * le, char level,const ch
 
 ///
 
-void _log_v(const char level, const char * format, va_list args)
+void _ft_log_v(const char level, const char * format, va_list args)
 {
 	static struct ft_logrecord le;
-	int le_message_length = log_entry_format(&le, level, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, format, args);
 	ft_logrecord_process(&le, le_message_length);
 }
 
-void _log_errno_v(int errnum, const char level, const char * format, va_list args)
+void _ft_log_errno_v(int errnum, const char level, const char * format, va_list args)
 {
 	static struct ft_logrecord le;
-	int le_message_length = log_entry_format(&le, level, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, format, args);
 
 	if (le_message_length > 0)
 	{
@@ -111,10 +111,10 @@ void _log_errno_v(int errnum, const char level, const char * format, va_list arg
 	ft_logrecord_process(&le, le_message_length);
 }
 
-void _log_openssl_err_v(const char level, const char * format, va_list args)
+void _ft_log_openssl_err_v(const char level, const char * format, va_list args)
 {
 	static struct ft_logrecord le;
-	int le_message_length = log_entry_format(&le, level, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
 	while (true)
@@ -140,22 +140,22 @@ void _log_openssl_err_v(const char level, const char * format, va_list args)
 }
 
 
-static void logging_libev_on_syserr(const char * msg)
+static void _ft_log_libev_on_syserr(const char * msg)
 {
 	FT_WARN("LibEv: %s", msg);
 }
 
 ///
 
-void _logging_init()
+void _ft_log_initialise()
 {
-	ev_set_syserr_cb(logging_libev_on_syserr);
+	ev_set_syserr_cb(_ft_log_libev_on_syserr);
 }
 
 
-void logging_flush()
+void ft_log_flush()
 {
-	ev_tstamp now = log_get_tstamp();
+	ev_tstamp now = _ft_log_get_tstamp();
 	bool do_flush = false;
 
 	if (libsccmn_config.log_flush_counter >= libsccmn_config.log_flush_counter_max)
@@ -176,21 +176,21 @@ void logging_flush()
 }
 
 
-bool logging_set_filename(const char * fname)
+bool ft_log_filename(const char * fname)
 {
 	if (libsccmn_config.log_filename != NULL)
 	{
-		logging_finish();
+		ft_log_finalise();
 		free((void *)libsccmn_config.log_filename);
 		libsccmn_config.log_filename = NULL;
 	}
 
 	libsccmn_config.log_filename = (fname != NULL) ? strdup(fname) : NULL;
-	return logging_reopen();
+	return ft_log_reopen();
 }
 
 
-bool logging_reopen()
+bool ft_log_reopen()
 {
 	if ((libsccmn_config.log_filename == NULL) && (libsccmn_config.log_f == NULL))
 	{
@@ -225,7 +225,7 @@ bool logging_reopen()
 }
 
 
-void logging_finish()
+void ft_log_finalise()
 {
 	if (libsccmn_config.log_f != NULL)
 	{
@@ -240,15 +240,15 @@ void logging_finish()
 ///
 
 
-void logging_set_context(struct context * context)
+void ft_log_context(struct context * context)
 {
 	if (context == NULL)
 	{
-		assert(logging_context != NULL);
-		logging_context = NULL;
+		assert(_ft_log_context != NULL);
+		_ft_log_context = NULL;
 		return;
 	}
 
-	assert(logging_context == NULL);
-	logging_context = context;
+	assert(_ft_log_context == NULL);
+	_ft_log_context = context;
 }

@@ -201,7 +201,7 @@ int main(int argc, char const *argv[])
 	int rc;
 	struct context context;
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	ft_initialise();
 	
 	//libsccmn_config.log_trace_mask |= L_TRACEID_SOCK_STREAM | L_TRACEID_EVENT_LOOP;

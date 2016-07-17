@@ -5,24 +5,24 @@
 START_TEST(log_normal_debug_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_DEBUG("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
 	FT_DEBUG_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_DEBUG("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
 	FT_DEBUG_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -31,18 +31,18 @@ END_TEST
 START_TEST(log_normal_info_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_INFO("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_INFO_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -50,18 +50,18 @@ END_TEST
 START_TEST(log_normal_warn_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_WARN("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_WARN_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -70,18 +70,18 @@ END_TEST
 START_TEST(log_normal_error_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_ERROR("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_ERROR_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -89,18 +89,18 @@ END_TEST
 START_TEST(log_normal_fatal_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_FATAL("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_FATAL_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -108,18 +108,18 @@ END_TEST
 START_TEST(log_normal_audit_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_AUDIT("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_AUDIT_P("Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -129,18 +129,18 @@ END_TEST
 START_TEST(log_errno_info_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_INFO_ERRNO(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_INFO_ERRNO_P(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -148,18 +148,18 @@ END_TEST
 START_TEST(log_errno_warn_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_WARN_ERRNO(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_WARN_ERRNO_P(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -167,18 +167,18 @@ END_TEST
 START_TEST(log_errno_error_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_ERROR_ERRNO(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_ERROR_ERRNO_P(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -186,18 +186,18 @@ END_TEST
 START_TEST(log_errno_fatal_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_FATAL_ERRNO(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_FATAL_ERRNO_P(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -206,18 +206,18 @@ END_TEST
 START_TEST(log_errno_audit_utest)
 {
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_AUDIT_ERRNO(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_AUDIT_ERRNO_P(EAGAIN, "Log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 }
 END_TEST
@@ -229,7 +229,7 @@ START_TEST(log_reopen_nofile_utest)
 	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
 	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
 
-	bool ok = logging_reopen();
+	bool ok = ft_log_reopen();
 	ck_assert_int_eq(ok, true);
 
 	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
@@ -243,17 +243,17 @@ START_TEST(log_reopen_wfile_utest)
 	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
 	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
 
-	bool ok = logging_set_filename("./log.txt");
+	bool ok = ft_log_filename("./log.txt");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(libsccmn_config.log_f, NULL);
 	ck_assert_ptr_ne(libsccmn_config.log_filename, NULL);
 
 	FT_INFO_ERRNO(EAGAIN, "Log message test!");
 
-	ok = logging_reopen();
+	ok = ft_log_reopen();
 	ck_assert_int_eq(ok, true);
 
-	ok = logging_set_filename(NULL);
+	ok = ft_log_filename(NULL);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
 	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
@@ -269,7 +269,7 @@ START_TEST(log_reopen_sighup_utest)
 	ck_assert_ptr_eq(libsccmn_config.log_f, NULL);
 	ck_assert_ptr_eq(libsccmn_config.log_filename, NULL);
 
-	bool ok = logging_set_filename("./log.txt");
+	bool ok = ft_log_filename("./log.txt");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(libsccmn_config.log_f, NULL);
 	ck_assert_str_eq(libsccmn_config.log_filename, "./log.txt");
@@ -303,7 +303,7 @@ START_TEST(log_openssl_info_utest)
 	unsigned long code;
 
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 	code = ERR_peek_error();
@@ -316,7 +316,7 @@ START_TEST(log_openssl_info_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002003);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_INFO_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
@@ -329,7 +329,7 @@ START_TEST(log_openssl_info_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002006);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_INFO_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
@@ -339,7 +339,7 @@ START_TEST(log_openssl_info_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 }
@@ -350,7 +350,7 @@ START_TEST(log_openssl_warn_utest)
 	unsigned long code;
 
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 	code = ERR_peek_error();
@@ -363,7 +363,7 @@ START_TEST(log_openssl_warn_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002003);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_WARN_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
@@ -376,7 +376,7 @@ START_TEST(log_openssl_warn_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002006);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_WARN_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
@@ -386,7 +386,7 @@ START_TEST(log_openssl_warn_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 }
@@ -397,7 +397,7 @@ START_TEST(log_openssl_error_utest)
 	unsigned long code;
 
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 	code = ERR_peek_error();
@@ -410,7 +410,7 @@ START_TEST(log_openssl_error_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002003);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_ERROR_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
@@ -423,7 +423,7 @@ START_TEST(log_openssl_error_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002006);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_ERROR_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
@@ -433,7 +433,7 @@ START_TEST(log_openssl_error_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 }
@@ -444,7 +444,7 @@ START_TEST(log_openssl_fatal_utest)
 	unsigned long code;
 
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 	code = ERR_peek_error();
@@ -457,7 +457,7 @@ START_TEST(log_openssl_fatal_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002003);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_FATAL_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
@@ -470,7 +470,7 @@ START_TEST(log_openssl_fatal_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002006);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_FATAL_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
@@ -480,7 +480,7 @@ START_TEST(log_openssl_fatal_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 }
@@ -491,7 +491,7 @@ START_TEST(log_openssl_audit_utest)
 	unsigned long code;
 
 	libsccmn_config.log_flush_counter_max = 1;
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 	code = ERR_peek_error();
@@ -504,7 +504,7 @@ START_TEST(log_openssl_audit_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002003);
 
-	logging_set_verbose(true);
+	ft_log_verbose(true);
 	FT_AUDIT_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 1);
 
@@ -517,7 +517,7 @@ START_TEST(log_openssl_audit_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0x1002006);
 
-	logging_set_verbose(false);
+	ft_log_verbose(false);
 	FT_AUDIT_OPENSSL("OpenSSL log message test!");
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 2);
 
@@ -527,7 +527,7 @@ START_TEST(log_openssl_audit_utest)
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	logging_flush();
+	ft_log_flush();
 	ck_assert_int_eq(libsccmn_config.log_flush_counter, 0);
 
 }

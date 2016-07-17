@@ -18,7 +18,7 @@ bool context_init(struct context * this)
 	if (this->ev_loop == NULL) return false;
 
 	// Set a logging context
-	logging_set_context(this);
+	ft_log_context(this);
 
 	// Install signal handlers
 	ev_signal_init(&this->sighup_w, context_on_sighup, SIGHUP);
@@ -59,7 +59,7 @@ bool context_init(struct context * this)
 
 void context_fini(struct context * this)
 {
-	logging_set_context(NULL);
+	ft_log_context(NULL);
 
 	//TODO: Destroy heartbeat
 	//TODO: Destroy frame pool
@@ -72,7 +72,7 @@ void context_fini(struct context * this)
 
 static void context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
 {
-	logging_reopen();
+	ft_log_reopen();
 }
 
 static void context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)

@@ -116,7 +116,7 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 	}
 
 	// Flush logs
-	logging_flush();
+	ft_log_flush();
 
 	//Lag detector
 	if (this->last_beat > 0.0)
