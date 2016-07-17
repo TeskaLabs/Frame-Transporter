@@ -84,7 +84,7 @@ struct ft_stream_delegate sock_est_1_sock_delegate =
 	.error = NULL
 };
 
-bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_est_1_on_accept(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	bool ok;
 
@@ -104,7 +104,7 @@ struct ft_listener_delegate utest_1_listener_delegate =
 
 START_TEST(sock_est_1_utest)
 {
-	struct listening_socket listen_sock;
+	struct ft_listener listen_sock;
 	int rc;
 	bool ok;
 
@@ -120,7 +120,7 @@ START_TEST(sock_est_1_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &utest_1_listener_delegate, &context, rp);
+	ok = ft_listener_init(&listen_sock, &utest_1_listener_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -143,7 +143,7 @@ START_TEST(sock_est_1_utest)
 	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_fini(&listen_sock);
+	ft_listener_fini(&listen_sock);
 
 	//TODO: Temporary
 	ft_stream_fini(&established_sock);
@@ -195,7 +195,7 @@ struct ft_stream_delegate utest_2_listener_delegate =
 	.read = sock_est_2_on_read,
 };
 
-bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_est_2_on_accept(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	bool ok;
 
@@ -219,7 +219,7 @@ struct ft_listener_delegate sock_est_2_listen_cb =
 
 START_TEST(sock_est_2_utest)
 {
-	struct listening_socket listen_sock;
+	struct ft_listener listen_sock;
 	int rc;
 	bool ok;
 
@@ -235,7 +235,7 @@ START_TEST(sock_est_2_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &sock_est_2_listen_cb, &context, rp);
+	ok = ft_listener_init(&listen_sock, &sock_est_2_listen_cb, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -255,7 +255,7 @@ START_TEST(sock_est_2_utest)
 	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_fini(&listen_sock);
+	ft_listener_fini(&listen_sock);
 
 	//TODO: Temporary
 	ft_stream_fini(&established_sock);
@@ -557,7 +557,7 @@ struct ft_stream_delegate sock_est_ssl_server_sock_delegate =
 };
 
 
-bool sock_est_ssl_server_listen_on_accept(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_est_ssl_server_listen_on_accept(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	bool ok;
 
@@ -584,7 +584,7 @@ struct ft_listener_delegate utest_ssl_server_listener_delegate =
 
 START_TEST(sock_est_ssl_server_utest)
 {
-	struct listening_socket listen_sock;
+	struct ft_listener listen_sock;
 	int rc;
 	bool ok;
 
@@ -620,7 +620,7 @@ START_TEST(sock_est_ssl_server_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&listen_sock, &utest_ssl_server_listener_delegate, &context, rp);
+	ok = ft_listener_init(&listen_sock, &utest_ssl_server_listener_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -643,7 +643,7 @@ START_TEST(sock_est_ssl_server_utest)
 	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_fini(&listen_sock);
+	ft_listener_fini(&listen_sock);
 
 	ft_stream_fini(&established_sock);
 

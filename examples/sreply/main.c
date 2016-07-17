@@ -50,7 +50,7 @@ static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 
 ///
 
-static bool on_accept_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	bool ok;
 

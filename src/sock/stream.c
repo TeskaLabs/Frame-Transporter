@@ -131,7 +131,7 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	return true;
 }
 
-bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	assert(listening_socket != NULL);
 

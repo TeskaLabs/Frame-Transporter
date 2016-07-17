@@ -2,7 +2,7 @@
 
 ////
 
-bool sock_listen_utest_accept_cb(struct listening_socket * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+bool sock_listen_utest_accept_cb(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	flags &= ~O_NONBLOCK;
@@ -31,7 +31,7 @@ struct ft_listener_delegate listener_delegate =
 
 START_TEST(sock_listen_single_utest)
 {
-	struct listening_socket sock;
+	struct ft_listener sock;
 	int rc;
 
 	bool ok;
@@ -45,7 +45,7 @@ START_TEST(sock_listen_single_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = listening_socket_init(&sock, &listener_delegate, &context, rp);
+	ok = ft_listener_init(&sock, &listener_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 	ck_assert_int_eq(sock.stats.accept_events, 0);
 
@@ -90,7 +90,7 @@ START_TEST(sock_listen_single_utest)
 
 	ck_assert_int_eq(sock.stats.accept_events, 1);
 
-	listening_socket_fini(&sock);
+	ft_listener_fini(&sock);
 
 	ft_context_fini(&context);
 }

@@ -1,11 +1,11 @@
 #include "../_ft_internal.h"
 #include <sys/un.h>
 
-static void listening_socket_on_io(struct ev_loop *loop, struct ev_io *watcher, int revents);
+static void _ft_listener_on_io(struct ev_loop *loop, struct ev_io *watcher, int revents);
 
 ///
 
-bool listening_socket_init(struct listening_socket * this, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * ai)
+bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * ai)
 {
 	int rc;
 	int fd = -1;
@@ -97,7 +97,7 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 		goto error_exit;
 	}
 
-	ev_io_init(&this->watcher, listening_socket_on_io, fd, EV_READ);
+	ev_io_init(&this->watcher, _ft_listener_on_io, fd, EV_READ);
 	this->watcher.data = this;
 
 	FT_DEBUG("Listening on %s", addrstr);
@@ -112,7 +112,7 @@ error_exit:
 }
 
 
-void listening_socket_fini(struct listening_socket * this)
+void ft_listener_fini(struct ft_listener * this)
 {
 	int rc;
 
@@ -138,7 +138,7 @@ void listening_socket_fini(struct listening_socket * this)
 }
 
 
-bool _ft_listener_cntl_start(struct listening_socket * this)
+bool _ft_listener_cntl_start(struct ft_listener * this)
 {
 	int rc;
 
@@ -169,7 +169,7 @@ bool _ft_listener_cntl_start(struct listening_socket * this)
 }
 
 
-bool _ft_listener_cntl_stop(struct listening_socket * this)
+bool _ft_listener_cntl_stop(struct ft_listener * this)
 {
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
@@ -186,9 +186,9 @@ bool _ft_listener_cntl_stop(struct listening_socket * this)
 }
 
 
-static void listening_socket_on_io(struct ev_loop * loop, struct ev_io *watcher, int revents)
+static void _ft_listener_on_io(struct ev_loop * loop, struct ev_io *watcher, int revents)
 {
-	struct listening_socket * this = watcher->data;
+	struct ft_listener * this = watcher->data;
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
@@ -258,7 +258,7 @@ static void ft_listener_list_on_remove(struct ft_list * list, struct ft_list_nod
 {
 	assert(list != NULL);
 
-	listening_socket_fini((struct listening_socket *)node->data);
+	ft_listener_fini((struct ft_listener *)node->data);
 }
 
 bool ft_listener_list_init(struct ft_list * list)
@@ -276,7 +276,7 @@ bool ft_listener_list_cntl(struct ft_list * list, const int control_code)
 	bool ok = true;
 	FT_LIST_FOR(list, node)
 	{
-		ok &= ft_listener_cntl((struct listening_socket *)node->data, control_code);
+		ok &= ft_listener_cntl((struct ft_listener *)node->data, control_code);
 	}
 	return ok;
 }
@@ -347,14 +347,14 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 	for (struct addrinfo * rp = rp_list; rp != NULL; rp = rp->ai_next)
 	{
 
-		struct ft_list_node * new_node = ft_list_node_new(sizeof(struct listening_socket));
+		struct ft_list_node * new_node = ft_list_node_new(sizeof(struct ft_listener));
 		if (new_node == NULL)
 		{
 			FT_WARN("Failed to allocate memory for a new listener");
 			continue;
 		}
 
-		bool ok = listening_socket_init((struct listening_socket *)new_node->data, delegate, context, rp);
+		bool ok = ft_listener_init((struct ft_listener *)new_node->data, delegate, context, rp);
 		if (!ok) 
 		{
 			ft_list_node_del(new_node);

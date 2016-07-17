@@ -1,15 +1,15 @@
 #ifndef FT_SOCK_LISTENER_H_
 #define FT_SOCK_LISTENER_H_
 
-struct listening_socket;
+struct ft_listener;
 
 struct ft_listener_delegate
 {
-	bool (* accept)(struct listening_socket *, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len);
+	bool (* accept)(struct ft_listener *, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len);
 };
 
 
-struct listening_socket
+struct ft_listener
 {
 	struct ft_listener_delegate * delegate;
 	struct ft_context * context;
@@ -36,8 +36,8 @@ struct listening_socket
 	void * data;
 };
 
-bool listening_socket_init(struct listening_socket * , struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp);
-void listening_socket_fini(struct listening_socket *);
+bool ft_listener_init(struct ft_listener * , struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp);
+void ft_listener_fini(struct ft_listener *);
 
 ///
 
@@ -48,12 +48,12 @@ enum ft_listener_cntl_codes
 };
 
 
-static inline bool ft_listener_cntl(struct listening_socket * this, const int control_code)
+static inline bool ft_listener_cntl(struct ft_listener * this, const int control_code)
 {
 	assert(this != NULL);
 
-	bool _ft_listener_cntl_start(struct listening_socket *);
-	bool _ft_listener_cntl_stop(struct listening_socket *);
+	bool _ft_listener_cntl_start(struct ft_listener *);
+	bool _ft_listener_cntl_stop(struct ft_listener *);
 
 	bool ok = true;
 	if ((control_code & FT_LISTENER_START) != 0) ok &= _ft_listener_cntl_start(this);
