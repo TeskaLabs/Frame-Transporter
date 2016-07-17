@@ -5,9 +5,7 @@
 
 ///
 
-struct exiting_watcher watcher;
 struct addrinfo * target_addr;
-
 struct ft_list listeners;
 
 ///
@@ -137,7 +135,7 @@ struct ft_listener_delegate listener_delegate =
 
 ///
 
-static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
+static void on_termination_cb(struct context * context, void * data)
 {
 	FT_LIST_FOR(&stream_pairs, node)
 	{
@@ -210,6 +208,8 @@ int main(int argc, char const *argv[])
 	ok = context_init(&context);
 	if (!ok) return EXIT_FAILURE;
 
+	ft_context_at_termination(&context, on_termination_cb, NULL);
+
 	ft_list_init(&stream_pairs, stream_pairs_on_remove);
 
 	// Prepare listening socket(s)
@@ -246,9 +246,6 @@ int main(int argc, char const *argv[])
 
 	// Start listening
 	ft_listener_list_cntl(&listeners, FT_LISTENER_START);
-
-	// Register exiting watcher
-	context_exiting_watcher_add(&context, &watcher, on_exiting_cb);
 
 	// Enter event loop
 	context_evloop_run(&context);

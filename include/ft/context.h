@@ -1,22 +1,6 @@
 #ifndef FT_CONTEXT_H_
 #define FT_CONTEXT_H_
 
-struct context;
-struct exiting_watcher;
-
-typedef void (* exiting_cb)(struct exiting_watcher * watcher, struct context * context);
-
-struct exiting_watcher
-{
-	struct exiting_watcher * next;
-	struct exiting_watcher * prev;
-
-	exiting_cb cb;
-	void * data;
-};
-
-//
-
 struct context
 {
 	struct ev_loop * ev_loop;
@@ -28,8 +12,7 @@ struct context
 	struct heartbeat heartbeat;
 	struct frame_pool frame_pool;
 
-	struct exiting_watcher * first_exiting_watcher;
-	struct exiting_watcher * last_exiting_watcher;
+	struct ft_list on_termination_list;
 };
 
 bool context_init(struct context * );
@@ -37,7 +20,9 @@ void context_fini(struct context * );
 
 void context_evloop_run(struct context * );
 
-void context_exiting_watcher_add(struct context * this, struct exiting_watcher * watcher, exiting_cb cb);
-void context_exiting_watcher_remove(struct context * this, struct exiting_watcher * watcher);
+
+typedef void (* ft_context_on_termination_callback)(struct context * context, void * data);
+
+bool ft_context_at_termination(struct context * , ft_context_on_termination_callback callback, void * data);
 
 #endif // FT_CONTEXT_H_

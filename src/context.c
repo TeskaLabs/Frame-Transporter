@@ -2,8 +2,14 @@
 
 ///
 
-static void context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents);
-static void context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
+static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents);
+static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
+
+struct _ft_context_on_termination_entry
+{
+	ft_context_on_termination_callback callback;
+	void * data;
+};
 
 ///
 
@@ -11,8 +17,8 @@ bool context_init(struct context * this)
 {
 	bool ok;
 
-	this->first_exiting_watcher = NULL;
-	this->last_exiting_watcher = NULL;
+	ok = ft_list_init(&this->on_termination_list, NULL);
+	if (!ok) return false;
 
 	this->ev_loop = ev_default_loop(ft_config.libev_loop_flags);
 	if (this->ev_loop == NULL) return false;
@@ -21,17 +27,17 @@ bool context_init(struct context * this)
 	ft_log_context(this);
 
 	// Install signal handlers
-	ev_signal_init(&this->sighup_w, context_on_sighup, SIGHUP);
+	ev_signal_init(&this->sighup_w, _ft_context_on_sighup, SIGHUP);
 	ev_signal_start(this->ev_loop, &this->sighup_w);
 	ev_unref(this->ev_loop);
 	this->sighup_w.data = this;
 
-	ev_signal_init(&this->sigint_w, context_on_sigexit, SIGINT);
+	ev_signal_init(&this->sigint_w, _ft_context_on_sigexit, SIGINT);
 	ev_signal_start(this->ev_loop, &this->sigint_w);
 	ev_unref(this->ev_loop);
 	this->sigint_w.data = this;
 
-	ev_signal_init(&this->sigterm_w, context_on_sigexit, SIGTERM);
+	ev_signal_init(&this->sigterm_w, _ft_context_on_sigexit, SIGTERM);
 	ev_signal_start(this->ev_loop, &this->sigterm_w);
 	ev_unref(this->ev_loop);
 	this->sigterm_w.data = this;
@@ -64,35 +70,51 @@ void context_fini(struct context * this)
 	//TODO: Destroy heartbeat
 	//TODO: Destroy frame pool
 	//TODO: Uninstall signal handlers
+	//TODO: remove entries in on_termination_list
 
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;
 }
 
 
-static void context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
+// This is a polite way of termination
+// It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
+static void _ft_context_terminate(struct context * this, struct ev_loop * loop)
+{
+	if (ev_is_active(&this->sigint_w))
+	{
+		ev_ref(this->ev_loop);
+		ev_signal_stop(this->ev_loop, &this->sigint_w);
+	}
+
+	if (ev_is_active(&this->sigterm_w))
+	{
+		ev_ref(this->ev_loop);
+		ev_signal_stop(this->ev_loop, &this->sigterm_w);
+	}
+
+	FT_LIST_FOR(&this->on_termination_list, node)
+	{
+		struct _ft_context_on_termination_entry * e = (struct _ft_context_on_termination_entry *)node->data;
+		e->callback(this, e->data);
+	}
+}
+
+
+static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
 {
 	ft_log_reopen();
 }
 
-static void context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
+
+static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
 {
 	struct context * this = w->data;
 	assert(this != NULL);
 
 	if (w->signum == SIGINT) putchar('\n');
-	
-	for (struct exiting_watcher * watcher = this->first_exiting_watcher; watcher != NULL; watcher = watcher->next)
-	{
-		if (watcher->cb == NULL) continue;
-		watcher->cb(watcher, this);
-	}
 
-	ev_ref(this->ev_loop);
-	ev_signal_stop(this->ev_loop, &this->sigint_w);
-
-	ev_ref(this->ev_loop);
-	ev_signal_stop(this->ev_loop, &this->sigterm_w);
+	_ft_context_terminate(this, loop);
 }
 
 
@@ -116,71 +138,21 @@ void context_evloop_run(struct context * this)
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "event loop stop");
 }
 
-///
 
-void context_exiting_watcher_add(struct context * this, struct exiting_watcher * watcher, exiting_cb cb)
+bool ft_context_at_termination(struct context * this, ft_context_on_termination_callback callback, void * data)
 {
 	assert(this != NULL);
-	assert(watcher != NULL);
+	assert(callback != NULL);
 
-	watcher->cb = cb;
+	struct ft_list_node * node = ft_list_node_new(sizeof(struct _ft_context_on_termination_entry));
+	if (node == NULL) return false;
+	struct _ft_context_on_termination_entry * e = (struct _ft_context_on_termination_entry *)node->data;
 
-	if (this->last_exiting_watcher == NULL)
-	{
-		assert(this->first_exiting_watcher == NULL);
+	e->callback = callback;
+	e->data = data;
 
-		this->first_exiting_watcher = watcher;
-		this->last_exiting_watcher = watcher;
-		watcher->next = NULL;
-		watcher->prev = NULL;
-	}
-	else
-	{
-		this->last_exiting_watcher->next = watcher;
-		watcher->next = NULL;
-		watcher->prev = this->last_exiting_watcher;
-		this->last_exiting_watcher = watcher;
-	}
+	ft_list_add(&this->on_termination_list, node);	
+
+	return true;
 }
 
-void context_exiting_watcher_remove(struct context * this, struct exiting_watcher * watcher)
-{
-	assert(this != NULL);
-	assert(watcher != NULL);
-
-	if ((watcher->prev == NULL) && (watcher->next == NULL))
-	{
-		assert(this->first_exiting_watcher == watcher);
-		assert(this->last_exiting_watcher == watcher);
-		this->first_exiting_watcher = NULL;
-		this->last_exiting_watcher = NULL;
-		return;
-	}
-
-	assert((this->first_exiting_watcher != NULL) || (this->last_exiting_watcher != NULL));
-
-	if (watcher->prev == NULL)
-	{
-		assert(this->first_exiting_watcher == watcher);
-		this->first_exiting_watcher = watcher->next;
-		if (this->first_exiting_watcher != NULL) this->first_exiting_watcher->prev = NULL;
-	}
-	else
-	{
-		watcher->prev->next = watcher->next;
-	}
-
-	if (watcher->next == NULL)
-	{
-		assert(this->last_exiting_watcher == watcher);
-		this->last_exiting_watcher = watcher->prev;
-		if (this->last_exiting_watcher != NULL) this->last_exiting_watcher->next = NULL;
-	}
-	else
-	{
-		watcher->next->prev = watcher->prev;
-	}
-
-	watcher->prev = NULL;
-	watcher->next = NULL;
-}

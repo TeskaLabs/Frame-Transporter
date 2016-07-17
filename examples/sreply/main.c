@@ -7,7 +7,6 @@
 
 SSL_CTX * ssl_ctx;
 struct context context;
-struct exiting_watcher watcher;
 
 struct ft_list streams;
 struct ft_list listeners;
@@ -86,7 +85,7 @@ struct ft_listener_delegate listener_delegate =
 
 ///
 
-static void on_exiting_cb(struct exiting_watcher * watcher, struct context * context)
+static void on_termination_cb(struct context * context, void * data)
 {
 	FT_LIST_FOR(&streams, node)
 	{
@@ -96,6 +95,7 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 
 	ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
 }
+
 
 static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 {
@@ -145,6 +145,8 @@ int main(int argc, char const *argv[])
 	ok = context_init(&context);
 	if (!ok) return EXIT_FAILURE;
 
+	ft_context_at_termination(&context, on_termination_cb, NULL);
+
 	// Initialize OpenSSL context
 	ssl_ctx = SSL_CTX_new(SSLv23_server_method());
 	if (ssl_ctx == NULL) return EXIT_FAILURE;
@@ -178,9 +180,6 @@ int main(int argc, char const *argv[])
 
 	// Start listening
 	ft_listener_list_cntl(&listeners, FT_LISTENER_START);
-
-	// Register exiting watcher
-	context_exiting_watcher_add(&context, &watcher, on_exiting_cb);
 
 	// Enter event loop
 	context_evloop_run(&context);

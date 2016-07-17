@@ -18,6 +18,7 @@ Suite * sock_est_tsuite(void);
 Suite * heartbeat_tsuite(void);
 Suite * fpool_tsuite(void);
 Suite * frame_tsuite(void);
+Suite * ft_context_tsuite(void);
 
 ///
 
@@ -45,6 +46,7 @@ int main()
 	srunner_add_suite(sr, heartbeat_tsuite());
 	srunner_add_suite(sr, fpool_tsuite());
 	srunner_add_suite(sr, frame_tsuite());
+	srunner_add_suite(sr, ft_context_tsuite());
 
 	srunner_run_all(sr, CK_VERBOSE /*CK_NORMAL*/);
 	number_failed = srunner_ntests_failed(sr);
