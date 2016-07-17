@@ -7,8 +7,8 @@ START_TEST(fpool_alloc_up_utest)
 	bool ok;
 	size_t x;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	x = frame_pool_available_frames_count(&context.frame_pool);
@@ -41,7 +41,7 @@ START_TEST(fpool_alloc_up_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -51,8 +51,8 @@ START_TEST(fpool_alloc_down_utest)
 	bool ok;
 	size_t x;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	x = frame_pool_available_frames_count(&context.frame_pool);
@@ -112,7 +112,7 @@ START_TEST(fpool_alloc_down_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -132,8 +132,8 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	ev_tstamp heartbeat_interval_backup = ft_config.heartbeat_interval;
 	ft_config.heartbeat_interval = 0.1;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	frame_pool_set_alloc_advise(&context.frame_pool, frame_pool_zone_alloc_advice_custom);
@@ -172,7 +172,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	ft_config.heartbeat_interval = heartbeat_interval_backup;
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 

@@ -6,7 +6,7 @@
 ///
 
 SSL_CTX * ssl_ctx;
-struct context context;
+struct ft_context context;
 
 struct ft_list streams;
 struct ft_list listeners;
@@ -85,7 +85,7 @@ struct ft_listener_delegate listener_delegate =
 
 ///
 
-static void on_termination_cb(struct context * context, void * data)
+static void on_termination_cb(struct ft_context * context, void * data)
 {
 	FT_LIST_FOR(&streams, node)
 	{
@@ -142,7 +142,7 @@ int main(int argc, char const *argv[])
 	ft_initialise();
 	
 	// Initializa context
-	ok = context_init(&context);
+	ok = ft_context_init(&context);
 	if (!ok) return EXIT_FAILURE;
 
 	ft_context_at_termination(&context, on_termination_cb, NULL);
@@ -182,12 +182,12 @@ int main(int argc, char const *argv[])
 	ft_listener_list_cntl(&listeners, FT_LISTENER_START);
 
 	// Enter event loop
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	// Clean up
 	ft_list_fini(&streams);
 	ft_list_fini(&listeners);
-	context_fini(&context);
+	ft_context_fini(&context);
 
 	return EXIT_SUCCESS;
 }

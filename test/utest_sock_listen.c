@@ -36,8 +36,8 @@ START_TEST(sock_listen_single_utest)
 
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
@@ -92,7 +92,7 @@ START_TEST(sock_listen_single_utest)
 
 	listening_socket_fini(&sock);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 

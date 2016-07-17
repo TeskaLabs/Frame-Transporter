@@ -31,7 +31,7 @@ static inline const char * _ft_log_levelname(char level)
 
 ///
 
-static struct context * _ft_log_context = NULL;
+static struct ft_context * _ft_log_context = NULL;
 
 inline static ev_tstamp _ft_log_get_tstamp()
 {
@@ -240,7 +240,7 @@ void ft_log_finalise()
 ///
 
 
-void ft_log_context(struct context * context)
+void ft_log_context(struct ft_context * context)
 {
 	if (context == NULL)
 	{

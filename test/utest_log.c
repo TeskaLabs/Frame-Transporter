@@ -276,8 +276,8 @@ START_TEST(log_reopen_sighup_utest)
 
 	FT_INFO("Log message test!");
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	ev_feed_signal(SIGHUP);

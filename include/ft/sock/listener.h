@@ -12,7 +12,7 @@ struct ft_listener_delegate
 struct listening_socket
 {
 	struct ft_listener_delegate * delegate;
-	struct context * context;
+	struct ft_context * context;
 
 	struct ev_io watcher;
 
@@ -36,7 +36,7 @@ struct listening_socket
 	void * data;
 };
 
-bool listening_socket_init(struct listening_socket * , struct ft_listener_delegate * delegate, struct context * context, struct addrinfo * rp);
+bool listening_socket_init(struct listening_socket * , struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp);
 void listening_socket_fini(struct listening_socket *);
 
 ///
@@ -65,8 +65,8 @@ static inline bool ft_listener_cntl(struct listening_socket * this, const int co
 
 bool ft_listener_list_init(struct ft_list *);
 
-int ft_listener_list_extend(struct ft_list *, struct ft_listener_delegate * delegate, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port);
-int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct ft_listener_delegate * delegate, struct context * context, struct addrinfo * rp_list);
+int ft_listener_list_extend(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port);
+int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list);
 
 bool ft_listener_list_cntl(struct ft_list *, const int control_code);
 

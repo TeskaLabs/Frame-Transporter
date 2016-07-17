@@ -110,8 +110,8 @@ START_TEST(sock_est_1_utest)
 
 	sock_est_1_result_counter = 0;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 
@@ -134,7 +134,7 @@ START_TEST(sock_est_1_utest)
 	fprintf(p, "1234\nABCDE\n");
 	fflush(p);
 
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	rc = pclose(p);
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
@@ -148,7 +148,7 @@ START_TEST(sock_est_1_utest)
 	//TODO: Temporary
 	established_socket_fini(&established_sock);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 
 	ck_assert_int_eq(sock_est_1_result_counter, 1);
 }
@@ -226,8 +226,8 @@ START_TEST(sock_est_2_utest)
 	//ft_config.log_verbose = true;
 	//ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
@@ -246,7 +246,7 @@ START_TEST(sock_est_2_utest)
 	FILE * p = popen("cat /etc/hosts | nc localhost 12345", "w");
 	ck_assert_ptr_ne(p, NULL);
 
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	rc = pclose(p);
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
@@ -260,7 +260,7 @@ START_TEST(sock_est_2_utest)
 	//TODO: Temporary
 	established_socket_fini(&established_sock);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -285,8 +285,8 @@ START_TEST(sock_est_conn_fail_utest)
 	struct established_socket sock;
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
@@ -316,11 +316,11 @@ START_TEST(sock_est_conn_fail_utest)
 	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
 	ck_assert_int_eq(ok, true);
 
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	established_socket_fini(&sock);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 
 }
 END_TEST
@@ -413,8 +413,8 @@ START_TEST(sock_est_ssl_client_utest)
 	SSL_CTX * ssl_ctx = SSL_CTX_new(TLSv1_2_client_method());
 	ck_assert_ptr_ne(ssl_ctx, NULL);
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	int inf = 0, outf = 0;
@@ -459,7 +459,7 @@ START_TEST(sock_est_ssl_client_utest)
 	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
 	ck_assert_int_eq(ok, true);
 
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	FT_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
 		sock.stats.read_events,
@@ -488,7 +488,7 @@ START_TEST(sock_est_ssl_client_utest)
 
 	established_socket_fini(&sock);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 
 }
 END_TEST
@@ -592,8 +592,8 @@ START_TEST(sock_est_ssl_server_utest)
 
 	ft_initialise();
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	// Initialize OpenSSL context
@@ -634,7 +634,7 @@ START_TEST(sock_est_ssl_server_utest)
 	fprintf(p, "1234\nABCDE\n");
 	fflush(p);
 
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	rc = pclose(p);
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
@@ -647,7 +647,7 @@ START_TEST(sock_est_ssl_server_utest)
 
 	established_socket_fini(&established_sock);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 
 	ck_assert_int_eq(sock_est_ssl_server_utest_result_counter, 2);
 }

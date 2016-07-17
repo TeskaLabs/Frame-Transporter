@@ -1,7 +1,7 @@
 #ifndef FT_CONTEXT_H_
 #define FT_CONTEXT_H_
 
-struct context
+struct ft_context
 {
 	struct ev_loop * ev_loop;
 
@@ -15,14 +15,14 @@ struct context
 	struct ft_list on_termination_list;
 };
 
-bool context_init(struct context * );
-void context_fini(struct context * );
+bool ft_context_init(struct ft_context * );
+void ft_context_fini(struct ft_context * );
 
-void context_evloop_run(struct context * );
+void ft_context_run(struct ft_context * );
 
 
-typedef void (* ft_context_on_termination_callback)(struct context * context, void * data);
+typedef void (* ft_context_on_termination_callback)(struct ft_context * context, void * data);
 
-bool ft_context_at_termination(struct context * , ft_context_on_termination_callback callback, void * data);
+bool ft_context_at_termination(struct ft_context * , ft_context_on_termination_callback callback, void * data);
 
 #endif // FT_CONTEXT_H_

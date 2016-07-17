@@ -19,7 +19,7 @@ struct established_socket
 {
 	// Common fields
 	struct ft_stream_delegate * delegate;
-	struct context * context;
+	struct ft_context * context;
 
 	struct
 	{
@@ -83,7 +83,7 @@ struct established_socket
 };
 
 bool established_socket_init_accept(struct established_socket *, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
-bool established_socket_init_connect(struct established_socket *, struct ft_stream_delegate * delegate, struct context * context, const struct addrinfo * addr);
+bool established_socket_init_connect(struct established_socket *, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
 void established_socket_fini(struct established_socket *);
 
 bool established_socket_write(struct established_socket *, struct frame * frame);

@@ -4,7 +4,7 @@ static void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 
 ///
 
-void heartbeat_init(struct heartbeat * this, struct context * context)
+void heartbeat_init(struct heartbeat * this, struct ft_context * context)
 {
 	assert(this != NULL);
 	assert(context != NULL);

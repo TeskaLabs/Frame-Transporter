@@ -6,20 +6,20 @@ START_TEST(ft_context_empty_utest)
 {
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	// Will immediately stop since there is nothing to do (no watcher is active)
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
 ///
 
-void ft_context_at_termination_utest_callback(struct context * context, void * data)
+void ft_context_at_termination_utest_callback(struct ft_context * context, void * data)
 {
 	ck_assert_ptr_eq(data, (void*)33);
 
@@ -31,8 +31,8 @@ START_TEST(ft_context_at_termination_utest)
 {
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	// Add a first callback
@@ -50,9 +50,9 @@ START_TEST(ft_context_at_termination_utest)
 	ev_ref(context.ev_loop);
 
 	// Will immediately stop since there is nothing to do (no watcher is active)
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 

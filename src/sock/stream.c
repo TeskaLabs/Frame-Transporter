@@ -60,7 +60,7 @@ static void established_socket_on_ssl_sent_shutdown_event(struct established_soc
 
 ///
 
-static bool established_socket_init(struct established_socket * this, struct ft_stream_delegate * delegate, struct context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
+static bool established_socket_init(struct established_socket * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
 {
 	assert(this != NULL);
 	assert(delegate != NULL);
@@ -165,7 +165,7 @@ bool established_socket_init_accept(struct established_socket * this, struct ft_
 }
 
 
-bool established_socket_init_connect(struct established_socket * this, struct ft_stream_delegate * delegate, struct context * context, const struct addrinfo * addr)
+bool established_socket_init_connect(struct established_socket * this, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
 {
 	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 	if (fd < 0)

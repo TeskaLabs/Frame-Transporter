@@ -134,7 +134,7 @@ bool ft_log_reopen(void);
 void ft_log_finalise(void);
 void ft_log_flush(void);
 
-void ft_log_context(struct context * context);
+void ft_log_context(struct ft_context * context);
 
 /*
  * Specify location of the log file.

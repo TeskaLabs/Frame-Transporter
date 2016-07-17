@@ -118,7 +118,7 @@ static void sigchld(int s)
 
 ///
 
-pid_t ft_deamonise(struct context * context)
+pid_t ft_deamonise(struct ft_context * context)
 {
 	pid_t pid;
 	int pipe_fds[2] = {-1, -1};

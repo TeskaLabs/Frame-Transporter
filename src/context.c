@@ -13,7 +13,7 @@ struct _ft_context_on_termination_entry
 
 ///
 
-bool context_init(struct context * this)
+bool ft_context_init(struct ft_context * this)
 {
 	bool ok;
 
@@ -63,7 +63,7 @@ bool context_init(struct context * this)
 }
 
 
-void context_fini(struct context * this)
+void ft_context_fini(struct ft_context * this)
 {
 	ft_log_context(NULL);
 
@@ -79,7 +79,7 @@ void context_fini(struct context * this)
 
 // This is a polite way of termination
 // It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
-static void _ft_context_terminate(struct context * this, struct ev_loop * loop)
+static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loop)
 {
 	if (ev_is_active(&this->sigint_w))
 	{
@@ -109,7 +109,7 @@ static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int reve
 
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
 {
-	struct context * this = w->data;
+	struct ft_context * this = w->data;
 	assert(this != NULL);
 
 	if (w->signum == SIGINT) putchar('\n');
@@ -118,7 +118,7 @@ static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int rev
 }
 
 
-void context_evloop_run(struct context * this)
+void ft_context_run(struct ft_context * this)
 {
 	assert(this != NULL);
 
@@ -139,7 +139,7 @@ void context_evloop_run(struct context * this)
 }
 
 
-bool ft_context_at_termination(struct context * this, ft_context_on_termination_callback callback, void * data)
+bool ft_context_at_termination(struct ft_context * this, ft_context_on_termination_callback callback, void * data)
 {
 	assert(this != NULL);
 	assert(callback != NULL);

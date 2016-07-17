@@ -67,7 +67,7 @@ struct ft_stream_delegate stream_delegate =
 int main(int argc, char const *argv[])
 {
 	bool ok;
-	struct context context;
+	struct ft_context context;
 	struct established_socket sock;
 
 	//ft_log_verbose(true);
@@ -80,7 +80,7 @@ int main(int argc, char const *argv[])
 	ERR_load_crypto_strings();
 
 	// Initialize context
-	ok = context_init(&context);
+	ok = ft_context_init(&context);
 	if (!ok) return EXIT_FAILURE;
 
 	// Initialize OpenSSL context
@@ -136,10 +136,10 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 	// Enter event loop
-	context_evloop_run(&context);
+	ft_context_run(&context);
 
 	// Finalize context
-	context_fini(&context);
+	ft_context_fini(&context);
 
 	return EXIT_SUCCESS;
 }

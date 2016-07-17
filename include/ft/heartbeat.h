@@ -17,7 +17,7 @@ struct heartbeat_watcher
 
 struct heartbeat
 {
-	struct context * context;
+	struct ft_context * context;
 
 	struct heartbeat_watcher * first_watcher;
 	struct heartbeat_watcher * last_watcher;
@@ -26,7 +26,7 @@ struct heartbeat
 	ev_tstamp last_beat;
 };
 
-void heartbeat_init(struct heartbeat * , struct context * context);
+void heartbeat_init(struct heartbeat * , struct ft_context * context);
 
 void heartbeat_start(struct heartbeat *);
 void heartbeat_stop(struct heartbeat *);

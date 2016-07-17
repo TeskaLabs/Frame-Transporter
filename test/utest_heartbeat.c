@@ -25,8 +25,8 @@ START_TEST(heartbeat_core_utest)
 	ev_tstamp heartbeat_interval_backup = ft_config.heartbeat_interval;
 	ft_config.heartbeat_interval = 0.1;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct heartbeat_watcher hbw1;
@@ -49,7 +49,7 @@ START_TEST(heartbeat_core_utest)
 
 	ft_config.heartbeat_interval = heartbeat_interval_backup;
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -77,8 +77,8 @@ START_TEST(heartbeat_list1_utest)
 {
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct heartbeat_watcher hbw1;
@@ -93,7 +93,7 @@ START_TEST(heartbeat_list1_utest)
 	heartbeat_remove(&context.heartbeat, &hbw1);
 	assert_watcher_count(&context.heartbeat, 0);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -101,8 +101,8 @@ START_TEST(heartbeat_list2_utest)
 {
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct heartbeat_watcher hbw1;
@@ -126,7 +126,7 @@ START_TEST(heartbeat_list2_utest)
 	heartbeat_remove(&context.heartbeat, &hbw1);
 	assert_watcher_count(&context.heartbeat, 0);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -134,8 +134,8 @@ START_TEST(heartbeat_list3_utest)
 {
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct heartbeat_watcher hbw1;
@@ -159,7 +159,7 @@ START_TEST(heartbeat_list3_utest)
 	heartbeat_remove(&context.heartbeat, &hbw2);
 	assert_watcher_count(&context.heartbeat, 0);
 
-	context_fini(&context);
+	ft_context_fini(&context);
 }
 END_TEST
 
@@ -167,8 +167,8 @@ START_TEST(heartbeat_list4_utest)
 {
 	bool ok;
 
-	struct context context;
-	ok = context_init(&context);
+	struct ft_context context;
+	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
 	struct heartbeat_watcher hbw1;
