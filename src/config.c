@@ -1,6 +1,6 @@
 #include "_ft_internal.h"
 
-struct libsccmn_config libsccmn_config =
+struct ft_config ft_config =
 {
 	.initialized = false, // Will be changed to true when initialized
 
@@ -34,7 +34,7 @@ struct libsccmn_config libsccmn_config =
 
 void ft_initialise(void)
 {
-	assert(libsccmn_config.initialized == false);
+	assert(ft_config.initialized == false);
 
 	// Initialize logging
 	_ft_log_initialise();
@@ -45,10 +45,10 @@ void ft_initialise(void)
 	// Ignore SIGPIPE
 	signal(SIGPIPE, SIG_IGN);
 
-	libsccmn_config.initialized = true;
+	ft_config.initialized = true;
 
 	// Initialize OpenSSL
-	if (libsccmn_config.log_verbose)
+	if (ft_config.log_verbose)
 	{
 		SSL_load_error_strings();
 		ERR_load_crypto_strings();

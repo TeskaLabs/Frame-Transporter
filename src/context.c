@@ -14,7 +14,7 @@ bool context_init(struct context * this)
 	this->first_exiting_watcher = NULL;
 	this->last_exiting_watcher = NULL;
 
-	this->ev_loop = ev_default_loop(libsccmn_config.libev_loop_flags);
+	this->ev_loop = ev_default_loop(ft_config.libev_loop_flags);
 	if (this->ev_loop == NULL) return false;
 
 	// Set a logging context
@@ -42,12 +42,12 @@ bool context_init(struct context * this)
 	ok = frame_pool_init(&this->frame_pool, &this->heartbeat);
 	if (!ok) return false;
 
-	if (libsccmn_config.sock_est_ssl_ex_data_index == -2)
+	if (ft_config.sock_est_ssl_ex_data_index == -2)
 	{
-		libsccmn_config.sock_est_ssl_ex_data_index = SSL_get_ex_new_index(0, "libsccmn_ptr", NULL, NULL, NULL);	
-		if (libsccmn_config.sock_est_ssl_ex_data_index == -1)
+		ft_config.sock_est_ssl_ex_data_index = SSL_get_ex_new_index(0, "libsccmn_ptr", NULL, NULL, NULL);	
+		if (ft_config.sock_est_ssl_ex_data_index == -1)
 		{
-			libsccmn_config.sock_est_ssl_ex_data_index = -2;
+			ft_config.sock_est_ssl_ex_data_index = -2;
 			FT_ERROR_OPENSSL("SSL_get_ex_new_index");
 			return false;
 		}

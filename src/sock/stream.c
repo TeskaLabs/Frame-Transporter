@@ -486,7 +486,7 @@ void established_socket_on_read_event(struct established_socket * this)
 
 	this->stats.read_events += 1;
 
-	for (unsigned int read_loops = 0; read_loops<libsccmn_config.sock_est_max_read_loops; read_loops += 1)
+	for (unsigned int read_loops = 0; read_loops<ft_config.sock_est_max_read_loops; read_loops += 1)
 	{
 		if (this->read_frame == NULL)
 		{
@@ -758,7 +758,7 @@ static void established_socket_write_real(struct established_socket * this)
 	{
 		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, (unsigned long long)this->write_frames->type);
 
-		if (write_loop > libsccmn_config.sock_est_max_read_loops)
+		if (write_loop > ft_config.sock_est_max_read_loops)
 		{
 			// Maximum write loops per event loop iteration reached
 			this->flags.write_ready = false;
@@ -1038,8 +1038,8 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 	}
 
 	// Set an socket reference
-	assert((libsccmn_config.sock_est_ssl_ex_data_index != -1) && (libsccmn_config.sock_est_ssl_ex_data_index != -2));
-	rc = SSL_set_ex_data(this->ssl, libsccmn_config.sock_est_ssl_ex_data_index, this);
+	assert((ft_config.sock_est_ssl_ex_data_index != -1) && (ft_config.sock_est_ssl_ex_data_index != -2));
+	rc = SSL_set_ex_data(this->ssl, ft_config.sock_est_ssl_ex_data_index, this);
 	if (rc != 1)
 	{
 		FT_WARN_OPENSSL("established_socket_ssl_enable:SSL_set_ex_data");

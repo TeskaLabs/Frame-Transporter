@@ -4,9 +4,9 @@
 
 START_TEST(config_init_core_utest)
 {
-	ck_assert_int_eq(libsccmn_config.initialized, false);
+	ck_assert_int_eq(ft_config.initialized, false);
 	ft_initialise();
-	ck_assert_int_eq(libsccmn_config.initialized, true);
+	ck_assert_int_eq(ft_config.initialized, true);
 }
 END_TEST
 

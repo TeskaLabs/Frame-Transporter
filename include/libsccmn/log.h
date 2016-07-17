@@ -24,7 +24,7 @@ void _ft_log_v(const char level, const char * format, va_list args);
 static inline void _ft_log(const char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 static inline void _ft_log(const char level, const char * format, ...)
 {
-	if ((level == 'D') && (!libsccmn_config.log_verbose)) return;
+	if ((level == 'D') && (!ft_config.log_verbose)) return;
 
 	va_list args;
 	va_start(args, format);
@@ -36,7 +36,7 @@ void _ft_log_errno_v(int errnum, const char level, const char * format, va_list 
 static inline void _ft_log_errno(int errnum, const char level, const char *format, ...) __attribute__((format(printf,3,4)));
 static inline void _ft_log_errno(int errnum, const char level, const char *format, ...)
 {
-	if ((level == 'D') && (!libsccmn_config.log_verbose)) return;
+	if ((level == 'D') && (!ft_config.log_verbose)) return;
 
 	va_list args;
 	va_start(args, format);
@@ -49,7 +49,7 @@ void _ft_log_openssl_err_v(char const level, const char * format, va_list args);
 static inline void _ft_log_openssl_err(char const level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 static inline void _ft_log_openssl_err(char const level, const char * format, ...)
 {
-	if ((level == 'D') && (!libsccmn_config.log_verbose)) return;
+	if ((level == 'D') && (!ft_config.log_verbose)) return;
 
 	va_list args;
 	va_start(args, format);
@@ -60,7 +60,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #ifdef RELEASE
 #define FT_TRACE(traceid, fmt, args...) do { if (0) _ft_log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_TRACE(traceid, fmt, args...) if ((libsccmn_config.log_trace_mask & traceid) != 0) _ft_log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
+#define FT_TRACE(traceid, fmt, args...) if ((ft_config.log_trace_mask & traceid) != 0) _ft_log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
 #endif
 
 #ifdef RELEASE
@@ -145,12 +145,12 @@ bool ft_log_filename(const char * fname);
 
 static inline bool ft_log_is_verbose(void)
 {
-	return libsccmn_config.log_verbose;
+	return ft_config.log_verbose;
 }
 
 static inline void ft_log_verbose(bool v)
 {
-	libsccmn_config.log_verbose = v;
+	ft_config.log_verbose = v;
 }
 
 ///

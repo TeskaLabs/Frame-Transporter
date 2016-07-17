@@ -309,7 +309,7 @@ void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbea
 
 		if (zone->flags.free_on_hb)
 		{
-			zone->free_at = now + libsccmn_config.fpool_zone_free_timeout;
+			zone->free_at = now + ft_config.fpool_zone_free_timeout;
 			zone->flags.free_on_hb = false;
 
 			last_zone_next = &zone->next;

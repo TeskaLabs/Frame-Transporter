@@ -14,7 +14,7 @@ void heartbeat_init(struct heartbeat * this, struct context * context)
 	this->first_watcher = NULL;
 	this->last_watcher = NULL;
 
-	ev_timer_init(&this->timer_w, heartbeat_on_timer, 0.0, libsccmn_config.heartbeat_interval);
+	ev_timer_init(&this->timer_w, heartbeat_on_timer, 0.0, ft_config.heartbeat_interval);
 	ev_set_priority(&this->timer_w, -2);
 	this->timer_w.data = this;
 }
@@ -122,7 +122,7 @@ void heartbeat_on_timer(struct ev_loop * loop, ev_timer * w, int revents)
 	if (this->last_beat > 0.0)
 	{
 		double delta = (now - this->last_beat) - w->repeat;
-		if (delta > libsccmn_config.lag_detector_sensitivity)
+		if (delta > ft_config.lag_detector_sensitivity)
 		{
 			FT_WARN("Lag (~ %.2lf sec.) detected", delta);
 		}

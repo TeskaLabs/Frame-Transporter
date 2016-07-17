@@ -147,7 +147,7 @@ static inline void established_socket_set_read_partial(struct established_socket
 
 static inline struct established_socket * established_socket_from_ssl(SSL * ssl)
 {
-    return SSL_get_ex_data(ssl, libsccmn_config.sock_est_ssl_ex_data_index);
+    return SSL_get_ex_data(ssl, ft_config.sock_est_ssl_ex_data_index);
 }
 
 // This function is to be used within SSL_CTX_set_verify() callback

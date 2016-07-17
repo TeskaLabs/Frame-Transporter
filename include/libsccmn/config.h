@@ -1,7 +1,7 @@
 #ifndef FT_CONFIG_H_
 #define FT_CONFIG_H_
 
-struct libsccmn_config
+struct ft_config
 {
 	bool initialized;
 
@@ -32,6 +32,6 @@ struct libsccmn_config
 	int sock_est_ssl_ex_data_index; // Where to store a pointer to socket object
 };
 
-extern struct libsccmn_config libsccmn_config;
+extern struct ft_config ft_config;
 
 #endif // FT_CONFIG_H_

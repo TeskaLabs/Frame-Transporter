@@ -20,7 +20,7 @@ bool listening_socket_init(struct listening_socket * this, struct ft_listener_de
 	this->context = context;
 	this->listening = false;
 	this->data = NULL;
-	this->backlog = libsccmn_config.sock_listen_backlog;
+	this->backlog = ft_config.sock_listen_backlog;
 
 	this->ai_family = ai->ai_family;
 	this->ai_socktype = ai->ai_socktype;

@@ -44,13 +44,13 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
-	if (libsccmn_config.log_use_utc)
+	if (ft_config.log_use_utc)
 		gmtime_r(&t, &tmp);
 	else
 		localtime_r(&t, &tmp);
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
 
-	fprintf(libsccmn_config.log_f != NULL ? libsccmn_config.log_f : stderr, 
+	fprintf(ft_config.log_f != NULL ? ft_config.log_f : stderr, 
 		"%s %02d %04d %02d:%02d:%02d.%03d %s %7d %s: %.*s\n",
 		_ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
@@ -60,7 +60,7 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 		le_message_length, le->message
 	);
 
-	libsccmn_config.log_flush_counter += 1;
+	ft_config.log_flush_counter += 1;
 }
 
 static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const char * format, va_list args)
@@ -158,11 +158,11 @@ void ft_log_flush()
 	ev_tstamp now = _ft_log_get_tstamp();
 	bool do_flush = false;
 
-	if (libsccmn_config.log_flush_counter >= libsccmn_config.log_flush_counter_max)
+	if (ft_config.log_flush_counter >= ft_config.log_flush_counter_max)
 	{
 		do_flush = true;
 	}
-	else if ((libsccmn_config.log_flush_last + libsccmn_config.log_flush_interval) < now)
+	else if ((ft_config.log_flush_last + ft_config.log_flush_interval) < now)
 	{
 		// Log entries are not that old to initiale the flush
 		do_flush = true;
@@ -170,55 +170,55 @@ void ft_log_flush()
 
 	if (!do_flush) return;
 
-	fflush(libsccmn_config.log_f != NULL ? libsccmn_config.log_f : stderr);
-	libsccmn_config.log_flush_counter = 0;
-	libsccmn_config.log_flush_last = now;
+	fflush(ft_config.log_f != NULL ? ft_config.log_f : stderr);
+	ft_config.log_flush_counter = 0;
+	ft_config.log_flush_last = now;
 }
 
 
 bool ft_log_filename(const char * fname)
 {
-	if (libsccmn_config.log_filename != NULL)
+	if (ft_config.log_filename != NULL)
 	{
 		ft_log_finalise();
-		free((void *)libsccmn_config.log_filename);
-		libsccmn_config.log_filename = NULL;
+		free((void *)ft_config.log_filename);
+		ft_config.log_filename = NULL;
 	}
 
-	libsccmn_config.log_filename = (fname != NULL) ? strdup(fname) : NULL;
+	ft_config.log_filename = (fname != NULL) ? strdup(fname) : NULL;
 	return ft_log_reopen();
 }
 
 
 bool ft_log_reopen()
 {
-	if ((libsccmn_config.log_filename == NULL) && (libsccmn_config.log_f == NULL))
+	if ((ft_config.log_filename == NULL) && (ft_config.log_f == NULL))
 	{
 		// No-op when filename and file is not specified 
 		return true;
 	}
 
-	if (libsccmn_config.log_filename == NULL)
+	if (ft_config.log_filename == NULL)
 	{
 		FT_WARN("Log file name is not specified");
 		return false;
 	}
 
-	FILE * f = fopen(libsccmn_config.log_filename, "a");
+	FILE * f = fopen(ft_config.log_filename, "a");
 	if (f == NULL)
 	{
-		FT_ERROR_ERRNO(errno, "Error when opening log file '%s'", libsccmn_config.log_filename);
+		FT_ERROR_ERRNO(errno, "Error when opening log file '%s'", ft_config.log_filename);
 		return false;
 	}
 
-	bool reopen = (libsccmn_config.log_f != NULL);
+	bool reopen = (ft_config.log_f != NULL);
 	if (reopen)
 	{
 		FT_INFO("Log file is closed");
-		fclose(libsccmn_config.log_f);
+		fclose(ft_config.log_f);
 	}
 
-	libsccmn_config.log_f = f;
+	ft_config.log_f = f;
 	FT_INFO("Log file is %s", reopen ? "reopen" : "open");
 
 	return true;
@@ -227,11 +227,11 @@ bool ft_log_reopen()
 
 void ft_log_finalise()
 {
-	if (libsccmn_config.log_f != NULL)
+	if (ft_config.log_f != NULL)
 	{
-		fflush(libsccmn_config.log_f);
-		fclose(libsccmn_config.log_f);
-		libsccmn_config.log_f = NULL;
+		fflush(ft_config.log_f);
+		fclose(ft_config.log_f);
+		ft_config.log_f = NULL;
 	}
 
 	fflush(stderr);

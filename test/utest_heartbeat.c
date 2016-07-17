@@ -22,8 +22,8 @@ START_TEST(heartbeat_core_utest)
 {
 	bool ok;
 
-	ev_tstamp heartbeat_interval_backup = libsccmn_config.heartbeat_interval;
-	libsccmn_config.heartbeat_interval = 0.1;
+	ev_tstamp heartbeat_interval_backup = ft_config.heartbeat_interval;
+	ft_config.heartbeat_interval = 0.1;
 
 	struct context context;
 	ok = context_init(&context);
@@ -47,7 +47,7 @@ START_TEST(heartbeat_core_utest)
 	ck_assert_int_eq(heartbeat_core_utest_counter, 3);
 	ck_assert_int_eq(heartbeat_core_utest_counter2, 6);
 
-	libsccmn_config.heartbeat_interval = heartbeat_interval_backup;
+	ft_config.heartbeat_interval = heartbeat_interval_backup;
 
 	context_fini(&context);
 }

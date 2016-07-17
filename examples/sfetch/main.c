@@ -71,7 +71,7 @@ int main(int argc, char const *argv[])
 	struct established_socket sock;
 
 	//ft_log_verbose(true);
-	//libsccmn_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
+	//ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
 	ft_initialise();	
 

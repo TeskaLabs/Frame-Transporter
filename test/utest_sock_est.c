@@ -223,8 +223,8 @@ START_TEST(sock_est_2_utest)
 	int rc;
 	bool ok;
 
-	//libsccmn_config.log_verbose = true;
-	//libsccmn_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
+	//ft_config.log_verbose = true;
+	//ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
 	struct context context;
 	ok = context_init(&context);
@@ -405,8 +405,8 @@ START_TEST(sock_est_ssl_client_utest)
 
 	ft_initialise();
 
-//	libsccmn_config.log_verbose = true;
-//	libsccmn_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
+//	ft_config.log_verbose = true;
+//	ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
 	sock_est_ssl_1_read_counter = 0;
 

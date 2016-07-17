@@ -129,8 +129,8 @@ START_TEST(fpool_alloc_custom_advice_utest)
 {
 	bool ok;
 
-	ev_tstamp heartbeat_interval_backup = libsccmn_config.heartbeat_interval;
-	libsccmn_config.heartbeat_interval = 0.1;
+	ev_tstamp heartbeat_interval_backup = ft_config.heartbeat_interval;
+	ft_config.heartbeat_interval = 0.1;
 
 	struct context context;
 	ok = context_init(&context);
@@ -163,14 +163,14 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	ck_assert_int_eq(frame_pool_zone_alloc_advice_custom_counter, frame_count);
 
 	// Simulate heartbeat
-	libsccmn_config.fpool_zone_free_timeout = 0.2;
+	ft_config.fpool_zone_free_timeout = 0.2;
 	ev_ref(context.ev_loop);
 	while (context.frame_pool.zones != NULL)
 	{
 		ev_run(context.ev_loop, EVRUN_ONCE);
 	}
 
-	libsccmn_config.heartbeat_interval = heartbeat_interval_backup;
+	ft_config.heartbeat_interval = heartbeat_interval_backup;
 
 	context_fini(&context);
 }

@@ -375,13 +375,13 @@ pid_t ft_deamonise(struct context * context)
 
 void ft_pidfile_filename(const char * fname)
 {
-	if (libsccmn_config.pid_file != NULL)
+	if (ft_config.pid_file != NULL)
 	{
-		free((void *)libsccmn_config.pid_file);
-		libsccmn_config.pid_file = NULL;
+		free((void *)ft_config.pid_file);
+		ft_config.pid_file = NULL;
 	}
 
-	libsccmn_config.pid_file = (fname != NULL) ? strdup(fname) : NULL;
+	ft_config.pid_file = (fname != NULL) ? strdup(fname) : NULL;
 }
 
 
@@ -424,16 +424,16 @@ bool ft_pidfile_create(void)
 	u = umask(022);
 
 
-	if (libsccmn_config.pid_file == NULL)
+	if (ft_config.pid_file == NULL)
 	{
 		// Pid file will not be created because it is not specified
 		return true;
 	}
 
-	fd = open(libsccmn_config.pid_file, O_CREAT | O_RDWR, 0644);
+	fd = open(ft_config.pid_file, O_CREAT | O_RDWR, 0644);
 	if (fd < 0)
 	{
-		FT_ERROR_ERRNO(errno, "ft_pidfile_create/open(%s)", libsccmn_config.pid_file);
+		FT_ERROR_ERRNO(errno, "ft_pidfile_create/open(%s)", ft_config.pid_file);
 		return false;
 	}
 
@@ -441,7 +441,7 @@ bool ft_pidfile_create(void)
 	if (locked < 0)
 	{
 		int saved_errno = errno;
-		unlink(libsccmn_config.pid_file);
+		unlink(ft_config.pid_file);
 		errno = saved_errno;
 		goto finish;
 	}
@@ -453,7 +453,7 @@ bool ft_pidfile_create(void)
 	{
 		int saved_errno = errno;
 		FT_ERROR_ERRNO(saved_errno, "ft_pidfile_create / write()");
-		unlink(libsccmn_config.pid_file);
+		unlink(ft_config.pid_file);
 		errno = saved_errno;
 		goto finish;
 	}
@@ -481,13 +481,13 @@ finish:
 
 bool ft_pidfile_remove(void)
 {
-	if (libsccmn_config.pid_file == NULL)
+	if (ft_config.pid_file == NULL)
 		return true;
 
-	int rc = unlink(libsccmn_config.pid_file);
+	int rc = unlink(ft_config.pid_file);
 	if (rc != 0)
 	{
-		FT_ERROR_ERRNO(errno, "ft_pidfile_remove / unlink(%s)", libsccmn_config.pid_file);
+		FT_ERROR_ERRNO(errno, "ft_pidfile_remove / unlink(%s)", ft_config.pid_file);
 	}
 
 	return rc == 0;
@@ -505,14 +505,14 @@ pid_t ft_pidfile_is_running(void)
     char *e = NULL;
 
 
-	if (libsccmn_config.pid_file == NULL)
+	if (ft_config.pid_file == NULL)
 	{
 		FT_ERROR("Pid file location is not specified.");
         goto finish;
     }
 
-    if ((fd = open(libsccmn_config.pid_file, O_RDWR, 0644)) < 0) {
-        if ((fd = open(libsccmn_config.pid_file, O_RDONLY, 0644)) < 0) {
+    if ((fd = open(ft_config.pid_file, O_RDWR, 0644)) < 0) {
+        if ((fd = open(ft_config.pid_file, O_RDONLY, 0644)) < 0) {
             if (errno != ENOENT)
                 FT_ERROR_ERRNO(errno, "Failed to open PID file");
 
@@ -526,7 +526,7 @@ pid_t ft_pidfile_is_running(void)
     if ((l = read(fd, txt, sizeof(txt)-1)) < 0) {
         int saved_errno = errno;
         FT_ERROR_ERRNO(errno, "daemon_pid_file_is_running / read()");
-        unlink(libsccmn_config.pid_file);
+        unlink(ft_config.pid_file);
         errno = saved_errno;
         goto finish;
     }
@@ -539,8 +539,8 @@ pid_t ft_pidfile_is_running(void)
     pid = (pid_t) lpid;
 
     if (errno != 0 || !e || *e || (long) pid != lpid) {
-        FT_WARN("PID file corrupt, removing. (%s)", libsccmn_config.pid_file);
-        unlink(libsccmn_config.pid_file);
+        FT_WARN("PID file corrupt, removing. (%s)", ft_config.pid_file);
+        unlink(ft_config.pid_file);
         errno = EINVAL;
         goto finish;
     }
@@ -548,7 +548,7 @@ pid_t ft_pidfile_is_running(void)
     if (kill(pid, 0) != 0 && errno != EPERM) {
         int saved_errno = errno;
         FT_ERROR_ERRNO(errno, "Process %lu died", (unsigned long) pid);
-        unlink(libsccmn_config.pid_file);
+        unlink(ft_config.pid_file);
         errno = saved_errno;
         goto finish;
     }
