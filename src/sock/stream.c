@@ -242,7 +242,7 @@ void ft_stream_fini(struct ft_stream * this)
 	if (this->read_frame != NULL)
 	{
 		cap = frame_total_start_to_position(this->read_frame);
-		frame_pool_return(this->read_frame);
+		ft_frame_return(this->read_frame);
 		this->read_frame = NULL;
 
 		if (cap > 0) FT_WARN("Lost %zu bytes in read buffer of the socket", cap);
@@ -255,7 +255,7 @@ void ft_stream_fini(struct ft_stream * this)
 		this->write_frames = frame->next;
 
 		cap += frame_total_position_to_limit(frame);
-		frame_pool_return(frame);
+		ft_frame_return(frame);
 	}
 	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
 
@@ -424,7 +424,7 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 	{
 		FT_WARN("Partial read due to read shutdown (%zd bytes)", frame_total_start_to_position(this->read_frame));
 		bool upstreamed = this->delegate->read(this, this->read_frame);
-		if (!upstreamed) frame_pool_return(this->read_frame);
+		if (!upstreamed) ft_frame_return(this->read_frame);
 	}
 	this->read_frame = NULL;
 
@@ -442,7 +442,7 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 
 	if (frame == NULL)
 	{
-		frame = frame_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+		frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	}
 
 	if (frame == NULL)
@@ -455,7 +455,7 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 	}
 
 	bool upstreamed = this->delegate->read(this, frame);
-	if (!upstreamed) frame_pool_return(frame);
+	if (!upstreamed) ft_frame_return(frame);
 
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT, TRACE_ARGS);
@@ -484,7 +484,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			}
 			else
 			{
-				this->read_frame = frame_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
+				this->read_frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 				if (this->read_frame != NULL) frame_format_simple(this->read_frame);
 			}
 
@@ -760,7 +760,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 		{
 			struct frame * frame = this->write_frames;
 			this->write_frames = frame->next;
-			frame_pool_return(frame);
+			ft_frame_return(frame);
 
 			if (this->write_frames != NULL) FT_ERROR("There are data frames in the write queue after end-of-stream.");
 
@@ -907,7 +907,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 				this->write_frame_last = &this->write_frames;
 			}
 
-			frame_pool_return(frame);
+			ft_frame_return(frame);
 		}
 	}
 
@@ -986,7 +986,7 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+	struct frame * frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");

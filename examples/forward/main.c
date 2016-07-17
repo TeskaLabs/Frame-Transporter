@@ -27,7 +27,7 @@ bool on_read_in_to_out(struct ft_stream * established_sock, struct frame * frame
 	if (!ok)
 	{
 		FT_ERROR_P("Cannot write a frame!");
-		frame_pool_return(frame);
+		ft_frame_return(frame);
 	}
 
 	return true;
@@ -41,7 +41,7 @@ bool on_read_out_to_in(struct ft_stream * established_sock, struct frame * frame
 	if (!ok)
 	{
 		FT_ERROR_P("Cannot write a frame!");
-		frame_pool_return(frame);
+		ft_frame_return(frame);
 	}
 
 	return true;

@@ -134,7 +134,7 @@ struct frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_typ
 
 /// Zone allocators follows ...
 
-struct ft_poolzone * ft_pool_alloc_default(struct frame_pool * this)
+struct ft_poolzone * ft_pool_alloc_default(struct ft_pool * this)
 {
 	if (this->zones == NULL) return ft_poolzone_new_mmap(16, false,  MAP_PRIVATE | MAP_ANON); // Allocate first, low-memory zone
 	if (this->zones->next == NULL) return ft_poolzone_new_mmap(2045, true,  MAP_PRIVATE | MAP_ANON); // Allocate second, high-memory zone
@@ -143,7 +143,7 @@ struct ft_poolzone * ft_pool_alloc_default(struct frame_pool * this)
 
 
 #ifdef MAP_HUGETLB
-struct ft_poolzone * ft_pool_alloc_hugetlb(struct frame_pool * this)
+struct ft_poolzone * ft_pool_alloc_hugetlb(struct ft_pool * this)
 {
 	if (this->zones == NULL)
 	{
@@ -211,7 +211,7 @@ cont_default:
 	return ft_pool_alloc_default(this);
 }
 #else
-struct ft_poolzone * ft_pool_alloc_hugetlb(struct frame_pool * this)
+struct ft_poolzone * ft_pool_alloc_hugetlb(struct ft_pool * this)
 {
 	FT_DEBUG("Huge table frame pool allocator is not available");
 	return ft_pool_alloc_default(this);

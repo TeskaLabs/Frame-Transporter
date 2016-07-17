@@ -6,24 +6,26 @@ Fixed-size block memory pool.
 See https://en.wikipedia.org/wiki/Memory_pool
 */
 
-struct frame_pool
+struct ft_pool
 {
 	struct ft_poolzone * zones;
 	ft_pool_alloc_fnct alloc_fnct;
 };
 
-bool frame_pool_init(struct frame_pool *, struct ft_context * context); // Context can be null
-void frame_pool_fini(struct frame_pool *);
+bool ft_pool_init(struct ft_pool *, struct ft_context * context); // Context can be null
+void ft_pool_fini(struct ft_pool *);
 
-void ft_pool_set_alloc(struct frame_pool *, ft_pool_alloc_fnct alloc_fnct);
+void ft_pool_set_alloc(struct ft_pool *, ft_pool_alloc_fnct alloc_fnct);
 
-size_t frame_pool_available_frames_count(struct frame_pool *);
-size_t frame_pool_zones_count(struct frame_pool *);
+size_t ft_pool_count_available_frames(struct ft_pool *);
+size_t ft_pool_count_zones(struct ft_pool *);
 
-struct frame * frame_pool_borrow_real(struct frame_pool *, uint64_t frame_type, const char * file, unsigned int line);
-#define frame_pool_borrow(pool, frame_type) frame_pool_borrow_real(pool, frame_type, __FILE__, __LINE__)
+struct frame * _ft_pool_borrow_real(struct ft_pool *, uint64_t frame_type, const char * file, unsigned int line);
+#define ft_pool_borrow(pool, frame_type) _ft_pool_borrow_real(pool, frame_type, __FILE__, __LINE__)
 
-static inline void frame_pool_return(struct frame * frame)
+// Following function requires access to pool object internals
+// and for this reason it is here and not with ft_frame object
+static inline void ft_frame_return(struct frame * frame)
 {
 	int rc;
 	struct ft_poolzone * zone = frame->zone;

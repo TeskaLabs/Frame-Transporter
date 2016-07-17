@@ -46,7 +46,7 @@ bool on_read(struct ft_stream * established_sock, struct frame * frame)
 		frame_print(frame);
 	}
 
-	frame_pool_return(frame);
+	ft_frame_return(frame);
 	return true;
 }
 
@@ -117,7 +117,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 
-	struct frame * frame = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	struct frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	if (frame == NULL) return EXIT_FAILURE;
 
 	frame_format_simple(frame);

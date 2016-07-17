@@ -19,7 +19,7 @@ bool on_read(struct ft_stream * established_sock, struct frame * frame)
 	if (!ok)
 	{
 		FT_ERROR("Cannot write a frame!");
-		frame_pool_return(frame);
+		ft_frame_return(frame);
 	}
 
 	return true;
@@ -92,13 +92,13 @@ static void on_termination_cb(struct ft_context * context, void * data)
 
 static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 {
-	size_t avail = frame_pool_available_frames_count(&context.frame_pool);
+	size_t avail = ft_pool_count_available_frames(&context.frame_pool);
 	bool throttle = avail < 8;
 
 	if (throttle)
 	{
 		// We can still allocated new zone
-		if (frame_pool_zones_count(&context.frame_pool) < 2) throttle = false;
+		if (ft_pool_count_zones(&context.frame_pool) < 2) throttle = false;
 	}
 
 	// Check all established socket and remove closed ones

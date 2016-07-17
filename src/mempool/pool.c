@@ -2,11 +2,11 @@
 
 ///
 
-static void frame_pool_heartbeat_callback(struct ft_context * context, void * data);
+static void _ft_pool_heartbeat_callback(struct ft_context * context, void * data);
 
 //
 
-bool frame_pool_init(struct frame_pool * this, struct ft_context * context)
+bool ft_pool_init(struct ft_pool * this, struct ft_context * context)
 {
 	assert(this != NULL);
 	this->zones = NULL;
@@ -16,14 +16,14 @@ bool frame_pool_init(struct frame_pool * this, struct ft_context * context)
 
 	if (context != NULL)
 	{
-		ft_context_at_heartbeat(context, frame_pool_heartbeat_callback, this);
+		ft_context_at_heartbeat(context, _ft_pool_heartbeat_callback, this);
 	}
 
 	return true;
 }
 
 
-void frame_pool_fini(struct frame_pool * this)
+void ft_pool_fini(struct ft_pool * this)
 {
 	assert(this != NULL);
 
@@ -39,7 +39,7 @@ void frame_pool_fini(struct frame_pool * this)
 }
 
 
-struct frame * frame_pool_borrow_real(struct frame_pool * this, uint64_t frame_type, const char * file, unsigned int line)
+struct frame * _ft_pool_borrow_real(struct ft_pool * this, uint64_t frame_type, const char * file, unsigned int line)
 {
 	assert(this != NULL);
 	struct frame * frame =  NULL;
@@ -72,16 +72,16 @@ struct frame * frame_pool_borrow_real(struct frame_pool * this, uint64_t frame_t
 }
 
 
-void ft_pool_set_alloc(struct frame_pool * this, ft_pool_alloc_fnct alloc_fnct)
+void ft_pool_set_alloc(struct ft_pool * this, ft_pool_alloc_fnct alloc_fnct)
 {
 	if (alloc_fnct == NULL) this->alloc_fnct = ft_pool_alloc_default;
 	else this->alloc_fnct = alloc_fnct;
 }
 
 
-static void frame_pool_heartbeat_callback(struct ft_context * context, void * data)
+static void _ft_pool_heartbeat_callback(struct ft_context * context, void * data)
 {
-	struct frame_pool * this = (struct frame_pool *)data;
+	struct ft_pool * this = (struct ft_pool *)data;
 	assert(this != NULL);
 
 	ev_tstamp now = ev_now(context->ev_loop);
@@ -126,7 +126,7 @@ static void frame_pool_heartbeat_callback(struct ft_context * context, void * da
 }
 
 
-size_t frame_pool_available_frames_count(struct frame_pool * this)
+size_t ft_pool_count_available_frames(struct ft_pool * this)
 {
 	assert(this != NULL);
 	size_t count = 0;
@@ -139,7 +139,7 @@ size_t frame_pool_available_frames_count(struct frame_pool * this)
 	return count;
 }
 
-size_t frame_pool_zones_count(struct frame_pool * this)
+size_t ft_pool_count_zones(struct ft_pool * this)
 {
 	assert(this != NULL);
 	size_t count = 0;

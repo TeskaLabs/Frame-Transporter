@@ -11,10 +11,10 @@ START_TEST(fpool_alloc_up_utest)
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
-	x = frame_pool_available_frames_count(&context.frame_pool);
+	x = ft_pool_count_available_frames(&context.frame_pool);
 	ck_assert_int_eq(x, 0);	
 
-	x = frame_pool_zones_count(&context.frame_pool);
+	x = ft_pool_count_zones(&context.frame_pool);
 	ck_assert_int_eq(x, 0);	
 
 	const int frame_count = 32;
@@ -22,7 +22,7 @@ START_TEST(fpool_alloc_up_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i], NULL);
 		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_RAW_DATA);
 
@@ -30,15 +30,15 @@ START_TEST(fpool_alloc_up_utest)
 			ck_assert_ptr_ne(frames[j], frames[i]);
 	}
 
-	x = frame_pool_zones_count(&context.frame_pool);
+	x = ft_pool_count_zones(&context.frame_pool);
 	ck_assert_int_eq(x, 2);
 
-	x = frame_pool_available_frames_count(&context.frame_pool);
+	x = ft_pool_count_available_frames(&context.frame_pool);
 	ck_assert_int_gt(x, 100);
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frame_pool_return(frames[i]);
+		ft_frame_return(frames[i]);
 	}
 
 	ft_context_fini(&context);
@@ -55,10 +55,10 @@ START_TEST(fpool_alloc_down_utest)
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
-	x = frame_pool_available_frames_count(&context.frame_pool);
+	x = ft_pool_count_available_frames(&context.frame_pool);
 	ck_assert_int_eq(x, 0);	
 
-	x = frame_pool_zones_count(&context.frame_pool);
+	x = ft_pool_count_zones(&context.frame_pool);
 	ck_assert_int_eq(x, 0);	
 
 	const int frame_count = 32;
@@ -68,7 +68,7 @@ START_TEST(fpool_alloc_down_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
@@ -82,14 +82,14 @@ START_TEST(fpool_alloc_down_utest)
 
 	for (int i = frame_count-1; i>=0; i -= 1)
 	{
-		frame_pool_return(frames[i]);
+		ft_frame_return(frames[i]);
 	}
 
 	// Second cycle
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
@@ -101,15 +101,15 @@ START_TEST(fpool_alloc_down_utest)
 			ck_assert_ptr_ne(frames[j], frames[i]);
 	}
 
-	x = frame_pool_zones_count(&context.frame_pool);
+	x = ft_pool_count_zones(&context.frame_pool);
 	ck_assert_int_eq(x, 2);
 
-	x = frame_pool_available_frames_count(&context.frame_pool);
+	x = ft_pool_count_available_frames(&context.frame_pool);
 	ck_assert_int_gt(x, 100);
 
 	for (int i = frame_count-1; i>=0; i -= 1)
 	{
-		frame_pool_return(frames[i]);
+		ft_frame_return(frames[i]);
 	}
 
 	ft_context_fini(&context);
@@ -119,7 +119,7 @@ END_TEST
 
 int ft_pool_alloc_custom_counter = 0;
 
-static struct ft_poolzone * ft_pool_alloc_custom(struct frame_pool * frame_pool)
+static struct ft_poolzone * ft_pool_alloc_custom(struct ft_pool * frame_pool)
 {
 	ft_pool_alloc_custom_counter += 1;
 	return ft_poolzone_new_mmap(1, true, MAP_PRIVATE | MAP_ANON);
@@ -143,7 +143,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_STREAM_END);
+		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_STREAM_END);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
@@ -157,7 +157,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frame_pool_return(frames[i]);
+		ft_frame_return(frames[i]);
 	}
 
 	ck_assert_int_eq(ft_pool_alloc_custom_counter, frame_count);

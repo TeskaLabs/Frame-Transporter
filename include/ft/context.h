@@ -13,7 +13,7 @@ struct ft_context
 	ev_timer heartbeat_w;
 	ev_tstamp heartbeat_at;
 
-	struct frame_pool frame_pool;
+	struct ft_pool frame_pool;
 
 	struct ft_list on_termination_list;
 	struct ft_list on_heartbeat_list;

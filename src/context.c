@@ -54,7 +54,7 @@ bool ft_context_init(struct ft_context * this)
 	ok = ft_list_init(&this->on_heartbeat_list, NULL);
 	if (!ok) return false;
 
-	ok = frame_pool_init(&this->frame_pool, this);
+	ok = ft_pool_init(&this->frame_pool, this);
 	if (!ok) return false;
 
 	if (ft_config.stream_ssl_ex_data_index == -2)
