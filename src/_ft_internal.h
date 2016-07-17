@@ -9,4 +9,8 @@
 
 void _ft_log_initialise(void);
 
-void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct frame_pool_zone * zone);
+void _frame_init(struct frame * , uint8_t * data, size_t capacity, struct ft_poolzone * zone);
+
+// Package private pool zone methods
+void _ft_poolzone_del(struct ft_poolzone * );
+struct frame * _ft_poolzone_borrow(struct ft_poolzone * , uint64_t frame_type, const char * file, unsigned int line);

@@ -1,5 +1,5 @@
-#ifndef FT_VEC_H_
-#define FT_VEC_H_
+#ifndef FT_MEMPOOL_VEC_H_
+#define FT_MEMPOOL_VEC_H_
 
 /****
 
@@ -77,4 +77,4 @@ static inline size_t ft_vec_len(struct ft_vec * this)
 	return this->limit - this->position;
 }
 
-#endif // FT_VEC_H_
+#endif // FT_MEMPOOL_VEC_H_

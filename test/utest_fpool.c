@@ -117,12 +117,12 @@ START_TEST(fpool_alloc_down_utest)
 END_TEST
 
 
-int frame_pool_zone_alloc_advice_custom_counter = 0;
+int ft_pool_alloc_custom_counter = 0;
 
-static struct frame_pool_zone * frame_pool_zone_alloc_advice_custom(struct frame_pool * frame_pool)
+static struct ft_poolzone * ft_pool_alloc_custom(struct frame_pool * frame_pool)
 {
-	frame_pool_zone_alloc_advice_custom_counter += 1;
-	return frame_pool_zone_new_mmap(frame_pool, 1, true, MAP_PRIVATE | MAP_ANON);
+	ft_pool_alloc_custom_counter += 1;
+	return ft_poolzone_new_mmap(1, true, MAP_PRIVATE | MAP_ANON);
 }
 
 START_TEST(fpool_alloc_custom_advice_utest)
@@ -136,7 +136,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
-	frame_pool_set_alloc_advise(&context.frame_pool, frame_pool_zone_alloc_advice_custom);
+	ft_pool_set_alloc(&context.frame_pool, ft_pool_alloc_custom);
 
 	const int frame_count = 32;
 	struct frame * frames[frame_count];
@@ -160,7 +160,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 		frame_pool_return(frames[i]);
 	}
 
-	ck_assert_int_eq(frame_pool_zone_alloc_advice_custom_counter, frame_count);
+	ck_assert_int_eq(ft_pool_alloc_custom_counter, frame_count);
 
 	// Simulate heartbeat
 	ft_config.fpool_zone_free_timeout = 0.2;

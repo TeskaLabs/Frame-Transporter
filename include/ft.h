@@ -48,6 +48,7 @@ struct ft_context;
 #include <ft/ini.h>
 #include <ft/fpool/vec.h>
 #include <ft/fpool/frame.h>
+#include <ft/fpool/zone.h>
 #include <ft/fpool/fpool.h>
 #include <ft/context.h>
 

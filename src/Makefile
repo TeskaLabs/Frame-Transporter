@@ -12,6 +12,7 @@ OBJS=\
 	sock/stream.o \
 	fpool/frame.o \
 	fpool/fpool.o \
+	fpool/zone.o \
 	context.o \
 	cols/list.o \
 

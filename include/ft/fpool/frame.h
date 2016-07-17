@@ -1,5 +1,5 @@
-#ifndef FT_FRAME_H_
-#define FT_FRAME_H_
+#ifndef FT_MEMPOOL_FRAME_H_
+#define FT_MEMPOOL_FRAME_H_
 
 enum ft_frame_type
 {
@@ -11,7 +11,7 @@ enum ft_frame_type
 struct frame
 {
 	struct frame * next; // This allows to chain frames in the list
-	struct frame_pool_zone * zone;
+	struct ft_poolzone * zone;
 
 	enum ft_frame_type type;
 	
@@ -98,4 +98,4 @@ static inline void * ft_vec_ptr(struct ft_vec * this)
 	return this->frame->data + this->offset + this->position;
 }
 
-#endif // FT_FRAME_H_
+#endif // FT_MEMPOOL_FRAME_H_
