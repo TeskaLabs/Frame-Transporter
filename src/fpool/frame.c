@@ -5,7 +5,7 @@ void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct fr
 	assert(this != NULL);
 	assert(((long)data % MEMPAGE_SIZE) == 0);
 
-	this->type = frame_type_FREE;
+	this->type = FT_FRAME_TYPE_FREE;
 	this->zone = zone;
 	this->data = data;
 	this->capacity = capacity;

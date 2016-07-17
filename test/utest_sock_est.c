@@ -13,7 +13,7 @@ struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 {
 	struct ft_vec * dvec;
 
-	struct frame * frame = frame_pool_borrow(&established_sock->context->frame_pool, frame_type_RAW_DATA);
+	struct frame * frame = frame_pool_borrow(&established_sock->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 	ck_assert_int_eq(frame->vec_position, 0);
 	ck_assert_int_eq(frame->vec_limit, 0);
@@ -42,9 +42,9 @@ struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 bool sock_est_1_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	bool ok;
-	ck_assert_int_ne(frame->type, frame_type_FREE);
+	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);
 
-	if (frame->type == frame_type_RAW_DATA)
+	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -61,7 +61,7 @@ bool sock_est_1_on_read(struct ft_stream * established_sock, struct frame * fram
 	}
 
 
-	if (frame->type == frame_type_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_STREAM_END)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -162,9 +162,9 @@ bool sock_est_2_on_read(struct ft_stream * established_sock, struct frame * fram
 {
 	bool ok;
 
-	ck_assert_int_ne(frame->type, frame_type_FREE);
+	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);
 
-	if (frame->type == frame_type_RAW_DATA)
+	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -174,7 +174,7 @@ bool sock_est_2_on_read(struct ft_stream * established_sock, struct frame * fram
 	}
 
 
-	if (frame->type == frame_type_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_STREAM_END)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -299,7 +299,7 @@ START_TEST(sock_est_conn_fail_utest)
 
 	freeaddrinfo(rp);
 
-	struct frame * frame = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+	struct frame * frame = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 
 	frame_format_simple(frame);
@@ -338,9 +338,9 @@ void sock_est_ssl_1_on_connected(struct ft_stream * this)
 
 bool sock_est_ssl_1_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
-	ck_assert_int_ne(frame->type, frame_type_FREE);
+	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);
 
-	if (frame->type == frame_type_RAW_DATA)
+	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -440,7 +440,7 @@ START_TEST(sock_est_ssl_client_utest)
 	ck_assert_int_eq(ok, true);
 
 
-	struct frame * frame = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+	struct frame * frame = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 
 	frame_format_simple(frame);
@@ -501,9 +501,9 @@ int sock_est_ssl_server_utest_result_counter;
 bool sock_est_ssl_server_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	bool ok;
-	ck_assert_int_ne(frame->type, frame_type_FREE);
+	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);
 
-	if (frame->type == frame_type_RAW_DATA)
+	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -521,7 +521,7 @@ bool sock_est_ssl_server_on_read(struct ft_stream * established_sock, struct fra
 	}
 
 
-	if (frame->type == frame_type_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_STREAM_END)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);

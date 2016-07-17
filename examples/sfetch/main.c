@@ -40,7 +40,7 @@ struct addrinfo * resolve(const char * host, const char * port)
 
 bool on_read(struct ft_stream * established_sock, struct frame * frame)
 {
-	if (frame->type == frame_type_RAW_DATA)
+	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
 		frame_flip(frame);
 		frame_print(frame);
@@ -117,7 +117,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 
-	struct frame * frame = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+	struct frame * frame = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	if (frame == NULL) return EXIT_FAILURE;
 
 	frame_format_simple(frame);

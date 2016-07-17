@@ -22,9 +22,9 @@ START_TEST(fpool_alloc_up_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i], NULL);
-		ck_assert_int_eq(frames[i]->type, frame_type_RAW_DATA);
+		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_RAW_DATA);
 
 		for (int j = 0; j < i; j += 1)
 			ck_assert_ptr_ne(frames[j], frames[i]);
@@ -68,11 +68,11 @@ START_TEST(fpool_alloc_down_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
-		ck_assert_int_eq(frames[i]->type, frame_type_RAW_DATA);
+		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
 		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
 
@@ -89,11 +89,11 @@ START_TEST(fpool_alloc_down_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, frame_type_RAW_DATA);
+		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
-		ck_assert_int_eq(frames[i]->type, frame_type_RAW_DATA);
+		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_RAW_DATA);
 		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
 		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
 
@@ -143,11 +143,11 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = frame_pool_borrow(&context.frame_pool, frame_type_STREAM_END);
+		frames[i] = frame_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_STREAM_END);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
-		ck_assert_int_eq(frames[i]->type, frame_type_STREAM_END);
+		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_STREAM_END);
 		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
 		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
 

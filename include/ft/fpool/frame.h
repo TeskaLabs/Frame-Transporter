@@ -1,17 +1,19 @@
 #ifndef FT_FRAME_H_
 #define FT_FRAME_H_
 
-
-#define frame_type_FREE    	   (0xFFFFFFFF)
-#define frame_type_STREAM_END  (0xFFFFFFFE)
-#define frame_type_RAW_DATA	   (0xFFFFFFFD)
+enum ft_frame_type
+{
+	FT_FRAME_TYPE_FREE           = 0xFFFFFFFF,
+	FT_FRAME_TYPE_STREAM_END     = 0xFFFFFFFE,
+    FT_FRAME_TYPE_RAW_DATA       = 0xFFFFFFFD,
+};
 
 struct frame
 {
 	struct frame * next; // This allows to chain frames in the list
 	struct frame_pool_zone * zone;
 
-	uint64_t type;
+	enum ft_frame_type type;
 	
 	unsigned int vec_position;
 	unsigned int vec_limit;
@@ -46,7 +48,7 @@ static inline void frame_flip(struct frame * this)
 	this->vec_position = 0;
 }
 
-static inline void frame_set_type(struct frame * this, uint64_t type)
+static inline void frame_set_type(struct frame * this, enum ft_frame_type type)
 {
 	assert(this != NULL);
 	this->type = type;

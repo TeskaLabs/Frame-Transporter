@@ -437,12 +437,12 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 		this->read_frame = NULL;
 
 		frame_format_empty(frame);
-		frame_set_type(frame, frame_type_STREAM_END);
+		frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
 	}
 
 	if (frame == NULL)
 	{
-		frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
+		frame = frame_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	}
 
 	if (frame == NULL)
@@ -484,7 +484,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			}
 			else
 			{
-				this->read_frame = frame_pool_borrow(&this->context->frame_pool, frame_type_RAW_DATA);
+				this->read_frame = frame_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 				if (this->read_frame != NULL) frame_format_simple(this->read_frame);
 			}
 
@@ -756,7 +756,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 		}
 		write_loop += 1;
 
-		if (this->write_frames->type == frame_type_STREAM_END)
+		if (this->write_frames->type == FT_FRAME_TYPE_STREAM_END)
 		{
 			struct frame * frame = this->write_frames;
 			this->write_frames = frame->next;
@@ -954,7 +954,7 @@ bool ft_stream_write(struct ft_stream * this, struct frame * frame)
 		return false;
 	}
 
-	if (frame->type == frame_type_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_STREAM_END)
 		this->flags.write_open = false;
 
 	//Add frame to the write queue
@@ -986,7 +986,7 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, frame_type_STREAM_END);
+	struct frame * frame = frame_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");

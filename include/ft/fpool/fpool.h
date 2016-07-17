@@ -63,7 +63,7 @@ static inline void frame_pool_return(struct frame * frame)
 	int rc;
 	struct frame_pool_zone * zone = frame->zone;
 
-	frame->type = frame_type_FREE;
+	frame->type = FT_FRAME_TYPE_FREE;
 
 	frame->next = zone->available_frames;
 	zone->available_frames = frame;

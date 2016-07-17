@@ -56,7 +56,7 @@ static void frame_pool_zone_del(struct frame_pool_zone * this)
 		FT_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %zd)", this->frames_used);
 		for(int i=0; i<this->frames_total; i+=1)
 		{
-			if (this->frames[i].type != frame_type_FREE)
+			if (this->frames[i].type != FT_FRAME_TYPE_FREE)
 			{
 				FT_FATAL("Unreturned frame #%d allocated at %s:%d", i+1, this->frames[i].borrowed_by_file, this->frames[i].borrowed_by_line);
 			}
