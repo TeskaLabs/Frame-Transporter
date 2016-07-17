@@ -13,11 +13,11 @@ struct ft_list listeners;
 
 ///
 
-bool on_read(struct established_socket * established_sock, struct frame * frame)
+bool on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 //	frame_print(frame);	
 	frame_flip(frame);
-	bool ok = established_socket_write(established_sock, frame);
+	bool ok = ft_stream_write(established_sock, frame);
 	if (!ok)
 	{
 		FT_ERROR("Cannot write a frame!");
@@ -35,7 +35,7 @@ struct ft_stream_delegate stream_delegate =
 
 static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 {
-	struct established_socket * stream = (struct established_socket *)node->data;
+	struct ft_stream * stream = (struct ft_stream *)node->data;
 
 	FT_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
 		stream->stats.read_events,
@@ -45,7 +45,7 @@ static void streams_on_remove(struct ft_list * list, struct ft_list_node * node)
 		stream->stats.write_bytes
 	);
 
-	established_socket_fini(stream);
+	ft_stream_fini(stream);
 }
 
 ///
@@ -54,22 +54,22 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 {
 	bool ok;
 
-	struct ft_list_node * new_node = ft_list_node_new(sizeof(struct established_socket));
+	struct ft_list_node * new_node = ft_list_node_new(sizeof(struct ft_stream));
 	if (new_node == NULL) return false;
 
-	struct established_socket * established_sock = (struct established_socket *)&new_node->data;
+	struct ft_stream * established_sock = (struct ft_stream *)&new_node->data;
 
-	ok = established_socket_init_accept(established_sock, &stream_delegate, listening_socket, fd, client_addr, client_addr_len);
+	ok = ft_stream_accept(established_sock, &stream_delegate, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
 		return false;
 	}
 
-	established_socket_set_read_partial(established_sock, true);
+	ft_stream_set_partial(established_sock, true);
 
 	// Initiate SSL
-	ok = established_socket_ssl_enable(established_sock, ssl_ctx);
+	ok = ft_stream_enable_ssl(established_sock, ssl_ctx);
 	if (!ok) return EXIT_FAILURE;
 
 
@@ -89,7 +89,7 @@ static void on_termination_cb(struct ft_context * context, void * data)
 {
 	FT_LIST_FOR(&streams, node)
 	{
-		struct established_socket * stream = (struct established_socket *)node->data;
+		struct ft_stream * stream = (struct ft_stream *)node->data;
 		ft_stream_cntl(stream, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
 	}
 
@@ -112,9 +112,9 @@ static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
 restart:
 	FT_LIST_FOR(&streams, node)
 	{
-		struct established_socket * sock = (struct established_socket *)node->data;
+		struct ft_stream * sock = (struct ft_stream *)node->data;
 
-		if (established_socket_is_shutdown(sock))
+		if (ft_stream_is_shutdown(sock))
 		{
 			ft_list_remove(&streams, node);
 			goto restart;

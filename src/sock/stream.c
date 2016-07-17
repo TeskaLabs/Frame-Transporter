@@ -23,13 +23,13 @@ enum write_event
 	CONNECT_WANT_WRITE = 16,
 };
 
-static void established_socket_read_set_event(struct established_socket * this, enum read_event event);
-static void established_socket_read_unset_event(struct established_socket * this, enum read_event event);
-static void established_socket_write_set_event(struct established_socket * this, enum write_event event);
-static void established_socket_write_unset_event(struct established_socket * this, enum write_event event);
+static void established_socket_read_set_event(struct ft_stream * this, enum read_event event);
+static void established_socket_read_unset_event(struct ft_stream * this, enum read_event event);
+static void established_socket_write_set_event(struct ft_stream * this, enum write_event event);
+static void established_socket_write_unset_event(struct ft_stream * this, enum write_event event);
 
-static void established_socket_on_write_event(struct established_socket * this);
-static void established_socket_on_ssl_sent_shutdown_event(struct established_socket * this);
+static void established_socket_on_write_event(struct ft_stream * this);
+static void established_socket_on_ssl_sent_shutdown_event(struct ft_stream * this);
 
 ///
 
@@ -60,7 +60,7 @@ static void established_socket_on_ssl_sent_shutdown_event(struct established_soc
 
 ///
 
-static bool established_socket_init(struct established_socket * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
+static bool established_socket_init(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
 {
 	assert(this != NULL);
 	assert(delegate != NULL);
@@ -131,7 +131,7 @@ static bool established_socket_init(struct established_socket * this, struct ft_
 	return true;
 }
 
-bool established_socket_init_accept(struct established_socket * this, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	assert(listening_socket != NULL);
 
@@ -165,7 +165,7 @@ bool established_socket_init_accept(struct established_socket * this, struct ft_
 }
 
 
-bool established_socket_init_connect(struct established_socket * this, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
+bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
 {
 	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 	if (fd < 0)
@@ -214,7 +214,7 @@ bool established_socket_init_connect(struct established_socket * this, struct ft
 	return true;
 }
 
-void established_socket_fini(struct established_socket * this)
+void ft_stream_fini(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
@@ -268,7 +268,7 @@ void established_socket_fini(struct established_socket * this)
 
 ///
 
-static void established_socket_error(struct established_socket * this, int sys_errno, unsigned long ssl_error, const char * when)
+static void established_socket_error(struct ft_stream * this, int sys_errno, unsigned long ssl_error, const char * when)
 {
 	assert(((sys_errno == 0) && (ssl_error != 0)) || ((sys_errno != 0) && (ssl_error == 0)));
 
@@ -311,7 +311,7 @@ static void established_socket_error(struct established_socket * this, int sys_e
 
 ///
 
-void established_socket_on_connect_event(struct established_socket * this)
+void established_socket_on_connect_event(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->flags.connecting == true);
@@ -366,21 +366,21 @@ void established_socket_on_connect_event(struct established_socket * this)
 
 ///
 
-void established_socket_read_set_event(struct established_socket * this, enum read_event event)
+void established_socket_read_set_event(struct ft_stream * this, enum read_event event)
 {
 	this->read_events |= event;
 	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.read_shutdown == false))
 		ev_io_start(this->context->ev_loop, &this->read_watcher);
 }
 
-void established_socket_read_unset_event(struct established_socket * this, enum read_event event)
+void established_socket_read_unset_event(struct ft_stream * this, enum read_event event)
 {
 	this->read_events &= ~event;
 	if ((this->read_events == 0) || (this->flags.read_shutdown == true) || (this->flags.read_throttle == true))
 		ev_io_stop(this->context->ev_loop, &this->read_watcher);	
 }
 
-bool _ft_stream_cntl_read_start(struct established_socket * this)
+bool _ft_stream_cntl_read_start(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
@@ -390,7 +390,7 @@ bool _ft_stream_cntl_read_start(struct established_socket * this)
 }
 
 
-bool _ft_stream_cntl_read_stop(struct established_socket * this)
+bool _ft_stream_cntl_read_stop(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
@@ -399,7 +399,7 @@ bool _ft_stream_cntl_read_stop(struct established_socket * this)
 	return true;
 }
 
-bool _ft_stream_cntl_read_throttle(struct established_socket * this, bool throttle)
+bool _ft_stream_cntl_read_throttle(struct ft_stream * this, bool throttle)
 {
 	assert(this != NULL);
 	this->flags.read_throttle = throttle;
@@ -411,7 +411,7 @@ bool _ft_stream_cntl_read_throttle(struct established_socket * this, bool thrott
 }
 
 
-static bool established_socket_uplink_read_stream_end(struct established_socket * this)
+static bool established_socket_uplink_read_stream_end(struct ft_stream * this)
 {
 	struct frame * frame = NULL;
 	if ((this->read_frame != NULL) && (frame_total_start_to_position(this->read_frame) == 0))
@@ -442,7 +442,7 @@ static bool established_socket_uplink_read_stream_end(struct established_socket 
 }
 
 
-static void established_socket_read_shutdown(struct established_socket * this)
+static void established_socket_read_shutdown(struct ft_stream * this)
 {
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -473,7 +473,7 @@ static void established_socket_read_shutdown(struct established_socket * this)
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
 
-void established_socket_on_read_event(struct established_socket * this)
+void established_socket_on_read_event(struct ft_stream * this)
 {
 	bool ok;
 	assert(this != NULL);
@@ -709,20 +709,20 @@ void established_socket_on_read_event(struct established_socket * this)
 
 ///
 
-void established_socket_write_set_event(struct established_socket * this, enum write_event event)
+void established_socket_write_set_event(struct ft_stream * this, enum write_event event)
 {
 	this->write_events |= event;
 	if (this->write_events != 0) ev_io_start(this->context->ev_loop, &this->write_watcher);
 }
 
-void established_socket_write_unset_event(struct established_socket * this, enum write_event event)
+void established_socket_write_unset_event(struct ft_stream * this, enum write_event event)
 {
 	this->write_events &= ~event;
 	if (this->write_events == 0) ev_io_stop(this->context->ev_loop, &this->write_watcher);
 }
 
 
-bool _ft_stream_cntl_write_start(struct established_socket * this)
+bool _ft_stream_cntl_write_start(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->write_watcher.fd >= 0);
@@ -732,7 +732,7 @@ bool _ft_stream_cntl_write_start(struct established_socket * this)
 }
 
 
-bool _ft_stream_cntl_write_stop(struct established_socket * this)
+bool _ft_stream_cntl_write_stop(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->write_watcher.fd >= 0);
@@ -742,7 +742,7 @@ bool _ft_stream_cntl_write_stop(struct established_socket * this)
 }
 
 
-static void established_socket_write_real(struct established_socket * this)
+static void established_socket_write_real(struct ft_stream * this)
 {
 	ssize_t rc;
 
@@ -928,7 +928,7 @@ static void established_socket_write_real(struct established_socket * this)
 }
 
 
-void established_socket_on_write_event(struct established_socket * this)
+void established_socket_on_write_event(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->flags.connecting == false);
@@ -954,7 +954,7 @@ void established_socket_on_write_event(struct established_socket * this)
 }
 
 
-bool established_socket_write(struct established_socket * this, struct frame * frame)
+bool ft_stream_write(struct ft_stream * this, struct frame * frame)
 {
 	assert(this != NULL);
 
@@ -989,7 +989,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 	return true;
 }
 
-bool _ft_stream_cntl_write_shutdown(struct established_socket * this)
+bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 {
 	assert(this != NULL);
 	
@@ -1005,7 +1005,7 @@ bool _ft_stream_cntl_write_shutdown(struct established_socket * this)
 		return false;
 	}
 
-	bool ret = established_socket_write(this, frame);
+	bool ret = ft_stream_write(this, frame);
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return ret;
@@ -1013,7 +1013,7 @@ bool _ft_stream_cntl_write_shutdown(struct established_socket * this)
 
 ///
 
-bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ctx)
+bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 {
 	assert(this != NULL);
 	if (this->ssl != NULL)
@@ -1025,7 +1025,7 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 	this->ssl = SSL_new(ctx);
 	if (this->ssl == NULL)
 	{
-		FT_WARN_OPENSSL("established_socket_ssl_enable:SSL_new");
+		FT_WARN_OPENSSL("ft_stream_enable_ssl:SSL_new");
 		return false;
 	}
 	
@@ -1033,16 +1033,16 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 	int rc = SSL_set_fd(this->ssl, this->write_watcher.fd);
 	if (rc != 1)
 	{
-		FT_WARN_OPENSSL("established_socket_ssl_enable:SSL_set_fd");
+		FT_WARN_OPENSSL("ft_stream_enable_ssl:SSL_set_fd");
 		return false;
 	}
 
 	// Set an socket reference
-	assert((ft_config.sock_est_ssl_ex_data_index != -1) && (ft_config.sock_est_ssl_ex_data_index != -2));
-	rc = SSL_set_ex_data(this->ssl, ft_config.sock_est_ssl_ex_data_index, this);
+	assert((ft_config.stream_ssl_ex_data_index != -1) && (ft_config.stream_ssl_ex_data_index != -2));
+	rc = SSL_set_ex_data(this->ssl, ft_config.stream_ssl_ex_data_index, this);
 	if (rc != 1)
 	{
-		FT_WARN_OPENSSL("established_socket_ssl_enable:SSL_set_ex_data");
+		FT_WARN_OPENSSL("ft_stream_enable_ssl:SSL_set_ex_data");
 		return false;
 	}
 
@@ -1056,7 +1056,7 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 }
 
 
-static void established_socket_on_ssl_handshake_connect_event(struct established_socket * this)
+static void established_socket_on_ssl_handshake_connect_event(struct ft_stream * this)
 {
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
@@ -1145,7 +1145,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 }
 
 
-static void established_socket_on_ssl_handshake_accept_event(struct established_socket * this)
+static void established_socket_on_ssl_handshake_accept_event(struct ft_stream * this)
 {
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
@@ -1223,7 +1223,7 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 }
 
 
-void established_socket_on_ssl_handshake_event(struct established_socket * this)
+void established_socket_on_ssl_handshake_event(struct ft_stream * this)
 {
 	assert(this != NULL);
 	assert(this->flags.ssl_status == 1);
@@ -1237,7 +1237,7 @@ void established_socket_on_ssl_handshake_event(struct established_socket * this)
 }
 
 
-void established_socket_on_ssl_sent_shutdown_event(struct established_socket * this)
+void established_socket_on_ssl_sent_shutdown_event(struct ft_stream * this)
 {
 	// This function handles outgoing SSL shutdown (SSL_SENT_SHUTDOWN)
 
@@ -1326,7 +1326,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 
 static void established_socket_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
-	struct established_socket * this = watcher->data;
+	struct ft_stream * this = watcher->data;
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
@@ -1373,7 +1373,7 @@ end:
 
 static void established_socket_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
-	struct established_socket * this = watcher->data;
+	struct ft_stream * this = watcher->data;
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
@@ -1414,7 +1414,7 @@ end:
 	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 }
 
-void ft_stream_diagnose(struct established_socket * this)
+void ft_stream_diagnose(struct ft_stream * this)
 {
 	assert(this != NULL);
 	fprintf(stderr, TRACE_FMT "\n", TRACE_ARGS);

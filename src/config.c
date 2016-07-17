@@ -28,7 +28,7 @@ struct ft_config ft_config =
 
 	.sock_est_max_read_loops = 10,
 	.sock_est_max_write_loops = 10,
-	.sock_est_ssl_ex_data_index = -2
+	.stream_ssl_ex_data_index = -2
 };
 
 

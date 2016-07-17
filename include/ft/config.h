@@ -29,7 +29,7 @@ struct ft_config
 
 	unsigned int sock_est_max_read_loops;
 	unsigned int sock_est_max_write_loops;
-	int sock_est_ssl_ex_data_index; // Where to store a pointer to socket object
+	int stream_ssl_ex_data_index; // Where to store a pointer to socket object
 };
 
 extern struct ft_config ft_config;

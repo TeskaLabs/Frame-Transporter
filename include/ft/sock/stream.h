@@ -1,21 +1,21 @@
 #ifndef FT_SOCK_STREAM_H_
 #define FT_SOCK_STREAM_H_
 
-struct established_socket;
+struct ft_stream;
 
 struct ft_stream_delegate
 {
-	struct frame * (*get_read_frame)(struct established_socket *); // If NULL, then simple frame will be used
-	bool (*read)(struct established_socket *, struct frame * frame); // True as a return value means, that the frame has been handed over to upstream protocol
+	struct frame * (*get_read_frame)(struct ft_stream *); // If NULL, then simple frame will be used
+	bool (*read)(struct ft_stream *, struct frame * frame); // True as a return value means, that the frame has been handed over to upstream protocol
 
-	void (*connected)(struct established_socket *); // Called when connect() is successfully established; can be NULL
+	void (*connected)(struct ft_stream *); // Called when connect() is successfully finished; can be NULL
 
-	void (*fini)(struct established_socket *);
+	void (*fini)(struct ft_stream *);
 
-	void (*error)(struct established_socket *);
+	void (*error)(struct ft_stream *);
 };
 
-struct established_socket
+struct ft_stream
 {
 	// Common fields
 	struct ft_stream_delegate * delegate;
@@ -82,15 +82,15 @@ struct established_socket
 	void * data;
 };
 
-bool established_socket_init_accept(struct established_socket *, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
-bool established_socket_init_connect(struct established_socket *, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
-void established_socket_fini(struct established_socket *);
+bool ft_stream_accept(struct ft_stream *, struct ft_stream_delegate * delegate, struct listening_socket * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
+bool ft_stream_connect(struct ft_stream *, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
+void ft_stream_fini(struct ft_stream *);
 
-bool established_socket_write(struct established_socket *, struct frame * frame);
+bool ft_stream_write(struct ft_stream *, struct frame * frame);
 
-bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
+bool ft_stream_enable_ssl(struct ft_stream *, SSL_CTX *ctx);
 
-void ft_stream_diagnose(struct established_socket *);
+void ft_stream_diagnose(struct ft_stream *);
 
 ///
 
@@ -107,17 +107,17 @@ enum ft_stream_cntl_codes
 };
 
 
-static inline bool ft_stream_cntl(struct established_socket * this, const int control_code)
+static inline bool ft_stream_cntl(struct ft_stream * this, const int control_code)
 {
 	assert(this != NULL);
 
-	bool _ft_stream_cntl_read_start(struct established_socket *);
-	bool _ft_stream_cntl_read_stop(struct established_socket *);
-	bool _ft_stream_cntl_read_throttle(struct established_socket *, bool throttle);
+	bool _ft_stream_cntl_read_start(struct ft_stream *);
+	bool _ft_stream_cntl_read_stop(struct ft_stream *);
+	bool _ft_stream_cntl_read_throttle(struct ft_stream *, bool throttle);
 	
-	bool _ft_stream_cntl_write_start(struct established_socket *);
-	bool _ft_stream_cntl_write_stop(struct established_socket *);
-	bool _ft_stream_cntl_write_shutdown(struct established_socket *);
+	bool _ft_stream_cntl_write_start(struct ft_stream *);
+	bool _ft_stream_cntl_write_stop(struct ft_stream *);
+	bool _ft_stream_cntl_write_shutdown(struct ft_stream *);
 
 	bool ok = true;
 	if ((control_code & FT_STREAM_READ_START) != 0) ok &= _ft_stream_cntl_read_start(this);
@@ -132,12 +132,12 @@ static inline bool ft_stream_cntl(struct established_socket * this, const int co
 
 ///
 
-static inline bool established_socket_is_shutdown(struct established_socket * this)
+static inline bool ft_stream_is_shutdown(struct ft_stream * this)
 {
 	return ((this->flags.read_shutdown) && (this->flags.write_shutdown));
 }
 
-static inline void established_socket_set_read_partial(struct established_socket * this, bool read_partial)
+static inline void ft_stream_set_partial(struct ft_stream * this, bool read_partial)
 {
 	assert(this != NULL);
 	this->flags.read_partial = read_partial;
@@ -145,17 +145,17 @@ static inline void established_socket_set_read_partial(struct established_socket
 
 ///
 
-static inline struct established_socket * established_socket_from_ssl(SSL * ssl)
+static inline struct ft_stream * ft_stream_from_ssl(SSL * ssl)
 {
-    return SSL_get_ex_data(ssl, ft_config.sock_est_ssl_ex_data_index);
+    return SSL_get_ex_data(ssl, ft_config.stream_ssl_ex_data_index);
 }
 
 // This function is to be used within SSL_CTX_set_verify() callback
-static inline struct established_socket * established_socket_from_x509_store_ctx(X509_STORE_CTX * ctx)
+static inline struct ft_stream * ft_stream_from_x509_store_ctx(X509_STORE_CTX * ctx)
 {
     SSL * ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     assert(ssl != NULL);
-    return established_socket_from_ssl(ssl);
+    return ft_stream_from_ssl(ssl);
 }
 
 #endif // FT_SOCK_STREAM_H_

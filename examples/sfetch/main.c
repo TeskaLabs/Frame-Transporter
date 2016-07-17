@@ -38,7 +38,7 @@ struct addrinfo * resolve(const char * host, const char * port)
 ///
 
 
-bool on_read(struct established_socket * established_sock, struct frame * frame)
+bool on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	if (frame->type == frame_type_RAW_DATA)
 	{
@@ -50,7 +50,7 @@ bool on_read(struct established_socket * established_sock, struct frame * frame)
 	return true;
 }
 
-void on_error(struct established_socket * established_sock)
+void on_error(struct ft_stream * established_sock)
 {
 	FT_FATAL("Error on the socket");
 	exit(EXIT_FAILURE);
@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
 {
 	bool ok;
 	struct ft_context context;
-	struct established_socket sock;
+	struct ft_stream sock;
 
 	//ft_log_verbose(true);
 	//ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
@@ -106,14 +106,14 @@ int main(int argc, char const *argv[])
 	}
 
 
-	ok = established_socket_init_connect(&sock, &stream_delegate, &context, target_addr);
+	ok = ft_stream_connect(&sock, &stream_delegate, &context, target_addr);
 	if (!ok) return EXIT_FAILURE;
 
 	freeaddrinfo(target_addr);
 
-	established_socket_set_read_partial(&sock, true);
+	ft_stream_set_partial(&sock, true);
 
-	ok = established_socket_ssl_enable(&sock, ssl_ctx);
+	ok = ft_stream_enable_ssl(&sock, ssl_ctx);
 	if (!ok) return EXIT_FAILURE;
 
 
@@ -129,7 +129,7 @@ int main(int argc, char const *argv[])
 
 	frame_flip(frame);
 
-	ok = established_socket_write(&sock, frame);
+	ok = ft_stream_write(&sock, frame);
 	if (!ok) return EXIT_FAILURE;
 
 	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);

@@ -2,14 +2,14 @@
 
 ////
 
-struct established_socket established_sock;
+struct ft_stream established_sock;
 int sock_est_1_result_counter;
 
 ///
 
 // This test is about incoming stream that 'hangs open' after all data are uploaded
 
-struct frame * sock_est_1_on_get_read_frame(struct established_socket * established_sock)
+struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 {
 	struct frame_dvec * dvec;
 
@@ -39,7 +39,7 @@ struct frame * sock_est_1_on_get_read_frame(struct established_socket * establis
 	return frame;
 }
 
-bool sock_est_1_on_read(struct established_socket * established_sock, struct frame * frame)
+bool sock_est_1_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	bool ok;
 	ck_assert_int_ne(frame->type, frame_type_FREE);
@@ -88,7 +88,7 @@ bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &sock_est_1_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
+	ok = ft_stream_accept(&established_sock, &sock_est_1_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
 	ft_listener_cntl(listening_socket, FT_LISTENER_STOP);
@@ -146,7 +146,7 @@ START_TEST(sock_est_1_utest)
 	listening_socket_fini(&listen_sock);
 
 	//TODO: Temporary
-	established_socket_fini(&established_sock);
+	ft_stream_fini(&established_sock);
 
 	ft_context_fini(&context);
 
@@ -158,7 +158,7 @@ END_TEST
 
 // This test is about incoming stream that terminates after all data are uploaded
 
-bool sock_est_2_on_read(struct established_socket * established_sock, struct frame * frame)
+bool sock_est_2_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	bool ok;
 
@@ -199,10 +199,10 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &utest_2_listener_delegate, listening_socket, fd, client_addr, client_addr_len);
+	ok = ft_stream_accept(&established_sock, &utest_2_listener_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
-	established_socket_set_read_partial(&established_sock, true);
+	ft_stream_set_partial(&established_sock, true);
 
 	// Stop listening
 	ok = ft_listener_cntl(listening_socket, FT_LISTENER_STOP);
@@ -258,7 +258,7 @@ START_TEST(sock_est_2_utest)
 	listening_socket_fini(&listen_sock);
 
 	//TODO: Temporary
-	established_socket_fini(&established_sock);
+	ft_stream_fini(&established_sock);
 
 	ft_context_fini(&context);
 }
@@ -266,7 +266,7 @@ END_TEST
 
 ///
 
-void sock_est_conn_fail_on_error(struct established_socket * established_sock)
+void sock_est_conn_fail_on_error(struct ft_stream * established_sock)
 {
 	printf("ERROR - NICE!\n");
 }
@@ -282,7 +282,7 @@ struct ft_stream_delegate sock_est_conn_fail_delegate =
 
 START_TEST(sock_est_conn_fail_utest)
 {
-	struct established_socket sock;
+	struct ft_stream sock;
 	bool ok;
 
 	struct ft_context context;
@@ -294,7 +294,7 @@ START_TEST(sock_est_conn_fail_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = established_socket_init_connect(&sock, &sock_est_conn_fail_delegate, &context, rp);
+	ok = ft_stream_connect(&sock, &sock_est_conn_fail_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -310,7 +310,7 @@ START_TEST(sock_est_conn_fail_utest)
 
 	frame_flip(frame);
 
-	ok = established_socket_write(&sock, frame);
+	ok = ft_stream_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
 
 	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
@@ -318,7 +318,7 @@ START_TEST(sock_est_conn_fail_utest)
 
 	ft_context_run(&context);
 
-	established_socket_fini(&sock);
+	ft_stream_fini(&sock);
 
 	ft_context_fini(&context);
 
@@ -330,13 +330,13 @@ END_TEST
 ssize_t sock_est_ssl_1_read_counter;
 EVP_MD_CTX * sock_est_ssl_1_mdctx;
 
-void sock_est_ssl_1_on_connected(struct established_socket * this)
+void sock_est_ssl_1_on_connected(struct ft_stream * this)
 {
 	ck_assert_int_eq(this->flags.ssl_status, 2);
 	ck_assert_int_eq(this->flags.connecting, false);	
 }
 
-bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct frame * frame)
+bool sock_est_ssl_1_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	ck_assert_int_ne(frame->type, frame_type_FREE);
 
@@ -363,7 +363,7 @@ bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct
 	return true;
 }
 
-void sock_est_ssl_1_on_error(struct established_socket * established_sock)
+void sock_est_ssl_1_on_error(struct ft_stream * established_sock)
 {
 	ck_assert_int_eq(0,1);
 }
@@ -379,7 +379,7 @@ struct ft_stream_delegate sock_est_ssl_1_delegate =
 
 START_TEST(sock_est_ssl_client_utest)
 {
-	struct established_socket sock;
+	struct ft_stream sock;
 	bool ok;
 	int rc;
 
@@ -429,14 +429,14 @@ START_TEST(sock_est_ssl_client_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = established_socket_init_connect(&sock, &sock_est_ssl_1_delegate, &context, rp);
+	ok = ft_stream_connect(&sock, &sock_est_ssl_1_delegate, &context, rp);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
 
-	established_socket_set_read_partial(&sock, true);
+	ft_stream_set_partial(&sock, true);
 
-	ok = established_socket_ssl_enable(&sock, ssl_ctx);
+	ok = ft_stream_enable_ssl(&sock, ssl_ctx);
 	ck_assert_int_eq(ok, true);
 
 
@@ -452,7 +452,7 @@ START_TEST(sock_est_ssl_client_utest)
 
 	frame_flip(frame);
 
-	ok = established_socket_write(&sock, frame);
+	ok = ft_stream_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
 
 
@@ -486,7 +486,7 @@ START_TEST(sock_est_ssl_client_utest)
 	close(inf);
 	close(outf);
 
-	established_socket_fini(&sock);
+	ft_stream_fini(&sock);
 
 	ft_context_fini(&context);
 
@@ -498,7 +498,7 @@ END_TEST
 SSL_CTX * sock_est_ssl_server_ssl_ctx = NULL;
 int sock_est_ssl_server_utest_result_counter;
 
-bool sock_est_ssl_server_on_read(struct established_socket * established_sock, struct frame * frame)
+bool sock_est_ssl_server_on_read(struct ft_stream * established_sock, struct frame * frame)
 {
 	bool ok;
 	ck_assert_int_ne(frame->type, frame_type_FREE);
@@ -541,7 +541,7 @@ bool sock_est_ssl_server_on_read(struct established_socket * established_sock, s
 
 static int sock_est_ssl_server_listen_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
-	struct established_socket * this = established_socket_from_x509_store_ctx(ctx);
+	struct ft_stream * this = ft_stream_from_x509_store_ctx(ctx);
 	ck_assert_ptr_ne(this, NULL);
 
     sock_est_ssl_server_utest_result_counter += 1;
@@ -561,13 +561,13 @@ bool sock_est_ssl_server_listen_on_accept(struct listening_socket * listening_so
 {
 	bool ok;
 
-	ok = established_socket_init_accept(&established_sock, &sock_est_ssl_server_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
+	ok = ft_stream_accept(&established_sock, &sock_est_ssl_server_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
-	established_socket_set_read_partial(&established_sock, true);
+	ft_stream_set_partial(&established_sock, true);
 
 	// Initiate SSL
-	ok = established_socket_ssl_enable(&established_sock, sock_est_ssl_server_ssl_ctx);
+	ok = ft_stream_enable_ssl(&established_sock, sock_est_ssl_server_ssl_ctx);
 	ck_assert_int_eq(ok, true);
 
 	ok = ft_listener_cntl(listening_socket, FT_LISTENER_STOP);
@@ -645,7 +645,7 @@ START_TEST(sock_est_ssl_server_utest)
 
 	listening_socket_fini(&listen_sock);
 
-	established_socket_fini(&established_sock);
+	ft_stream_fini(&established_sock);
 
 	ft_context_fini(&context);
 

@@ -14,18 +14,18 @@ struct ft_list listeners;
 
 struct stream_pair
 {
-	struct established_socket stream_in;
-	struct established_socket stream_out;
+	struct ft_stream stream_in;
+	struct ft_stream stream_out;
 };
 
 struct ft_list stream_pairs; // List of established_socket(s) pairs
 
 
-bool on_read_in_to_out(struct established_socket * established_sock, struct frame * frame)
+bool on_read_in_to_out(struct ft_stream * established_sock, struct frame * frame)
 {
 	frame_flip(frame);
 	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
-	bool ok = established_socket_write(&pair->stream_out, frame);
+	bool ok = ft_stream_write(&pair->stream_out, frame);
 	if (!ok)
 	{
 		FT_ERROR_P("Cannot write a frame!");
@@ -35,11 +35,11 @@ bool on_read_in_to_out(struct established_socket * established_sock, struct fram
 	return true;
 }
 
-bool on_read_out_to_in(struct established_socket * established_sock, struct frame * frame)
+bool on_read_out_to_in(struct ft_stream * established_sock, struct frame * frame)
 {
 	frame_flip(frame);
 	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
-	bool ok = established_socket_write(&pair->stream_in, frame);
+	bool ok = ft_stream_write(&pair->stream_in, frame);
 	if (!ok)
 	{
 		FT_ERROR_P("Cannot write a frame!");
@@ -49,7 +49,7 @@ bool on_read_out_to_in(struct established_socket * established_sock, struct fram
 	return true;
 }
 
-void on_error(struct established_socket * established_sock)
+void on_error(struct ft_stream * established_sock)
 {
 	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
 	//TODO: maybe even hard shutdown
@@ -90,8 +90,8 @@ static void stream_pairs_on_remove(struct ft_list * list, struct ft_list_node * 
 		pair->stream_out.stats.write_bytes
 	);
 
-	established_socket_fini(&pair->stream_in);
-	established_socket_fini(&pair->stream_out);
+	ft_stream_fini(&pair->stream_in);
+	ft_stream_fini(&pair->stream_out);
 }
 
 ///
@@ -106,26 +106,26 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 	struct stream_pair * pair = (struct stream_pair *)&new_node->data;
 
 	// Initialize connection on the incoming connection
-	ok = established_socket_init_accept(&pair->stream_in, &stream_in_delegate, listening_socket, fd, client_addr, client_addr_len);
+	ok = ft_stream_accept(&pair->stream_in, &stream_in_delegate, listening_socket, fd, client_addr, client_addr_len);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
 		return false;
 	}
 	pair->stream_in.data = pair;
-	established_socket_set_read_partial(&pair->stream_in, true);
+	ft_stream_set_partial(&pair->stream_in, true);
 
 	// Initialize connection on the outgoing connection
-	ok = established_socket_init_connect(&pair->stream_out, &stream_out_delegate, listening_socket->context, target_addr);
+	ok = ft_stream_connect(&pair->stream_out, &stream_out_delegate, listening_socket->context, target_addr);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
 		return false;
 	}
 	pair->stream_out.data = pair;
-	established_socket_set_read_partial(&pair->stream_out, true);
+	ft_stream_set_partial(&pair->stream_out, true);
 
-	ok = established_socket_ssl_enable(&pair->stream_out, ssl_ctx);
+	ok = ft_stream_enable_ssl(&pair->stream_out, ssl_ctx);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
@@ -162,7 +162,7 @@ restart:
 	FT_LIST_FOR(&stream_pairs, node)
 	{
 		struct stream_pair * pair = (struct stream_pair *)&node->data;
-		if (established_socket_is_shutdown(&pair->stream_in) || established_socket_is_shutdown(&pair->stream_out))
+		if (ft_stream_is_shutdown(&pair->stream_in) || ft_stream_is_shutdown(&pair->stream_out))
 		{
 			ft_list_remove(&stream_pairs, node);
 			goto restart;

@@ -57,12 +57,12 @@ bool ft_context_init(struct ft_context * this)
 	ok = frame_pool_init(&this->frame_pool, this);
 	if (!ok) return false;
 
-	if (ft_config.sock_est_ssl_ex_data_index == -2)
+	if (ft_config.stream_ssl_ex_data_index == -2)
 	{
-		ft_config.sock_est_ssl_ex_data_index = SSL_get_ex_new_index(0, "ft_stream_ptr", NULL, NULL, NULL);	
-		if (ft_config.sock_est_ssl_ex_data_index == -1)
+		ft_config.stream_ssl_ex_data_index = SSL_get_ex_new_index(0, "stream_ssl_ex_data", NULL, NULL, NULL);	
+		if (ft_config.stream_ssl_ex_data_index == -1)
 		{
-			ft_config.sock_est_ssl_ex_data_index = -2;
+			ft_config.stream_ssl_ex_data_index = -2;
 			FT_ERROR_OPENSSL("SSL_get_ex_new_index");
 			return false;
 		}
