@@ -8,9 +8,9 @@ enum ft_frame_type
     FT_FRAME_TYPE_RAW_DATA       = 0xFFFFFFFD,
 };
 
-struct frame
+struct ft_frame
 {
-	struct frame * next; // This allows to chain frames in the list
+	struct ft_frame * next; // This allows to chain frames in the list
 	struct ft_poolzone * zone;
 
 	enum ft_frame_type type;
@@ -26,16 +26,16 @@ struct frame
 	size_t capacity;
 };
 
-size_t frame_total_start_to_position(struct frame *);
-size_t frame_total_position_to_limit(struct frame *);
+size_t ft_frame_pos(struct ft_frame *);
+size_t ft_frame_len(struct ft_frame *);
 
-void frame_format_empty(struct frame *);
-void frame_format_simple(struct frame *);
+void ft_frame_format_empty(struct ft_frame *);
+void ft_frame_format_simple(struct ft_frame *);
 
 //This is diagnostics function
-void frame_print(struct frame *);
+void ft_frame_fprintf(struct ft_frame *, FILE * f);
 
-static inline void frame_flip(struct frame * this)
+static inline void ft_frame_flip(struct ft_frame * this)
 {
 	assert(this != NULL);
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
@@ -48,7 +48,7 @@ static inline void frame_flip(struct frame * this)
 	this->vec_position = 0;
 }
 
-static inline void frame_set_type(struct frame * this, enum ft_frame_type type)
+static inline void ft_frame_set_type(struct ft_frame * this, enum ft_frame_type type)
 {
 	assert(this != NULL);
 	this->type = type;
@@ -56,9 +56,9 @@ static inline void frame_set_type(struct frame * this, enum ft_frame_type type)
 
 ///
 
-struct ft_vec * frame_add_dvec(struct frame * this, size_t offset, size_t capacity);
+struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_t capacity);
 
-static inline struct ft_vec * frame_next_dvec(struct frame * this)
+static inline struct ft_vec * ft_frame_next_vec(struct ft_frame * this)
 {
 	assert(this != NULL);
 	if (this->vec_position == this->vec_limit) return NULL;
@@ -71,7 +71,7 @@ static inline struct ft_vec * frame_next_dvec(struct frame * this)
 	return vec;
 }
 
-static inline struct ft_vec * frame_current_dvec(struct frame * this)
+static inline struct ft_vec * ft_frame_get_vec(struct ft_frame * this)
 {
 	assert(this != NULL);
 	if (this->vec_position == this->vec_limit) return NULL;
@@ -80,13 +80,6 @@ static inline struct ft_vec * frame_current_dvec(struct frame * this)
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	vec -= (1 + this->vec_position);
 	return vec;
-}
-
-static inline size_t frame_currect_dvec_size(struct frame * this)
-{
-	assert(this != NULL);
-	struct ft_vec * vec = frame_current_dvec(this);
-	return vec->limit - vec->position;
 }
 
 // Following function requires access to frame object internals

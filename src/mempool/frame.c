@@ -1,6 +1,6 @@
 #include "../_ft_internal.h"
 
-void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct ft_poolzone * zone)
+void _ft_frame_init(struct ft_frame * this, uint8_t * data, size_t capacity, struct ft_poolzone * zone)
 {
 	assert(this != NULL);
 	assert(((long)data % MEMPAGE_SIZE) == 0);
@@ -19,7 +19,7 @@ void _frame_init(struct frame * this, uint8_t * data, size_t capacity, struct ft
 	bzero(this->data, FRAME_SIZE);
 }
 
-size_t frame_total_start_to_position(struct frame * this)
+size_t ft_frame_pos(struct ft_frame * this)
 {
 	assert(this != NULL);
 
@@ -33,7 +33,7 @@ size_t frame_total_start_to_position(struct frame * this)
 	return length;
 }
 
-size_t frame_total_position_to_limit(struct frame * this)
+size_t ft_frame_len(struct ft_frame * this)
 {
 	assert(this != NULL);
 
@@ -47,7 +47,7 @@ size_t frame_total_position_to_limit(struct frame * this)
 	return length;
 }
 
-struct ft_vec * frame_add_dvec(struct frame * this, size_t offset, size_t capacity)
+struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_t capacity)
 {
 	assert(this != NULL);	
 	assert(offset >= 0);
@@ -77,7 +77,7 @@ struct ft_vec * frame_add_dvec(struct frame * this, size_t offset, size_t capaci
 	return vec;
 }
 
-void frame_format_empty(struct frame * this)
+void ft_frame_format_empty(struct ft_frame * this)
 {
 	assert(this != NULL);
 
@@ -85,18 +85,18 @@ void frame_format_empty(struct frame * this)
 	this->vec_position = 0;	
 }
 
-void frame_format_simple(struct frame * this)
+void ft_frame_format_simple(struct ft_frame * this)
 {
-	frame_format_empty(this);
-	frame_add_dvec(this, 0, this->capacity - sizeof(struct ft_vec));
+	ft_frame_format_empty(this);
+	ft_frame_create_vec(this, 0, this->capacity - sizeof(struct ft_vec));
 }
 
 
-void frame_print(struct frame * this)
+void ft_frame_fprintf(struct ft_frame * this, FILE * f)
 {
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	for (int i=-1; i>(-1-this->vec_limit); i -= 1)
-		write(STDOUT_FILENO, vec[i].frame->data + vec[i].offset, vec[i].limit);
+		fwrite(vec[i].frame->data + vec[i].offset, vec[i].limit, 1, f);
 }
 
 

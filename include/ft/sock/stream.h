@@ -5,8 +5,8 @@ struct ft_stream;
 
 struct ft_stream_delegate
 {
-	struct frame * (*get_read_frame)(struct ft_stream *); // If NULL, then simple frame will be used
-	bool (*read)(struct ft_stream *, struct frame * frame); // True as a return value means, that the frame has been handed over to upstream protocol
+	struct ft_frame * (*get_read_frame)(struct ft_stream *); // If NULL, then simple frame will be used
+	bool (*read)(struct ft_stream *, struct ft_frame * frame); // True as a return value means, that the frame has been handed over to upstream protocol
 
 	void (*connected)(struct ft_stream *); // Called when connect() is successfully finished; can be NULL
 
@@ -56,13 +56,13 @@ struct ft_stream
 
 	// Input
 	struct ev_io read_watcher;
-	struct frame * read_frame;
+	struct ft_frame * read_frame;
 	unsigned int read_events;
 
 	// Output
 	struct ev_io write_watcher;
-	struct frame * write_frames; // Queue of write frames 
-	struct frame ** write_frame_last;
+	struct ft_frame * write_frames; // Queue of write frames 
+	struct ft_frame ** write_frame_last;
 	unsigned int write_events;
 
 	// SSL
@@ -86,7 +86,7 @@ bool ft_stream_accept(struct ft_stream *, struct ft_stream_delegate * delegate, 
 bool ft_stream_connect(struct ft_stream *, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
 void ft_stream_fini(struct ft_stream *);
 
-bool ft_stream_write(struct ft_stream *, struct frame * frame);
+bool ft_stream_write(struct ft_stream *, struct ft_frame * frame);
 
 bool ft_stream_enable_ssl(struct ft_stream *, SSL_CTX *ctx);
 

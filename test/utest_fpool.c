@@ -18,7 +18,7 @@ START_TEST(fpool_alloc_up_utest)
 	ck_assert_int_eq(x, 0);	
 
 	const int frame_count = 32;
-	struct frame * frames[frame_count];
+	struct ft_frame * frames[frame_count];
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
@@ -62,7 +62,7 @@ START_TEST(fpool_alloc_down_utest)
 	ck_assert_int_eq(x, 0);	
 
 	const int frame_count = 32;
-	struct frame * frames[frame_count];
+	struct ft_frame * frames[frame_count];
 
 	// First cycle
 
@@ -139,7 +139,7 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	ft_pool_set_alloc(&context.frame_pool, ft_pool_alloc_custom);
 
 	const int frame_count = 32;
-	struct frame * frames[frame_count];
+	struct ft_frame * frames[frame_count];
 
 	for (int i = 0; i<frame_count; i += 1)
 	{

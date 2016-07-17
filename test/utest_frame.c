@@ -19,24 +19,24 @@ START_TEST(frame_core_utest)
 	int rc;
 	bool ok;
 	size_t pos;
-	struct frame frame;
+	struct ft_frame frame;
 	uint8_t * frame_data;
 
 	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
 	ck_assert_int_eq(rc, 0);
 
-	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	_ft_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 
-	frame_format_simple(&frame);
+	ft_frame_format_simple(&frame);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 1);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 0);
 
-	struct ft_vec * dvec = frame_current_dvec(&frame);
+	struct ft_vec * dvec = ft_frame_get_vec(&frame);
 	ck_assert_ptr_ne(dvec, NULL);
 	ck_assert_int_eq(dvec->position, 0);
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
@@ -48,7 +48,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 10);
 
 	ok = ft_vec_cat(dvec, "ABCDEFG", 7);
@@ -57,7 +57,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 17);
 
 	ok = ft_vec_strcat(dvec, "abcdefg");
@@ -66,7 +66,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 24);
 
 	ok = frame_core_utest_vprintf(dvec, "%s %d %d", "Hello world", 1, 777);
@@ -75,7 +75,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 41);
 
 	ok = ft_vec_sprintf(dvec, "%s %d %d", "Another text", 12311, 743427);
@@ -84,7 +84,7 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 66);
 
 	free(frame_data);
@@ -92,41 +92,41 @@ START_TEST(frame_core_utest)
 END_TEST
 
 
-START_TEST(frame_flip_utest)
+START_TEST(ft_frame_flip_utest)
 {
 	int rc;
 	size_t pos;
-	struct frame frame;
+	struct ft_frame frame;
 	uint8_t * frame_data;
 
 	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
 	ck_assert_int_eq(rc, 0);
 
-	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	_ft_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 	
-	frame_format_simple(&frame);
+	ft_frame_format_simple(&frame);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 1);
 
-	struct ft_vec * dvec = frame_current_dvec(&frame);
+	struct ft_vec * dvec = ft_frame_get_vec(&frame);
 	ck_assert_int_eq(dvec->position, 0);
 	ck_assert_int_eq(dvec->limit, frame.capacity - sizeof(struct ft_vec));
 	ck_assert_int_eq(dvec->limit, dvec->capacity);
 
 	ft_vec_pos(dvec, 333);
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 333);
 
 	ft_vec_flip(dvec);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 1);
 
-	pos = frame_total_start_to_position(&frame);
+	pos = ft_frame_pos(&frame);
 	ck_assert_int_eq(pos, 0);
 
-	pos = frame_total_position_to_limit(&frame);
+	pos = ft_frame_len(&frame);
 	ck_assert_int_eq(pos, 333);
 
 	free(frame_data);
@@ -134,29 +134,29 @@ START_TEST(frame_flip_utest)
 END_TEST
 
 
-START_TEST(frame_add_dvec_utest)
+START_TEST(ft_frame_create_vec_utest)
 {
 	int rc;
-	struct frame frame;
+	struct ft_frame frame;
 	uint8_t * frame_data;
 	struct ft_vec * dvec;
 
 	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
 	ck_assert_int_eq(rc, 0);
 
-	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	_ft_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 
-	dvec = frame_add_dvec(&frame, 0, FRAME_SIZE);
+	dvec = ft_frame_create_vec(&frame, 0, FRAME_SIZE);
 	ck_assert_ptr_eq(dvec, NULL);
 
-	dvec = frame_add_dvec(&frame, FRAME_SIZE, 1);
+	dvec = ft_frame_create_vec(&frame, FRAME_SIZE, 1);
 	ck_assert_ptr_eq(dvec, NULL);
 
 	for (int i=0; i<30; i+= 1)
 	{
-		dvec = frame_add_dvec(&frame, 0, 30);
+		dvec = ft_frame_create_vec(&frame, 0, 30);
 		ck_assert_ptr_ne(dvec, NULL);
 	}
 
@@ -166,100 +166,100 @@ START_TEST(frame_add_dvec_utest)
 END_TEST
 
 
-START_TEST(frame_format_empty_utest)
+START_TEST(ft_frame_format_empty_utest)
 {
 	int rc;
 	size_t x;
-	struct frame frame;
+	struct ft_frame frame;
 	uint8_t * frame_data;
 	struct ft_vec * dvec;
 
 	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
 	ck_assert_int_eq(rc, 0);
 
-	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	_ft_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 
-	frame_format_empty(&frame);
+	ft_frame_format_empty(&frame);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 
-	dvec = frame_add_dvec(&frame, 0, 30);
+	dvec = ft_frame_create_vec(&frame, 0, 30);
 	ck_assert_ptr_ne(dvec, NULL);
 
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 1);
 
-	frame_format_empty(&frame);
+	ft_frame_format_empty(&frame);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 
-	x = frame_total_start_to_position(&frame);
+	x = ft_frame_pos(&frame);
 	ck_assert_int_eq(x, 0);
 
-	x = frame_total_position_to_limit(&frame);
+	x = ft_frame_len(&frame);
 	ck_assert_int_eq(x, 0);
 }
 END_TEST
 
 
-START_TEST(frame_format_simple_utest)
+START_TEST(ft_frame_format_simple_utest)
 {
 	int rc;
 	size_t x;
-	struct frame frame;
+	struct ft_frame frame;
 	uint8_t * frame_data;
-	struct ft_vec * dvec;
+	struct ft_vec * vec;
 
 	rc = posix_memalign((void **)&frame_data, MEMPAGE_SIZE, FRAME_SIZE); 
 	ck_assert_int_eq(rc, 0);
 
-	_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
+	_ft_frame_init(&frame, frame_data, MEMPAGE_SIZE, NULL);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 0);
 
-	frame_format_simple(&frame);
+	ft_frame_format_simple(&frame);
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 1);
 
-	x = frame_total_start_to_position(&frame);
+	x = ft_frame_pos(&frame);
 	ck_assert_int_eq(x, 0);
 
-	x = frame_total_position_to_limit(&frame);
+	x = ft_frame_len(&frame);
 	ck_assert_int_eq(x, 4056);
 
-	x = frame_currect_dvec_size(&frame);
+	vec = ft_frame_get_vec(&frame);
+	ck_assert_ptr_ne(vec, NULL);
+
+	x = ft_vec_len(vec);
 	ck_assert_int_eq(x, 4056);
 
-	dvec = frame_current_dvec(&frame);
-	ck_assert_ptr_ne(dvec, NULL);
+	ft_vec_pos(vec, 10);
 
-	ft_vec_pos(dvec, 10);
-
-	x = frame_currect_dvec_size(&frame);
+	x = ft_vec_len(vec);
 	ck_assert_int_eq(x, 4046);
 
-	x = frame_total_start_to_position(&frame);
+	x = ft_frame_pos(&frame);
 	ck_assert_int_eq(x, 10);
 
-	ft_vec_advance(dvec, 33);
+	ft_vec_advance(vec, 33);
 
-	x = frame_total_start_to_position(&frame);
+	x = ft_frame_pos(&frame);
 	ck_assert_int_eq(x, 43);
 
-	x = frame_currect_dvec_size(&frame);
+	x = ft_vec_len(vec);
 	ck_assert_int_eq(x, 4013);
 
-	frame_flip(&frame);
+	ft_frame_flip(&frame);
 
-	x = frame_total_start_to_position(&frame);
+	x = ft_frame_pos(&frame);
 	ck_assert_int_eq(x, 0);
 
-	x = frame_currect_dvec_size(&frame);
+	x = ft_vec_len(vec);
 	ck_assert_int_eq(x, 43);
 
-	x = frame_total_position_to_limit(&frame);
+	x = ft_frame_len(&frame);
 	ck_assert_int_eq(x, 43);
 }
 END_TEST
@@ -274,13 +274,13 @@ Suite * frame_tsuite(void)
 	tc = tcase_create("frame-core");
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, frame_core_utest);
-	tcase_add_test(tc, frame_flip_utest);
-	tcase_add_test(tc, frame_add_dvec_utest);
+	tcase_add_test(tc, ft_frame_flip_utest);
+	tcase_add_test(tc, ft_frame_create_vec_utest);
 
 	tc = tcase_create("frame-format");
 	suite_add_tcase(s, tc);
-	tcase_add_test(tc, frame_format_empty_utest);
-	tcase_add_test(tc, frame_format_simple_utest);
+	tcase_add_test(tc, ft_frame_format_empty_utest);
+	tcase_add_test(tc, ft_frame_format_simple_utest);
 
 	return s;
 }

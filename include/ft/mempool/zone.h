@@ -23,10 +23,10 @@ struct ft_poolzone
 
 	ev_tstamp free_at;	
 
-	struct frame * available_frames;
-	struct frame * low_frame;
-	struct frame * high_frame;
-	struct frame frames[];
+	struct ft_frame * available_frames;
+	struct ft_frame * low_frame;
+	struct ft_frame * high_frame;
+	struct ft_frame frames[];
 };
 
 bool ft_poolzone_init(struct ft_poolzone *, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable);

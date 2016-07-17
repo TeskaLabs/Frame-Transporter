@@ -38,12 +38,12 @@ struct addrinfo * resolve(const char * host, const char * port)
 ///
 
 
-bool on_read(struct ft_stream * established_sock, struct frame * frame)
+bool on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
-		frame_flip(frame);
-		frame_print(frame);
+		ft_frame_flip(frame);
+		ft_frame_fprintf(frame, stdout);
 	}
 
 	ft_frame_return(frame);
@@ -117,17 +117,17 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 
-	struct frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	struct ft_frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	if (frame == NULL) return EXIT_FAILURE;
 
-	frame_format_simple(frame);
-	struct ft_vec * vec = frame_current_dvec(frame);
+	ft_frame_format_simple(frame);
+	struct ft_vec * vec = ft_frame_get_vec(frame);
 	if (vec == NULL) return EXIT_FAILURE;
 
 	ok = ft_vec_sprintf(vec, "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", argv[1]);
 	if (!ok) return EXIT_FAILURE;
 
-	frame_flip(frame);
+	ft_frame_flip(frame);
 
 	ok = ft_stream_write(&sock, frame);
 	if (!ok) return EXIT_FAILURE;

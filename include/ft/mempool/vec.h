@@ -21,7 +21,7 @@ Frame vectors
 
 struct ft_vec
 {
-	struct frame * frame;
+	struct ft_frame * frame;
 
 	// 0 (+ offset) <= position <= limit <= capacity
 	// Vector length is defined as limit - position

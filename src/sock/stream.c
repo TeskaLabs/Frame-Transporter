@@ -241,7 +241,7 @@ void ft_stream_fini(struct ft_stream * this)
 	size_t cap;
 	if (this->read_frame != NULL)
 	{
-		cap = frame_total_start_to_position(this->read_frame);
+		cap = ft_frame_pos(this->read_frame);
 		ft_frame_return(this->read_frame);
 		this->read_frame = NULL;
 
@@ -251,10 +251,10 @@ void ft_stream_fini(struct ft_stream * this)
 	cap = 0;
 	while (this->write_frames != NULL)
 	{
-		struct frame * frame = this->write_frames;
+		struct ft_frame * frame = this->write_frames;
 		this->write_frames = frame->next;
 
-		cap += frame_total_position_to_limit(frame);
+		cap += ft_frame_len(frame);
 		ft_frame_return(frame);
 	}
 	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
@@ -420,24 +420,24 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 	this->flags.read_shutdown = true;
 
 	// Uplink read frame, if there is one (this can result in a partial frame but that's ok)
-	if (frame_total_start_to_position(this->read_frame) > 0)
+	if (ft_frame_pos(this->read_frame) > 0)
 	{
-		FT_WARN("Partial read due to read shutdown (%zd bytes)", frame_total_start_to_position(this->read_frame));
+		FT_WARN("Partial read due to read shutdown (%zd bytes)", ft_frame_pos(this->read_frame));
 		bool upstreamed = this->delegate->read(this, this->read_frame);
 		if (!upstreamed) ft_frame_return(this->read_frame);
 	}
 	this->read_frame = NULL;
 
 	// Uplink (to delegate) end-of-stream
-	struct frame * frame = NULL;
-	if ((this->read_frame != NULL) && (frame_total_start_to_position(this->read_frame) == 0))
+	struct ft_frame * frame = NULL;
+	if ((this->read_frame != NULL) && (ft_frame_pos(this->read_frame) == 0))
 	{
 		// Recycle this->read_frame if there are no data read
 		frame = this->read_frame;
 		this->read_frame = NULL;
 
-		frame_format_empty(frame);
-		frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
+		ft_frame_format_empty(frame);
+		ft_frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
 	}
 
 	if (frame == NULL)
@@ -485,7 +485,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			else
 			{
 				this->read_frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
-				if (this->read_frame != NULL) frame_format_simple(this->read_frame);
+				if (this->read_frame != NULL) ft_frame_format_simple(this->read_frame);
 			}
 
 			if (this->read_frame == NULL)
@@ -498,7 +498,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			}
 		}
 
-		struct ft_vec * frame_dvec = frame_current_dvec(this->read_frame);
+		struct ft_vec * frame_dvec = ft_frame_get_vec(this->read_frame);
 		assert(frame_dvec != NULL);
 
 		size_t size_to_read = frame_dvec->limit - frame_dvec->position;
@@ -664,7 +664,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 		assert(frame_dvec->position == frame_dvec->limit);
 
 		// Current dvec is filled, move to next one
-		ok = frame_next_dvec(this->read_frame);
+		ok = ft_frame_next_vec(this->read_frame);
 		if (!ok)
 		{
 			// All dvecs in the frame are filled with data
@@ -758,7 +758,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 
 		if (this->write_frames->type == FT_FRAME_TYPE_STREAM_END)
 		{
-			struct frame * frame = this->write_frames;
+			struct ft_frame * frame = this->write_frames;
 			this->write_frames = frame->next;
 			ft_frame_return(frame);
 
@@ -786,7 +786,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 			return;
 		}
 
-		struct ft_vec * frame_dvec = frame_current_dvec(this->write_frames);
+		struct ft_vec * frame_dvec = ft_frame_get_vec(this->write_frames);
 		assert(frame_dvec != NULL);
 
 		size_t size_to_write = frame_dvec->limit - frame_dvec->position;
@@ -894,11 +894,11 @@ static void _ft_stream_write_real(struct ft_stream * this)
 		assert(frame_dvec->position == frame_dvec->limit);
 
 		// Current dvec is filled, move to next one
-		bool ok = frame_next_dvec(this->write_frames);
+		bool ok = ft_frame_next_vec(this->write_frames);
 		if (!ok)
 		{
 			// All dvecs in the frame have been written
-			struct frame * frame = this->write_frames;
+			struct ft_frame * frame = this->write_frames;
 
 			this->write_frames = frame->next;
 			if (this->write_frames == NULL)
@@ -942,7 +942,7 @@ void _ft_stream_on_write_event(struct ft_stream * this)
 }
 
 
-bool ft_stream_write(struct ft_stream * this, struct frame * frame)
+bool ft_stream_write(struct ft_stream * this, struct ft_frame * frame)
 {
 	assert(this != NULL);
 
@@ -986,7 +986,7 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct frame * frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+	struct ft_frame * frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");

@@ -9,16 +9,16 @@ int sock_est_1_result_counter;
 
 // This test is about incoming stream that 'hangs open' after all data are uploaded
 
-struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
+struct ft_frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 {
 	struct ft_vec * dvec;
 
-	struct frame * frame = ft_pool_borrow(&established_sock->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	struct ft_frame * frame = ft_pool_borrow(&established_sock->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 	ck_assert_int_eq(frame->vec_position, 0);
 	ck_assert_int_eq(frame->vec_limit, 0);
 
-	dvec = frame_add_dvec(frame, 0, 5);
+	dvec = ft_frame_create_vec(frame, 0, 5);
 	ck_assert_ptr_ne(dvec, NULL);
 	ck_assert_int_eq(dvec->position, 0);
 	ck_assert_int_eq(dvec->limit, 5);
@@ -27,7 +27,7 @@ struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 	ck_assert_int_eq(frame->vec_position, 0);
 	ck_assert_int_eq(frame->vec_limit, 1);
 
-	dvec = frame_add_dvec(frame, 5, 6);
+	dvec = ft_frame_create_vec(frame, 5, 6);
 	ck_assert_ptr_ne(dvec, NULL);
 	ck_assert_int_eq(dvec->position, 0);
 	ck_assert_int_eq(dvec->limit, 6);
@@ -39,7 +39,7 @@ struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 	return frame;
 }
 
-bool sock_est_1_on_read(struct ft_stream * established_sock, struct frame * frame)
+bool sock_est_1_on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	bool ok;
 	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);
@@ -158,7 +158,7 @@ END_TEST
 
 // This test is about incoming stream that terminates after all data are uploaded
 
-bool sock_est_2_on_read(struct ft_stream * established_sock, struct frame * frame)
+bool sock_est_2_on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	bool ok;
 
@@ -299,16 +299,16 @@ START_TEST(sock_est_conn_fail_utest)
 
 	freeaddrinfo(rp);
 
-	struct frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	struct ft_frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 
-	frame_format_simple(frame);
-	struct ft_vec * dvec = frame_current_dvec(frame);
+	ft_frame_format_simple(frame);
+	struct ft_vec * dvec = ft_frame_get_vec(frame);
 	ck_assert_ptr_ne(dvec, NULL);	
 
 	ok = ft_vec_sprintf(dvec, "Virtually anything, will be lost anyway");
 
-	frame_flip(frame);
+	ft_frame_flip(frame);
 
 	ok = ft_stream_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
@@ -336,7 +336,7 @@ void sock_est_ssl_1_on_connected(struct ft_stream * this)
 	ck_assert_int_eq(this->flags.connecting, false);	
 }
 
-bool sock_est_ssl_1_on_read(struct ft_stream * established_sock, struct frame * frame)
+bool sock_est_ssl_1_on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);
 
@@ -346,17 +346,17 @@ bool sock_est_ssl_1_on_read(struct ft_stream * established_sock, struct frame * 
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
 
 
-		frame_flip(frame);
-		ck_assert_int_gt(frame_total_position_to_limit(frame), 0);
-		//frame_print(frame);
+		ft_frame_flip(frame);
+		ck_assert_int_gt(ft_frame_len(frame), 0);
+		//ft_frame_fprintf(stdout, frame);
 
-		for (struct ft_vec * dvec = frame_current_dvec(frame); dvec != NULL; dvec = frame_next_dvec(frame))
+		for (struct ft_vec * dvec = ft_frame_get_vec(frame); dvec != NULL; dvec = ft_frame_next_vec(frame))
 		{
 			int rc = EVP_DigestUpdate(sock_est_ssl_1_mdctx, ft_vec_ptr(dvec), ft_vec_len(dvec));
 			ck_assert_int_eq(rc, 1);
 		}
 
-		sock_est_ssl_1_read_counter += frame_total_position_to_limit(frame);
+		sock_est_ssl_1_read_counter += ft_frame_len(frame);
 	}
 
 	ft_frame_return(frame);
@@ -440,17 +440,17 @@ START_TEST(sock_est_ssl_client_utest)
 	ck_assert_int_eq(ok, true);
 
 
-	struct frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	struct ft_frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 
-	frame_format_simple(frame);
-	struct ft_vec * dvec = frame_current_dvec(frame);
+	ft_frame_format_simple(frame);
+	struct ft_vec * dvec = ft_frame_get_vec(frame);
 	ck_assert_ptr_ne(dvec, NULL);	
 
 	ok = ft_vec_sprintf(dvec, "GET /sock_est_ssl_1_utest.bin HTTP/1.0\r\n\r\n");
 	ck_assert_int_eq(ok, true);
 
-	frame_flip(frame);
+	ft_frame_flip(frame);
 
 	ok = ft_stream_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
@@ -498,7 +498,7 @@ END_TEST
 SSL_CTX * sock_est_ssl_server_ssl_ctx = NULL;
 int sock_est_ssl_server_utest_result_counter;
 
-bool sock_est_ssl_server_on_read(struct ft_stream * established_sock, struct frame * frame)
+bool sock_est_ssl_server_on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	bool ok;
 	ck_assert_int_ne(frame->type, FT_FRAME_TYPE_FREE);

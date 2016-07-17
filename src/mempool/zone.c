@@ -25,8 +25,8 @@ bool ft_poolzone_init(struct ft_poolzone * this, uint8_t * data, size_t alloc_si
 	uint8_t * frame_data = data;
 	for(int i=0; i<this->frames_total; i+=1)
 	{
-		struct frame * frame = &this->frames[i];
-		_frame_init(frame, frame_data + (i*FRAME_SIZE), FRAME_SIZE, this);
+		struct ft_frame * frame = &this->frames[i];
+		_ft_frame_init(frame, frame_data + (i*FRAME_SIZE), FRAME_SIZE, this);
 		assert(frame >= this->low_frame);
 		assert(frame <= this->high_frame);
 	}
@@ -72,7 +72,7 @@ struct ft_poolzone * ft_poolzone_new_mmap(size_t frame_count, bool freeable, int
 	size_t mmap_size_frames = frame_count * FRAME_SIZE;
 	assert((mmap_size_frames % MEMPAGE_SIZE) == 0);
 
-	size_t mmap_size_zone = sizeof(struct ft_poolzone) + frame_count * sizeof(struct frame);
+	size_t mmap_size_zone = sizeof(struct ft_poolzone) + frame_count * sizeof(struct ft_frame);
 	size_t mmap_size_fill = MEMPAGE_SIZE - (mmap_size_zone % MEMPAGE_SIZE);
 	if (mmap_size_fill == MEMPAGE_SIZE) mmap_size_fill = 0;
 	size_t alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
@@ -100,12 +100,12 @@ struct ft_poolzone * ft_poolzone_new_mmap(size_t frame_count, bool freeable, int
 }
 
 
-struct frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_type, const char * file, unsigned int line)
+struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_type, const char * file, unsigned int line)
 {
 	int rc;
 
 	if (this->available_frames == NULL) return NULL; // Zone has no available frames
-	struct frame * frame = this->available_frames;
+	struct ft_frame * frame = this->available_frames;
 	this->available_frames = frame->next;
 
 	// Reset frame
@@ -194,7 +194,7 @@ struct ft_poolzone * ft_pool_alloc_hugetlb(struct ft_pool * this)
 		do {
 			frame_count -= 1;
 			size_t mmap_size_frames = frame_count * FRAME_SIZE;
-			size_t mmap_size_zone = sizeof(struct ft_poolzone) + frame_count * sizeof(struct frame);
+			size_t mmap_size_zone = sizeof(struct ft_poolzone) + frame_count * sizeof(struct ft_frame);
 			size_t mmap_size_fill = MEMPAGE_SIZE - (mmap_size_zone % MEMPAGE_SIZE);
 			if (mmap_size_fill == MEMPAGE_SIZE) mmap_size_fill = 0;
 			alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;

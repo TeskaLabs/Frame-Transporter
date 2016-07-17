@@ -21,9 +21,9 @@ struct stream_pair
 struct ft_list stream_pairs; // List of established_socket(s) pairs
 
 
-bool on_read_in_to_out(struct ft_stream * established_sock, struct frame * frame)
+bool on_read_in_to_out(struct ft_stream * established_sock, struct ft_frame * frame)
 {
-	frame_flip(frame);
+	ft_frame_flip(frame);
 	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
 	bool ok = ft_stream_write(&pair->stream_out, frame);
 	if (!ok)
@@ -35,9 +35,9 @@ bool on_read_in_to_out(struct ft_stream * established_sock, struct frame * frame
 	return true;
 }
 
-bool on_read_out_to_in(struct ft_stream * established_sock, struct frame * frame)
+bool on_read_out_to_in(struct ft_stream * established_sock, struct ft_frame * frame)
 {
-	frame_flip(frame);
+	ft_frame_flip(frame);
 	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
 	bool ok = ft_stream_write(&pair->stream_in, frame);
 	if (!ok)

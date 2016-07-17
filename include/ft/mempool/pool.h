@@ -20,12 +20,12 @@ void ft_pool_set_alloc(struct ft_pool *, ft_pool_alloc_fnct alloc_fnct);
 size_t ft_pool_count_available_frames(struct ft_pool *);
 size_t ft_pool_count_zones(struct ft_pool *);
 
-struct frame * _ft_pool_borrow_real(struct ft_pool *, uint64_t frame_type, const char * file, unsigned int line);
+struct ft_frame * _ft_pool_borrow_real(struct ft_pool *, uint64_t frame_type, const char * file, unsigned int line);
 #define ft_pool_borrow(pool, frame_type) _ft_pool_borrow_real(pool, frame_type, __FILE__, __LINE__)
 
 // Following function requires access to pool object internals
 // and for this reason it is here and not with ft_frame object
-static inline void ft_frame_return(struct frame * frame)
+static inline void ft_frame_return(struct ft_frame * frame)
 {
 	int rc;
 	struct ft_poolzone * zone = frame->zone;
