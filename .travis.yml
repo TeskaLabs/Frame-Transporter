@@ -24,3 +24,6 @@ before_install:
 before_script:
     - cp doc/travis.rules.site rules.site
     - sudo hugeadm --pool-pages-min DEFAULT:2
+
+notifications:
+    slack: teskalabs:6pYgZhD2AwcKGkeuNbS4IH4s
