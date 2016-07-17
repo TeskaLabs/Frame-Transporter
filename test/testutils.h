@@ -7,7 +7,7 @@
 
 #include <check.h>
 
-#include <libsccmn.h>
+#include <ft.h>
 
 bool resolve(struct addrinfo **res, const char * host, const char * port);
 pid_t popen2(const char *command, int *infp, int *outfp);
