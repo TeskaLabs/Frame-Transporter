@@ -46,7 +46,6 @@ struct ft_context;
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
-#include <ft/heartbeat.h>
 #include <ft/frame.h>
 #include <ft/fpool.h>
 #include <ft/context.h>

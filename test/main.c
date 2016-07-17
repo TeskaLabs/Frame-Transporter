@@ -15,7 +15,6 @@ Suite * log_tsuite(void);
 Suite * daemon_tsuite(void);
 Suite * sock_listen_tsuite(void);
 Suite * sock_est_tsuite(void);
-Suite * heartbeat_tsuite(void);
 Suite * fpool_tsuite(void);
 Suite * frame_tsuite(void);
 Suite * ft_context_tsuite(void);
@@ -43,7 +42,6 @@ int main()
 	srunner_add_suite(sr, daemon_tsuite());
 	srunner_add_suite(sr, sock_listen_tsuite());
 	srunner_add_suite(sr, sock_est_tsuite());
-	srunner_add_suite(sr, heartbeat_tsuite());
 	srunner_add_suite(sr, fpool_tsuite());
 	srunner_add_suite(sr, frame_tsuite());
 	srunner_add_suite(sr, ft_context_tsuite());

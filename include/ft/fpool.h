@@ -42,11 +42,10 @@ struct frame_pool
 {
 	struct frame_pool_zone * zones;
 	frame_pool_zone_alloc_advice alloc_advise;
-	struct heartbeat_watcher heartbeat_w;
 };
 
-bool frame_pool_init(struct frame_pool *, struct heartbeat * heartbeat);
-void frame_pool_fini(struct frame_pool *, struct heartbeat * heartbeat);
+bool frame_pool_init(struct frame_pool *, struct ft_context * context); // Context can be null
+void frame_pool_fini(struct frame_pool *);
 
 void frame_pool_set_alloc_advise(struct frame_pool *, frame_pool_zone_alloc_advice alloc_advise);
 struct frame_pool_zone * frame_pool_zone_alloc_advice_default(struct frame_pool * this);

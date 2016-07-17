@@ -10,7 +10,6 @@ OBJS=\
 	daemon.o \
 	sock/listener.o \
 	sock/stream.o \
-	heartbeat.o \
 	frame.o \
 	fpool.o \
 	context.o \

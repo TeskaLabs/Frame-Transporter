@@ -1,5 +1,11 @@
 #include "_ft_internal.h"
 
+///
+
+static void frame_pool_heartbeat_callback(struct ft_context * context, void * data);
+
+///
+
 bool frame_pool_zone_init(struct frame_pool_zone * this, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable)
 {
 	assert(this != NULL);
@@ -99,24 +105,24 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint
 
 //
 
-static void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now);
-
-
-bool frame_pool_init(struct frame_pool * this, struct heartbeat * heartbeat)
+bool frame_pool_init(struct frame_pool * this, struct ft_context * context)
 {
 	assert(this != NULL);
 	this->zones = NULL;
 	
-	heartbeat_add(heartbeat, &this->heartbeat_w, frame_pool_heartbeat_cb);
-	this->heartbeat_w.data = this;
-
 	this->alloc_advise = frame_pool_zone_alloc_advice_default;
+
+
+	if (context != NULL)
+	{
+		ft_context_at_heartbeat(context, frame_pool_heartbeat_callback, this);
+	}
 
 	return true;
 }
 
 
-void frame_pool_fini(struct frame_pool * this, struct heartbeat * heartbeat)
+void frame_pool_fini(struct frame_pool * this)
 {
 	assert(this != NULL);
 
@@ -128,7 +134,7 @@ void frame_pool_fini(struct frame_pool * this, struct heartbeat * heartbeat)
 		frame_pool_zone_del(zone);
 	}
 
-	heartbeat_remove(heartbeat, &this->heartbeat_w);
+	//TODO: Unregister heartbeat
 }
 
 
@@ -290,10 +296,12 @@ void frame_pool_set_alloc_advise(struct frame_pool * this, frame_pool_zone_alloc
 }
 
 
-void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbeat * heartbeat, ev_tstamp now)
+static void frame_pool_heartbeat_callback(struct ft_context * context, void * data)
 {
-	struct frame_pool * this = watcher->data;
+	struct frame_pool * this = (struct frame_pool *)data;
 	assert(this != NULL);
+
+	ev_tstamp now = ev_now(context->ev_loop);
 
 	// Iterate via zones and find free-able ones with no used frames ...
 	struct frame_pool_zone ** last_zone_next = &this->zones;
@@ -333,6 +341,9 @@ void frame_pool_heartbeat_cb(struct heartbeat_watcher * watcher, struct heartbea
 		frame_pool_zone_del(zone_free);
 	}
 }
+
+
+
 
 size_t frame_pool_available_frames_count(struct frame_pool * this)
 {
