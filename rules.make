@@ -54,7 +54,7 @@ LDLIBS+=-lm
 # Basic commands
 
 subdirs:
-	@$(foreach dir, $(SUBDIRS), $(MAKE) -C $(dir);)
+	@$(foreach dir, $(SUBDIRS), echo " [CD]" $(dir) && $(MAKE) -C $(dir);)
 
 clean:
 	@echo " [RM] in" $(CURDIR)
