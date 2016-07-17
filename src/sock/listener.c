@@ -138,7 +138,7 @@ void listening_socket_fini(struct listening_socket * this)
 }
 
 
-bool listening_socket_start(struct listening_socket * this)
+bool _ft_listener_cntl_start(struct listening_socket * this)
 {
 	int rc;
 
@@ -169,7 +169,7 @@ bool listening_socket_start(struct listening_socket * this)
 }
 
 
-bool listening_socket_stop(struct listening_socket * this)
+bool _ft_listener_cntl_stop(struct listening_socket * this)
 {
 	L_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
@@ -269,31 +269,18 @@ bool ft_listener_list_init(struct ft_list * list)
 }
 
 
-bool ft_listener_list_start(struct ft_list * list)
+bool ft_listener_list_cntl(struct ft_list * list, const int control_code)
 {
 	assert(list != NULL);
 
-	bool ok;
-	for (struct ft_list_node * node = list->head; node != NULL; node = node->next)
+	bool ok = true;
+	FT_LIST_FOR(list, node)
 	{
-		ok = listening_socket_start((struct listening_socket *)node->data);
-		if (!ok) return false;
+		ok &= ft_listener_cntl((struct listening_socket *)node->data, control_code);
 	}
-	return true;
+	return ok;
 }
 
-bool ft_listener_list_stop(struct ft_list * list)
-{
-	assert(list != NULL);
-
-	bool ok;
-	for (struct ft_list_node * node = list->head; node != NULL; node = node->next)
-	{
-		ok = listening_socket_stop((struct listening_socket *)node->data);
-		if (!ok) return false;
-	}
-	return true;
-}
 
 int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate * delegate, struct context * context, int ai_family, int ai_socktype, const char * host, const char * port)
 {

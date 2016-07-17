@@ -51,25 +51,25 @@ START_TEST(sock_listen_single_utest)
 
 	freeaddrinfo(rp);
 
-	ok = listening_socket_start(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_stop(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_start(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_stop(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_stop(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_start(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
-	ok = listening_socket_start(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
 	FILE * p = popen("nc localhost 12345", "w");
@@ -85,7 +85,7 @@ START_TEST(sock_listen_single_utest)
 
 	ck_assert_str_eq(sock.data, "1234\n");
 
-	ok = listening_socket_stop(&sock);
+	ok = ft_listener_cntl(&sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
 	ck_assert_int_eq(sock.stats.accept_events, 1);

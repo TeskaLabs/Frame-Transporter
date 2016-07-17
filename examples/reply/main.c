@@ -90,7 +90,7 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 		established_socket_write_stop(stream);
 	}
 
-	ft_listener_list_stop(&listeners);
+	ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
 }
 
 static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
@@ -163,7 +163,7 @@ int main(int argc, char const *argv[])
 	ev_unref(context.ev_loop);
 
 	// Start listening
-	ft_listener_list_start(&listeners);
+	ft_listener_list_cntl(&listeners, FT_LISTENER_START);
 
 	// Register exiting watcher
 	context_exiting_watcher_add(&context, &watcher, on_exiting_cb);

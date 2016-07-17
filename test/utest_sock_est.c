@@ -86,7 +86,7 @@ bool sock_est_1_on_accept(struct listening_socket * listening_socket, int fd, co
 	ok = established_socket_init_accept(&established_sock, &sock_est_1_sock_delegate, listening_socket, fd, client_addr, client_addr_len);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_stop(listening_socket);
+	ft_listener_cntl(listening_socket, FT_LISTENER_STOP);
 
 	return true;
 }
@@ -120,7 +120,7 @@ START_TEST(sock_est_1_utest)
 
 	freeaddrinfo(rp);
 
-	ok = listening_socket_start(&listen_sock);
+	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
 	FILE * p = popen("nc localhost 12345", "w");
@@ -135,7 +135,7 @@ START_TEST(sock_est_1_utest)
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
 	ck_assert_int_eq(rc, 0);
 
-	ok = listening_socket_stop(&listen_sock);
+	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
 	listening_socket_fini(&listen_sock);
@@ -195,9 +195,9 @@ bool sock_est_2_on_accept(struct listening_socket * listening_socket, int fd, co
 
 	established_socket_set_read_partial(&established_sock, true);
 
-
 	// Stop listening
-	listening_socket_stop(listening_socket);
+	ok = ft_listener_cntl(listening_socket, FT_LISTENER_STOP);
+	ck_assert_int_eq(ok, true);
 
 	return true;
 }
@@ -231,7 +231,7 @@ START_TEST(sock_est_2_utest)
 
 	freeaddrinfo(rp);
 
-	ok = listening_socket_start(&listen_sock);
+	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
 	FILE * p = popen("cat /etc/hosts | nc localhost 12345", "w");
@@ -243,7 +243,7 @@ START_TEST(sock_est_2_utest)
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
 	ck_assert_int_eq(rc, 0);
 
-	ok = listening_socket_stop(&listen_sock);
+	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
 	listening_socket_fini(&listen_sock);
@@ -558,7 +558,8 @@ bool sock_est_ssl_server_listen_on_accept(struct listening_socket * listening_so
 	ok = established_socket_ssl_enable(&established_sock, sock_est_ssl_server_ssl_ctx);
 	ck_assert_int_eq(ok, true);
 
-	listening_socket_stop(listening_socket);
+	ok = ft_listener_cntl(listening_socket, FT_LISTENER_STOP);
+	ck_assert_int_eq(ok, true);
 
 	return true;
 }
@@ -612,7 +613,7 @@ START_TEST(sock_est_ssl_server_utest)
 
 	freeaddrinfo(rp);
 
-	ok = listening_socket_start(&listen_sock);
+	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
 	FILE * p = popen("openssl s_client -quiet -key ./ssl/key.pem -cert ./ssl/cert.pem -connect localhost:12345", "w");
@@ -627,7 +628,7 @@ START_TEST(sock_est_ssl_server_utest)
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
 	ck_assert_int_eq(rc, 0);
 
-	ok = listening_socket_stop(&listen_sock);
+	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
 	listening_socket_fini(&listen_sock);
