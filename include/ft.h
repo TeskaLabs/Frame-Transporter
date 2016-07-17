@@ -46,8 +46,9 @@ struct ft_context;
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
-#include <ft/frame.h>
-#include <ft/fpool.h>
+#include <ft/fpool/vec.h>
+#include <ft/fpool/frame.h>
+#include <ft/fpool/fpool.h>
 #include <ft/context.h>
 
 #include <ft/sock/listener.h>

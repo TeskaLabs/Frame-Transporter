@@ -1,4 +1,4 @@
-#include "_ft_internal.h"
+#include "../_ft_internal.h"
 
 ///
 
@@ -86,8 +86,8 @@ static struct frame * frame_pool_zone_borrow(struct frame_pool_zone * this, uint
 	frame->borrowed_by_line = line;
 	frame->zone->frames_used += 1;
 
-	frame->dvec_position = 0;
-	frame->dvec_limit = 0;
+	frame->vec_position = 0;
+	frame->vec_limit = 0;
 
 	// Lock the frame the memory
 	if (frame->zone->flags.mlock_when_used)

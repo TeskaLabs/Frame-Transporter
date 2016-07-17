@@ -498,7 +498,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			}
 		}
 
-		struct frame_dvec * frame_dvec = frame_current_dvec(this->read_frame);
+		struct ft_vec * frame_dvec = frame_current_dvec(this->read_frame);
 		assert(frame_dvec != NULL);
 
 		size_t size_to_read = frame_dvec->limit - frame_dvec->position;
@@ -647,7 +647,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 		assert(rc > 0);
 		FT_TRACE(FT_TRACE_ID_STREAM, "READ " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
 		this->stats.read_bytes += rc;
-		frame_dvec_position_add(frame_dvec, rc);
+		ft_vec_advance(frame_dvec, rc);
 
 		if (frame_dvec->position < frame_dvec->limit)
 		{
@@ -786,7 +786,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 			return;
 		}
 
-		struct frame_dvec * frame_dvec = frame_current_dvec(this->write_frames);
+		struct ft_vec * frame_dvec = frame_current_dvec(this->write_frames);
 		assert(frame_dvec != NULL);
 
 		size_t size_to_write = frame_dvec->limit - frame_dvec->position;
@@ -882,7 +882,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 		assert(rc > 0);
 		FT_TRACE(FT_TRACE_ID_STREAM, "WRITE " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
 		this->stats.write_bytes += rc;
-		frame_dvec_position_add(frame_dvec, rc);
+		ft_vec_advance(frame_dvec, rc);
 		if (frame_dvec->position < frame_dvec->limit)
 		{
 			// Not all data has been written, wait for next write event

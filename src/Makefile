@@ -10,8 +10,8 @@ OBJS=\
 	daemon.o \
 	sock/listener.o \
 	sock/stream.o \
-	frame.o \
-	fpool.o \
+	fpool/frame.o \
+	fpool/fpool.o \
 	context.o \
 	cols/list.o \
 

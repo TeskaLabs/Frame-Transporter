@@ -11,12 +11,12 @@ int sock_est_1_result_counter;
 
 struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 {
-	struct frame_dvec * dvec;
+	struct ft_vec * dvec;
 
 	struct frame * frame = frame_pool_borrow(&established_sock->context->frame_pool, frame_type_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
-	ck_assert_int_eq(frame->dvec_position, 0);
-	ck_assert_int_eq(frame->dvec_limit, 0);
+	ck_assert_int_eq(frame->vec_position, 0);
+	ck_assert_int_eq(frame->vec_limit, 0);
 
 	dvec = frame_add_dvec(frame, 0, 5);
 	ck_assert_ptr_ne(dvec, NULL);
@@ -24,8 +24,8 @@ struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 	ck_assert_int_eq(dvec->limit, 5);
 	ck_assert_int_eq(dvec->capacity, 5);
 
-	ck_assert_int_eq(frame->dvec_position, 0);
-	ck_assert_int_eq(frame->dvec_limit, 1);
+	ck_assert_int_eq(frame->vec_position, 0);
+	ck_assert_int_eq(frame->vec_limit, 1);
 
 	dvec = frame_add_dvec(frame, 5, 6);
 	ck_assert_ptr_ne(dvec, NULL);
@@ -33,8 +33,8 @@ struct frame * sock_est_1_on_get_read_frame(struct ft_stream * established_sock)
 	ck_assert_int_eq(dvec->limit, 6);
 	ck_assert_int_eq(dvec->capacity, 6);
 
-	ck_assert_int_eq(frame->dvec_position, 0);
-	ck_assert_int_eq(frame->dvec_limit, 2);
+	ck_assert_int_eq(frame->vec_position, 0);
+	ck_assert_int_eq(frame->vec_limit, 2);
 
 	return frame;
 }
@@ -303,10 +303,10 @@ START_TEST(sock_est_conn_fail_utest)
 	ck_assert_ptr_ne(frame, NULL);
 
 	frame_format_simple(frame);
-	struct frame_dvec * dvec = frame_current_dvec(frame);
+	struct ft_vec * dvec = frame_current_dvec(frame);
 	ck_assert_ptr_ne(dvec, NULL);	
 
-	ok = frame_dvec_sprintf(dvec, "Virtually anything, will be lost anyway");
+	ok = ft_vec_sprintf(dvec, "Virtually anything, will be lost anyway");
 
 	frame_flip(frame);
 
@@ -350,9 +350,9 @@ bool sock_est_ssl_1_on_read(struct ft_stream * established_sock, struct frame * 
 		ck_assert_int_gt(frame_total_position_to_limit(frame), 0);
 		//frame_print(frame);
 
-		for (struct frame_dvec * dvec = frame_current_dvec(frame); dvec != NULL; dvec = frame_next_dvec(frame))
+		for (struct ft_vec * dvec = frame_current_dvec(frame); dvec != NULL; dvec = frame_next_dvec(frame))
 		{
-			int rc = EVP_DigestUpdate(sock_est_ssl_1_mdctx, frame_dvec_ptr(dvec), frame_dvec_len(dvec));
+			int rc = EVP_DigestUpdate(sock_est_ssl_1_mdctx, ft_vec_ptr(dvec), ft_vec_len(dvec));
 			ck_assert_int_eq(rc, 1);
 		}
 
@@ -444,10 +444,10 @@ START_TEST(sock_est_ssl_client_utest)
 	ck_assert_ptr_ne(frame, NULL);
 
 	frame_format_simple(frame);
-	struct frame_dvec * dvec = frame_current_dvec(frame);
+	struct ft_vec * dvec = frame_current_dvec(frame);
 	ck_assert_ptr_ne(dvec, NULL);	
 
-	ok = frame_dvec_sprintf(dvec, "GET /sock_est_ssl_1_utest.bin HTTP/1.0\r\n\r\n");
+	ok = ft_vec_sprintf(dvec, "GET /sock_est_ssl_1_utest.bin HTTP/1.0\r\n\r\n");
 	ck_assert_int_eq(ok, true);
 
 	frame_flip(frame);

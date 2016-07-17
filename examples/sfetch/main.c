@@ -121,10 +121,10 @@ int main(int argc, char const *argv[])
 	if (frame == NULL) return EXIT_FAILURE;
 
 	frame_format_simple(frame);
-	struct frame_dvec * dvec = frame_current_dvec(frame);
-	if (dvec == NULL) return EXIT_FAILURE;
+	struct ft_vec * vec = frame_current_dvec(frame);
+	if (vec == NULL) return EXIT_FAILURE;
 
-	ok = frame_dvec_sprintf(dvec, "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", argv[1]);
+	ok = ft_vec_sprintf(vec, "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", argv[1]);
 	if (!ok) return EXIT_FAILURE;
 
 	frame_flip(frame);
