@@ -41,6 +41,8 @@
 // Forward declarations
 struct context;
 
+#include <ft/cols/list.h>
+
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
@@ -48,8 +50,6 @@ struct context;
 #include <ft/frame.h>
 #include <ft/fpool.h>
 #include <ft/context.h>
-
-#include <ft/cols/list.h>
 
 #include <ft/sock/listener.h>
 #include <ft/sock/stream.h>
