@@ -1,5 +1,5 @@
-#ifndef FT_SOCK_LISTENER_H
-#define FT_SOCK_LISTENER_H
+#ifndef FT_SOCK_LISTENER_H_
+#define FT_SOCK_LISTENER_H_
 
 struct listening_socket;
 
@@ -70,4 +70,4 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct ft_listener_del
 
 bool ft_listener_list_cntl(struct ft_list *, const int control_code);
 
-#endif // FT_SOCK_LISTENER_H
+#endif // FT_SOCK_LISTENER_H_

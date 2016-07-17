@@ -1,5 +1,5 @@
-#ifndef __FT_COLS_LIST_H__
-#define __FT_COLS_LIST_H__
+#ifndef FT_COLS_LIST_H_
+#define FT_COLS_LIST_H_
 
 struct ft_list_node
 {
@@ -55,4 +55,4 @@ void ft_list_remove_all(struct ft_list *);
 
 #define FT_LIST_FOR(LIST, NODE) for (struct ft_list_node * NODE = (LIST)->head; NODE != NULL; NODE = NODE->next)
 
-#endif // __FT_COLS_LIST_H__
+#endif // FT_COLS_LIST_H_

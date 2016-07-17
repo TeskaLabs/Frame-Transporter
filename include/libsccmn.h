@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_H__
-#define __LIBSCCMN_H__
+#ifndef FT_H_
+#define FT_H_
 
 #if defined(__linux)
 #define _GNU_SOURCE 1
@@ -88,4 +88,4 @@ bool ft_parse_bool(const char * value);
  */
 int ft_base32_encode(char * buf, size_t * buflen, const void * data, size_t size);
 
-#endif // __LIBSCCMN_H__
+#endif // FT_H_

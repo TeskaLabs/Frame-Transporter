@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_FRAME_H__
-#define __LIBSCCMN_FRAME_H__
+#ifndef FT_FRAME_H_
+#define FT_FRAME_H_
 
 /****
 Frame:
@@ -171,4 +171,4 @@ static inline size_t frame_currect_dvec_size(struct frame * this)
 	return dvec->limit - dvec->position;
 }
 
-#endif //__LIBSCCMN_FRAME_H__
+#endif // FT_FRAME_H_

@@ -1,5 +1,5 @@
-#ifndef FT_SOCK_STREAM_H
-#define FT_SOCK_STREAM_H
+#ifndef FT_SOCK_STREAM_H_
+#define FT_SOCK_STREAM_H_
 
 struct established_socket;
 
@@ -158,4 +158,4 @@ static inline struct established_socket * established_socket_from_x509_store_ctx
     return established_socket_from_ssl(ssl);
 }
 
-#endif // FT_SOCK_STREAM_H
+#endif // FT_SOCK_STREAM_H_

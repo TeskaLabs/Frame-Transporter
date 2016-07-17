@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_CONTEXT_H__
-#define __LIBSCCMN_CONTEXT_H__
+#ifndef FT_CONTEXT_H_
+#define FT_CONTEXT_H_
 
 struct context;
 struct exiting_watcher;
@@ -40,4 +40,4 @@ void context_evloop_run(struct context * );
 void context_exiting_watcher_add(struct context * this, struct exiting_watcher * watcher, exiting_cb cb);
 void context_exiting_watcher_remove(struct context * this, struct exiting_watcher * watcher);
 
-#endif //__LIBSCCMN_CONTEXT_H__
+#endif // FT_CONTEXT_H_

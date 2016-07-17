@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_FPOOL_H__
-#define __LIBSCCMN_FPOOL_H__
+#ifndef FT_FPOOL_H_
+#define FT_FPOOL_H_
 
 /*
 Fixed-size block memory pool.
@@ -89,4 +89,4 @@ static inline void frame_pool_return(struct frame * frame)
 
 }
 
-#endif //__LIBSCCMN_FPOOL_H__
+#endif // FT_FPOOL_H_

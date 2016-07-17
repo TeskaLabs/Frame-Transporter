@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_HEARTBEAT_H__
-#define __LIBSCCMN_HEARTBEAT_H__
+#ifndef FT_HEARTBEAT_H_
+#define FT_HEARTBEAT_H_
 
 struct heartbeat;
 struct heartbeat_watcher;
@@ -34,4 +34,4 @@ void heartbeat_stop(struct heartbeat *);
 void heartbeat_add(struct heartbeat *, struct heartbeat_watcher * watcher, heartbeat_cb cb);
 void heartbeat_remove(struct heartbeat *, struct heartbeat_watcher * watcher);
 
-#endif //__LIBSCCMN_HEARTBEAT_H__
+#endif // FT_HEARTBEAT_H_

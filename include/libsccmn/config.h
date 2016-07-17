@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_CONFIG_H__
-#define __LIBSCCMN_CONFIG_H__
+#ifndef FT_CONFIG_H_
+#define FT_CONFIG_H_
 
 struct libsccmn_config
 {
@@ -34,4 +34,4 @@ struct libsccmn_config
 
 extern struct libsccmn_config libsccmn_config;
 
-#endif // __LIBSCCMN_CONFIG_H__
+#endif // FT_CONFIG_H_

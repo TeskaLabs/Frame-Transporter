@@ -7,8 +7,8 @@ https://github.com/benhoyt/inih
 
 */
 
-#ifndef __LIBSCCMN_INI_H__
-#define __LIBSCCMN_INI_H__
+#ifndef FT_INI_H_
+#define FT_INI_H_
 
 /* Make this header file easier to include in C++ code */
 #ifdef __cplusplus
@@ -90,4 +90,4 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
 }
 #endif
 
-#endif /* __LIBSCCMN_INI_H__ */
+#endif // FT_INI_H_ 

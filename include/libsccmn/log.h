@@ -1,5 +1,5 @@
-#ifndef ft_LOG_H
-#define ft_LOG_H
+#ifndef FT_LOG_H_
+#define FT_LOG_H_
 
 /*
 Log levels:
@@ -167,4 +167,4 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length);
 
 ///
 
-#endif //ft_LOG_H
+#endif // FT_LOG_H_
