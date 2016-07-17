@@ -50,19 +50,12 @@ bool on_read_out_to_in(struct established_socket * established_sock, struct fram
 	return true;
 }
 
-void on_connected(struct established_socket * established_sock)
-{
-	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
-	established_socket_read_start(&pair->stream_in);
-	established_socket_read_start(&pair->stream_out);
-}
-
 void on_error(struct established_socket * established_sock)
 {
 	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
 	//TODO: maybe even hard shutdown
-	established_socket_write_shutdown(&pair->stream_in);
-	established_socket_write_shutdown(&pair->stream_out);
+	ft_stream_cntl(&pair->stream_in, FT_STREAM_WRITE_SHUTDOWN);
+	ft_stream_cntl(&pair->stream_out, FT_STREAM_WRITE_SHUTDOWN);
 }
 
 struct ft_stream_delegate stream_in_delegate = 
@@ -75,7 +68,6 @@ struct ft_stream_delegate stream_in_delegate =
 struct ft_stream_delegate stream_out_delegate = 
 {
 	.read = on_read_out_to_in,
-	.connected = on_connected,
 	.error = on_error,
 };
 
@@ -158,10 +150,8 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 	FT_LIST_FOR(&stream_pairs, node)
 	{
 		struct stream_pair * pair = (struct stream_pair *)&node->data;
-		established_socket_read_stop(&pair->stream_in);
-		established_socket_write_stop(&pair->stream_in);
-		established_socket_read_stop(&pair->stream_out);
-		established_socket_write_stop(&pair->stream_out);
+		ft_stream_cntl(&pair->stream_in, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
+		ft_stream_cntl(&pair->stream_out, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
 	}
 
 	ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);

@@ -67,7 +67,6 @@ static bool on_accept_cb(struct listening_socket * listening_socket, int fd, con
 
 	// Start read on the socket
 	established_socket_set_read_partial(stream, true);
-	established_socket_read_start(stream);
 
 	ft_list_add(&streams, new_node);
 
@@ -86,8 +85,7 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 	FT_LIST_FOR(&streams, node)
 	{
 		struct established_socket * stream = (struct established_socket *)node->data;
-		established_socket_read_stop(stream);
-		established_socket_write_stop(stream);
+		ft_stream_cntl(stream, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
 	}
 
 	ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
@@ -116,9 +114,13 @@ restart:
 			goto restart; // List has been changed during iteration
 		}
 
-		if (((!throttle) && (sock->flags.read_throttle == true)) || ((throttle) && (sock->flags.read_throttle == false)))
+		if ((throttle) && (sock->flags.read_throttle == false))
 		{
-			established_socket_read_throttle(sock, throttle);
+			ft_stream_cntl(sock, FT_STREAM_READ_PAUSE);
+		}
+		else if ((!throttle) && (sock->flags.read_throttle == true))
+		{
+			ft_stream_cntl(sock, FT_STREAM_READ_RESUME);
 		}
 	}
 }

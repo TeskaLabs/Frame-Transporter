@@ -86,15 +86,51 @@ bool established_socket_init_accept(struct established_socket *, struct ft_strea
 bool established_socket_init_connect(struct established_socket *, struct ft_stream_delegate * delegate, struct context * context, const struct addrinfo * addr);
 void established_socket_fini(struct established_socket *);
 
-void established_socket_read_start(struct established_socket *);
-void established_socket_read_stop(struct established_socket *);
-void established_socket_read_throttle(struct established_socket *, bool throttle);
-
-void established_socket_write_start(struct established_socket *);
-void established_socket_write_stop(struct established_socket *);
-
 bool established_socket_write(struct established_socket *, struct frame * frame);
-bool established_socket_write_shutdown(struct established_socket *);
+
+bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
+
+void established_socket_diag(struct established_socket *);
+
+///
+
+enum ft_stream_cntl_codes
+{
+	FT_STREAM_READ_START     = 0x0001,
+	FT_STREAM_READ_STOP      = 0x0002,
+	FT_STREAM_READ_PAUSE     = 0x0004,  // Start read throttling
+	FT_STREAM_READ_RESUME    = 0x0008,  // Stop read throttling
+
+	FT_STREAM_WRITE_START    = 0x0010,
+	FT_STREAM_WRITE_STOP     = 0x0020,
+	FT_STREAM_WRITE_SHUTDOWN = 0x0040,  // Submit write shutdown
+};
+
+
+static inline bool ft_stream_cntl(struct established_socket * this, const int control_code)
+{
+	assert(this != NULL);
+
+	bool _ft_stream_cntl_read_start(struct established_socket *);
+	bool _ft_stream_cntl_read_stop(struct established_socket *);
+	bool _ft_stream_cntl_read_throttle(struct established_socket *, bool throttle);
+	
+	bool _ft_stream_cntl_write_start(struct established_socket *);
+	bool _ft_stream_cntl_write_stop(struct established_socket *);
+	bool _ft_stream_cntl_write_shutdown(struct established_socket *);
+
+	bool ok = true;
+	if ((control_code & FT_STREAM_READ_START) != 0) ok &= _ft_stream_cntl_read_start(this);
+	if ((control_code & FT_STREAM_READ_STOP) != 0) ok &= _ft_stream_cntl_read_stop(this);
+	if ((control_code & FT_STREAM_READ_PAUSE) != 0) ok &= _ft_stream_cntl_read_throttle(this, true);
+	if ((control_code & FT_STREAM_READ_RESUME) != 0) ok &= _ft_stream_cntl_read_throttle(this, false);
+	if ((control_code & FT_STREAM_WRITE_START) != 0) ok &= _ft_stream_cntl_write_start(this);
+	if ((control_code & FT_STREAM_WRITE_STOP) != 0) ok &= _ft_stream_cntl_write_stop(this);
+	if ((control_code & FT_STREAM_WRITE_SHUTDOWN) != 0) ok &= _ft_stream_cntl_write_shutdown(this);
+	return ok;
+}
+
+///
 
 static inline bool established_socket_is_shutdown(struct established_socket * this)
 {
@@ -106,10 +142,6 @@ static inline void established_socket_set_read_partial(struct established_socket
 	assert(this != NULL);
 	this->flags.read_partial = read_partial;
 }
-
-bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
-
-void established_socket_diag(struct established_socket *);
 
 ///
 

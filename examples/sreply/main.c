@@ -91,8 +91,7 @@ static void on_exiting_cb(struct exiting_watcher * watcher, struct context * con
 	FT_LIST_FOR(&streams, node)
 	{
 		struct established_socket * stream = (struct established_socket *)node->data;
-		established_socket_read_stop(stream);
-		established_socket_write_stop(stream);
+		ft_stream_cntl(stream, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
 	}
 
 	ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
@@ -121,9 +120,13 @@ restart:
 			goto restart;
 		}
 
-		if (((!throttle) && (sock->flags.read_throttle == true)) || ((throttle) && (sock->flags.read_throttle == false)))
+		if ((throttle) && (sock->flags.read_throttle == false))
 		{
-			established_socket_read_throttle(sock, throttle);
+			ft_stream_cntl(sock, FT_STREAM_READ_PAUSE);
+		}
+		else if ((!throttle) && (sock->flags.read_throttle == true))
+		{
+			ft_stream_cntl(sock, FT_STREAM_READ_RESUME);
 		}
 	}
 }

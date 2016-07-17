@@ -37,10 +37,6 @@ struct addrinfo * resolve(const char * host, const char * port)
 
 ///
 
-void on_connected(struct established_socket * this)
-{
-	established_socket_read_start(this);
-}
 
 bool on_read(struct established_socket * established_sock, struct frame * frame)
 {
@@ -62,7 +58,6 @@ void on_error(struct established_socket * established_sock)
 
 struct ft_stream_delegate stream_delegate = 
 {
-	.connected = on_connected,
 	.read = on_read,
 	.error = on_error,
 };
@@ -137,9 +132,8 @@ int main(int argc, char const *argv[])
 	ok = established_socket_write(&sock, frame);
 	if (!ok) return EXIT_FAILURE;
 
-	ok = established_socket_write_shutdown(&sock);
+	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
 	if (!ok) return EXIT_FAILURE;
-
 
 	// Enter event loop
 	context_evloop_run(&context);

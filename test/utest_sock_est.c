@@ -41,6 +41,7 @@ struct frame * sock_est_1_on_get_read_frame(struct established_socket * establis
 
 bool sock_est_1_on_read(struct established_socket * established_sock, struct frame * frame)
 {
+	bool ok;
 	ck_assert_int_ne(frame->type, frame_type_FREE);
 
 	if (frame->type == frame_type_RAW_DATA)
@@ -53,7 +54,9 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 
 		sock_est_1_result_counter += 1;
 
-		established_socket_write_shutdown(established_sock);
+		ok = ft_stream_cntl(established_sock, FT_STREAM_WRITE_SHUTDOWN);
+		ck_assert_int_eq(ok, true);
+
 		return true;
 	}
 
@@ -64,7 +67,9 @@ bool sock_est_1_on_read(struct established_socket * established_sock, struct fra
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
 		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
-		established_socket_write_shutdown(established_sock);
+		ok = ft_stream_cntl(established_sock, FT_STREAM_WRITE_SHUTDOWN);
+		ck_assert_int_eq(ok, true);
+
 		return false;
 	}
 
@@ -155,6 +160,8 @@ END_TEST
 
 bool sock_est_2_on_read(struct established_socket * established_sock, struct frame * frame)
 {
+	bool ok;
+
 	ck_assert_int_ne(frame->type, frame_type_FREE);
 
 	if (frame->type == frame_type_RAW_DATA)
@@ -173,7 +180,9 @@ bool sock_est_2_on_read(struct established_socket * established_sock, struct fra
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
 
 
-		established_socket_write_shutdown(established_sock);
+		ok = ft_stream_cntl(established_sock, FT_STREAM_WRITE_SHUTDOWN);
+		ck_assert_int_eq(ok, true);
+
 		return false;
 	}
 
@@ -304,11 +313,10 @@ START_TEST(sock_est_conn_fail_utest)
 	ok = established_socket_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
 
-	ok = established_socket_write_shutdown(&sock);
+	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
 	ck_assert_int_eq(ok, true);
 
 	context_evloop_run(&context);
-
 
 	established_socket_fini(&sock);
 
@@ -325,9 +333,7 @@ EVP_MD_CTX * sock_est_ssl_1_mdctx;
 void sock_est_ssl_1_on_connected(struct established_socket * this)
 {
 	ck_assert_int_eq(this->flags.ssl_status, 2);
-	ck_assert_int_eq(this->flags.connecting, false);
-
-	established_socket_read_start(this);
+	ck_assert_int_eq(this->flags.connecting, false);	
 }
 
 bool sock_est_ssl_1_on_read(struct established_socket * established_sock, struct frame * frame)
@@ -449,7 +455,8 @@ START_TEST(sock_est_ssl_client_utest)
 	ok = established_socket_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
 
-	ok = established_socket_write_shutdown(&sock);
+
+	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
 	ck_assert_int_eq(ok, true);
 
 	context_evloop_run(&context);
@@ -493,6 +500,7 @@ int sock_est_ssl_server_utest_result_counter;
 
 bool sock_est_ssl_server_on_read(struct established_socket * established_sock, struct frame * frame)
 {
+	bool ok;
 	ck_assert_int_ne(frame->type, frame_type_FREE);
 
 	if (frame->type == frame_type_RAW_DATA)
@@ -506,7 +514,9 @@ bool sock_est_ssl_server_on_read(struct established_socket * established_sock, s
 
 		sock_est_ssl_server_utest_result_counter += 1;
 
-		established_socket_write_shutdown(established_sock);
+		ok = ft_stream_cntl(established_sock, FT_STREAM_WRITE_SHUTDOWN);
+		ck_assert_int_eq(ok, true);
+
 		return true;
 	}
 
@@ -518,7 +528,9 @@ bool sock_est_ssl_server_on_read(struct established_socket * established_sock, s
 
 		ck_assert_int_eq(established_sock->stats.read_bytes, 11);
 
-		established_socket_write_shutdown(established_sock);
+		ok = ft_stream_cntl(established_sock, FT_STREAM_WRITE_SHUTDOWN);
+		ck_assert_int_eq(ok, true);
+
 		return false;
 	}
 

@@ -145,15 +145,19 @@ bool established_socket_init_accept(struct established_socket * this, struct ft_
 		listening_socket->ai_socktype,
 		listening_socket->ai_protocol
 	);
-	if (!ok) return false;
+	if (!ok)
+	{
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
+		return false;
+	}
 
 	this->flags.connecting = false;
 	this->flags.active = false;
 	this->flags.ssl_server = true;
 	this->connected_at = this->created_at;	
 
-	established_socket_read_start(this);
-	established_socket_write_start(this);
+	ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
+	if (!ok) L_WARN_P("Failed to set events properly");
 
 	L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
@@ -182,6 +186,7 @@ bool established_socket_init_connect(struct established_socket * this, struct ft
 	);
 	if (!ok)
 	{
+		L_TRACE(L_TRACEID_SOCK_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
 		return false;
 	}
 
@@ -197,6 +202,7 @@ bool established_socket_init_connect(struct established_socket * this, struct ft
 		if (errno != EINPROGRESS)
 		{
 			L_ERROR_ERRNO(errno, "connect()");
+			L_TRACE(L_TRACEID_SOCK_STREAM, "END connect err" TRACE_FMT, TRACE_ARGS);
 			return false;
 		}
 	}
@@ -218,8 +224,7 @@ void established_socket_fini(struct established_socket * this)
 
 	if(this->delegate->fini != NULL) this->delegate->fini(this);	
 
-	established_socket_read_stop(this);
-	established_socket_write_stop(this);
+	ft_stream_cntl(this, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
 
 	int rc = close(this->read_watcher.fd);
 	if (rc != 0) L_WARN_ERRNO_P(errno, "close()");
@@ -347,9 +352,7 @@ void established_socket_on_connect_event(struct established_socket * this)
 		return;
 	}
 
-	// Configure established callbacks
-	established_socket_read_start(this);
-	established_socket_write_start(this);
+	ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 
 	this->connected_at = ev_now(this->context->ev_loop);
 	this->flags.connecting = false;
@@ -377,30 +380,34 @@ void established_socket_read_unset_event(struct established_socket * this, enum 
 		ev_io_stop(this->context->ev_loop, &this->read_watcher);	
 }
 
-void established_socket_read_start(struct established_socket * this)
+bool _ft_stream_cntl_read_start(struct established_socket * this)
 {
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
 
 	established_socket_read_set_event(this, READ_WANT_READ);
+	return true;
 }
 
 
-void established_socket_read_stop(struct established_socket * this)
+bool _ft_stream_cntl_read_stop(struct established_socket * this)
 {
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
 
 	established_socket_read_unset_event(this, READ_WANT_READ);
+	return true;
 }
 
-void established_socket_read_throttle(struct established_socket * this, bool throttle)
+bool _ft_stream_cntl_read_throttle(struct established_socket * this, bool throttle)
 {
 	assert(this != NULL);
 	this->flags.read_throttle = throttle;
 
 	if (throttle) established_socket_read_unset_event(this, 0);
 	else established_socket_read_set_event(this, 0);
+
+	return true;
 }
 
 
@@ -440,7 +447,7 @@ static void established_socket_read_shutdown(struct established_socket * this)
 	L_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	// Stop futher reads on the socket
-	established_socket_read_stop(this);
+	ft_stream_cntl(this, FT_STREAM_READ_STOP);
 	this->read_shutdown_at = ev_now(this->context->ev_loop);
 	this->flags.read_shutdown = true;
 
@@ -458,7 +465,7 @@ static void established_socket_read_shutdown(struct established_socket * this)
 	if (!ok)
 	{
 		L_WARN("Failed to submit end-of-stream frame, throttling");
-		established_socket_read_throttle(this, true);
+		ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
 		//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
 		return;
 	}
@@ -496,7 +503,7 @@ void established_socket_on_read_event(struct established_socket * this)
 			if (this->read_frame == NULL)
 			{
 				L_WARN("Out of frames when reading, throttling");
-				established_socket_read_throttle(this, true);
+				ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
 				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
 				L_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
@@ -715,21 +722,23 @@ void established_socket_write_unset_event(struct established_socket * this, enum
 }
 
 
-void established_socket_write_start(struct established_socket * this)
+bool _ft_stream_cntl_write_start(struct established_socket * this)
 {
 	assert(this != NULL);
 	assert(this->write_watcher.fd >= 0);
 
-	established_socket_write_set_event(this, WRITE_WANT_WRITE);	
+	established_socket_write_set_event(this, WRITE_WANT_WRITE);
+	return true;
 }
 
 
-void established_socket_write_stop(struct established_socket * this)
+bool _ft_stream_cntl_write_stop(struct established_socket * this)
 {
 	assert(this != NULL);
 	assert(this->write_watcher.fd >= 0);
 
 	established_socket_write_unset_event(this, WRITE_WANT_WRITE);
+	return true;
 }
 
 
@@ -980,7 +989,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 	return true;
 }
 
-bool established_socket_write_shutdown(struct established_socket * this)
+bool _ft_stream_cntl_write_shutdown(struct established_socket * this)
 {
 	assert(this != NULL);
 	
@@ -1063,8 +1072,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 		established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
 		established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 
-		established_socket_read_start(this);
-		established_socket_write_start(this);
+		ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 
 		this->connected_at = ev_now(this->context->ev_loop);
 		this->flags.connecting = false;
@@ -1153,8 +1161,7 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 		established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
 		established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 
-		established_socket_read_start(this);
-		established_socket_write_start(this);
+		ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 
 		this->connected_at = ev_now(this->context->ev_loop);
 		this->flags.connecting = false;
