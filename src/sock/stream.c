@@ -135,7 +135,7 @@ bool established_socket_init_accept(struct established_socket * this, struct ft_
 {
 	assert(listening_socket != NULL);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN fd:%d", fd);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN fd:%d", fd);
 
 	bool ok = established_socket_init(
 		this, delegate, listening_socket->context, 
@@ -147,7 +147,7 @@ bool established_socket_init_accept(struct established_socket * this, struct ft_
 	);
 	if (!ok)
 	{
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
 		return false;
 	}
 
@@ -159,7 +159,7 @@ bool established_socket_init_accept(struct established_socket * this, struct ft_
 	ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 	if (!ok) FT_WARN_P("Failed to set events properly");
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return true;
 }
@@ -174,7 +174,7 @@ bool established_socket_init_connect(struct established_socket * this, struct ft
 		return false;
 	}
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN fd:%d", fd);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN fd:%d", fd);
 
 	bool ok = established_socket_init(
 		this, delegate, context,
@@ -186,7 +186,7 @@ bool established_socket_init_connect(struct established_socket * this, struct ft
 	);
 	if (!ok)
 	{
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
 		return false;
 	}
 
@@ -202,14 +202,14 @@ bool established_socket_init_connect(struct established_socket * this, struct ft
 		if (errno != EINPROGRESS)
 		{
 			FT_ERROR_ERRNO(errno, "connect()");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END connect err" TRACE_FMT, TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END connect err" TRACE_FMT, TRACE_ARGS);
 			return false;
 		}
 	}
 
 	established_socket_write_set_event(this, CONNECT_WANT_WRITE);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return true;
 }
@@ -306,7 +306,7 @@ static void established_socket_error(struct established_socket * this, int sys_e
 		}		
 	}
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, TRACE_FMT " %s", TRACE_ARGS, when);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, TRACE_FMT " %s", TRACE_ARGS, when);
 }
 
 ///
@@ -316,7 +316,7 @@ void established_socket_on_connect_event(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->flags.connecting == true);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, TRACE_FMT, TRACE_ARGS);
 
 	int errno_cmd = -1;
 	socklen_t optlen = sizeof(errno_cmd);
@@ -444,7 +444,7 @@ static bool established_socket_uplink_read_stream_end(struct established_socket 
 
 static void established_socket_read_shutdown(struct established_socket * this)
 {
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	// Stop futher reads on the socket
 	ft_stream_cntl(this, FT_STREAM_READ_STOP);
@@ -470,7 +470,7 @@ static void established_socket_read_shutdown(struct established_socket * this)
 		return;
 	}
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
 
 void established_socket_on_read_event(struct established_socket * this)
@@ -482,7 +482,7 @@ void established_socket_on_read_event(struct established_socket * this)
 		|| ((this->ssl != NULL) && (this->flags.ssl_status == 2))
 	);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	this->stats.read_events += 1;
 
@@ -505,7 +505,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				FT_WARN("Out of frames when reading, throttling");
 				ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
 				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
-				FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
+				FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
 			}
 		}
@@ -531,7 +531,7 @@ void established_socket_on_read_event(struct established_socket * this)
 					if (errno == EAGAIN)
 					{
 						established_socket_read_set_event(this, READ_WANT_READ);
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " EAGAIN", TRACE_ARGS);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " EAGAIN", TRACE_ARGS);
 						return;
 					}
 
@@ -545,7 +545,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				}
 
 				established_socket_read_shutdown(this);
-				FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+				FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 				return;
 			}
 		}
@@ -563,7 +563,7 @@ void established_socket_on_read_event(struct established_socket * this)
 					case SSL_ERROR_WANT_READ:
 						established_socket_read_set_event(this, READ_WANT_READ);
 						established_socket_write_unset_event(this, SSL_READ_WANT_WRITE);
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " READ_WANT_READ", TRACE_ARGS);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " READ_WANT_READ", TRACE_ARGS);
 						return;
 
 					case SSL_ERROR_WANT_WRITE:
@@ -575,7 +575,7 @@ void established_socket_on_read_event(struct established_socket * this)
 						}
 						established_socket_read_unset_event(this, READ_WANT_READ);
 						established_socket_write_set_event(this, SSL_READ_WANT_WRITE);
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_READ_WANT_WRITE", TRACE_ARGS);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_READ_WANT_WRITE", TRACE_ARGS);
 						return;
 
 
@@ -598,7 +598,7 @@ void established_socket_on_read_event(struct established_socket * this)
 
 						established_socket_read_shutdown(this);
 
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL received shutdown (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL received shutdown (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 						return;
 
 
@@ -619,7 +619,7 @@ void established_socket_on_read_event(struct established_socket * this)
 							this->error.ssl_error = 0;
 
 							established_socket_read_shutdown(this);
-							FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL terminate (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
+							FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL terminate (ssl_shutdown_status: %d)", TRACE_ARGS, ssl_shutdown_status);
 							return;
 						}
 
@@ -629,7 +629,7 @@ void established_socket_on_read_event(struct established_socket * this)
 						}
 
 						established_socket_read_shutdown(this);
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL (errno: %d, rc: %zd)", TRACE_ARGS, errno_read, rc);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL (errno: %d, rc: %zd)", TRACE_ARGS, errno_read, rc);
 						return;
 
 
@@ -641,7 +641,7 @@ void established_socket_on_read_event(struct established_socket * this)
 							established_socket_error(this, 0, ssl_err_tmp, "SSL read (SSL error)");
 						}
 						established_socket_read_shutdown(this);
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 						return;
 
 
@@ -649,7 +649,7 @@ void established_socket_on_read_event(struct established_socket * this)
 						FT_ERROR_P("Unexpected error %d  during read, closing", ssl_err);
 						established_socket_error(this, errno_read == 0 ? ECONNRESET : errno_read, 0UL, "SSL read (unknown)");
 						established_socket_read_shutdown(this);
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
 						return;
 
 				}
@@ -657,7 +657,7 @@ void established_socket_on_read_event(struct established_socket * this)
 		}
 
 		assert(rc > 0);
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "READ " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "READ " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
 		this->stats.read_bytes += rc;
 		frame_dvec_position_add(frame_dvec, rc);
 
@@ -670,7 +670,7 @@ void established_socket_on_read_event(struct established_socket * this)
 				if (upstreamed) this->read_frame = NULL;
 			}
 			established_socket_read_set_event(this, READ_WANT_READ);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " incomplete read (%zd)", TRACE_ARGS, rc);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " incomplete read (%zd)", TRACE_ARGS, rc);
 			return;
 		}
 		assert(frame_dvec->position == frame_dvec->limit);
@@ -685,7 +685,7 @@ void established_socket_on_read_event(struct established_socket * this)
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
 				// If watcher is stopped, break reading	
-				FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " read stopped", TRACE_ARGS);
+				FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " read stopped", TRACE_ARGS);
 				return;
 			}
 		}
@@ -696,7 +696,7 @@ void established_socket_on_read_event(struct established_socket * this)
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
 				// If watcher is stopped, break reading	
-				FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " partial read stopped", TRACE_ARGS);
+				FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " partial read stopped", TRACE_ARGS);
 				return;
 			}
 		}
@@ -704,7 +704,7 @@ void established_socket_on_read_event(struct established_socket * this)
 
 	// Maximum read loops within event loop iteration is exceeded
 	established_socket_read_set_event(this, READ_WANT_READ);
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " max read loops", TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " max read loops", TRACE_ARGS);
 }
 
 ///
@@ -751,19 +751,19 @@ static void established_socket_write_real(struct established_socket * this)
 	assert(this->flags.connecting == false);
 	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);	
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);	
 
 	unsigned int write_loop = 0;
 	while (this->write_frames != NULL)
 	{
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, (unsigned long long)this->write_frames->type);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, (unsigned long long)this->write_frames->type);
 
 		if (write_loop > libsccmn_config.sock_est_max_read_loops)
 		{
 			// Maximum write loops per event loop iteration reached
 			this->flags.write_ready = false;
 			established_socket_write_set_event(this, WRITE_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " max loops", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " max loops", TRACE_ARGS);
 			return; 
 		}
 		write_loop += 1;
@@ -794,7 +794,7 @@ static void established_socket_write_real(struct established_socket * this)
 				if (rc != 0) FT_WARN_ERRNO_P(errno, "shutdown()");
 			}
 
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
 			return;
 		}
 
@@ -884,7 +884,7 @@ static void established_socket_write_real(struct established_socket * this)
 					default:
 						FT_WARN_P("Unexpected error %d  during write, closing", ssl_err);
 						established_socket_error(this, errno_write == 0 ? ECONNRESET : errno_write, 0UL, "SSL read (unknown)");
-						FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
+						FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_UNKNOWN", TRACE_ARGS);
 						return;
 
 				}
@@ -892,7 +892,7 @@ static void established_socket_write_real(struct established_socket * this)
 		}
 
 		assert(rc > 0);
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "WRITE " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "WRITE " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
 		this->stats.write_bytes += rc;
 		frame_dvec_position_add(frame_dvec, rc);
 		if (frame_dvec->position < frame_dvec->limit)
@@ -900,7 +900,7 @@ static void established_socket_write_real(struct established_socket * this)
 			// Not all data has been written, wait for next write event
 			this->flags.write_ready = false;
 			established_socket_write_set_event(this, WRITE_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " partial", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " partial", TRACE_ARGS);
 			return; 
 		}
 		assert(frame_dvec->position == frame_dvec->limit);
@@ -923,7 +923,7 @@ static void established_socket_write_real(struct established_socket * this)
 		}
 	}
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 	return;
 }
 
@@ -933,7 +933,7 @@ void established_socket_on_write_event(struct established_socket * this)
 	assert(this != NULL);
 	assert(this->flags.connecting == false);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	this->stats.write_events += 1;
 	this->flags.write_ready = true;
@@ -950,7 +950,7 @@ void established_socket_on_write_event(struct established_socket * this)
 		established_socket_write_unset_event(this, WRITE_WANT_WRITE);
 	}
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
 
 
@@ -958,7 +958,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 {
 	assert(this != NULL);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	if (this->flags.write_open == false)
 	{
@@ -977,7 +977,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 	if (this->flags.write_ready == false)
 	{
 		if (this->flags.connecting == false) established_socket_write_set_event(this, WRITE_WANT_WRITE);
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " queue", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " queue", TRACE_ARGS);
 		return true;
 	}
 
@@ -985,7 +985,7 @@ bool established_socket_write(struct established_socket * this, struct frame * f
 
 	established_socket_write_real(this);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " direct", TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " direct", TRACE_ARGS);
 	return true;
 }
 
@@ -993,7 +993,7 @@ bool _ft_stream_cntl_write_shutdown(struct established_socket * this)
 {
 	assert(this != NULL);
 	
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
@@ -1006,7 +1006,7 @@ bool _ft_stream_cntl_write_shutdown(struct established_socket * this)
 	}
 
 	bool ret = established_socket_write(this, frame);
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return ret;
 }
@@ -1058,7 +1058,7 @@ bool established_socket_ssl_enable(struct established_socket * this, SSL_CTX *ct
 
 static void established_socket_on_ssl_handshake_connect_event(struct established_socket * this)
 {
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
 
 	rc = SSL_connect(this->ssl);
@@ -1082,7 +1082,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 		// Simulate a write event to dump frames in the write queue
 		established_socket_on_write_event(this);
 
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
 		return;
 	}
 
@@ -1093,18 +1093,18 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 		case SSL_ERROR_WANT_READ:
 			established_socket_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
 			established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_READ (rc: %d)", TRACE_ARGS, rc);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_READ (rc: %d)", TRACE_ARGS, rc);
 			return;
 
 		case SSL_ERROR_WANT_WRITE:
 			established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 			established_socket_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (SSL_ERROR_ZERO_RETURN)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
@@ -1122,7 +1122,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 				FT_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d, errno: %d, ssl_err: %lu, ssl_status: %d)", rc, errno_con, ERR_peek_error(), SSL_get_shutdown(this->ssl));
 			}
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (SSL_ERROR_SYSCALL)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SSL:
@@ -1132,13 +1132,13 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 				assert(errno_con == 0);
 				established_socket_error(this, 0, ssl_err_tmp, "SSL connect (SSL_ERROR_SSL)");
 			}
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
 
 		default:
 			FT_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (unknown)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 
 	}
@@ -1147,7 +1147,7 @@ static void established_socket_on_ssl_handshake_connect_event(struct established
 
 static void established_socket_on_ssl_handshake_accept_event(struct established_socket * this)
 {
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
 
 	rc = SSL_accept(this->ssl);
@@ -1171,7 +1171,7 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 		// Simulate a write event to dump frames in the write queue
 		established_socket_on_write_event(this);
 
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
 		return;
 	}
 
@@ -1182,24 +1182,24 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 		case SSL_ERROR_WANT_READ:
 			established_socket_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
 			established_socket_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_HANDSHAKE_WANT_READ (rc: %d)", TRACE_ARGS, rc);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_HANDSHAKE_WANT_READ (rc: %d)", TRACE_ARGS, rc);
 			return;
 
 		case SSL_ERROR_WANT_WRITE:
 			established_socket_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 			established_socket_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_HANDSHAKE_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_HANDSHAKE_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (zero ret)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
 			FT_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (syscall)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SSL:
@@ -1210,14 +1210,14 @@ static void established_socket_on_ssl_handshake_accept_event(struct established_
 				assert(errno_con == 0 );
 				established_socket_error(this, 0, ssl_err_tmp, "SSL connect (SSL error)");
 			}
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
 
 		default:
 			// SSL Handshake failed (in a strange way)
 			FT_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
 			established_socket_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (unknown)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
 }
@@ -1245,14 +1245,14 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 	assert(this->flags.ssl_status != 0);
 	assert(this->ssl != NULL);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 
 	int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 	if ((ssl_shutdown_status & SSL_SENT_SHUTDOWN) == SSL_SENT_SHUTDOWN)
 	{
 		FT_WARN("SSL shutdown has been already sent");
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " already sent", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " already sent", TRACE_ARGS);
 		return;
 	}
 
@@ -1264,7 +1264,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 		FT_DEBUG("SSL shutdown sent");
 		established_socket_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
 		established_socket_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " sent", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " sent", TRACE_ARGS);
 		return;
 	}
 
@@ -1280,7 +1280,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
 		if ((rc != 0) && ( errno != ENOTCONN)) FT_WARN_ERRNO_P(errno, "shutdown()");
 
-		FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " completed", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " completed", TRACE_ARGS);
 		return;
 	}
 
@@ -1291,13 +1291,13 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 		case SSL_ERROR_WANT_READ:
 			established_socket_read_set_event(this, SSL_SHUTDOWN_WANT_READ);
 			established_socket_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_READ", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_READ", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_WANT_WRITE:
 			established_socket_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
 			established_socket_write_set_event(this, SSL_SHUTDOWN_WANT_WRITE);
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_WRITE", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " SSL_SHUTDOWN_WANT_WRITE", TRACE_ARGS);
 			return;
 
 
@@ -1308,7 +1308,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 				assert(errno_ssl_cmd == 0);
 				established_socket_error(this, 0, ssl_err_tmp, "SSL shutdown (unknown)");
 			}
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 
 		case SSL_ERROR_ZERO_RETURN:
 		case SSL_ERROR_SYSCALL:
@@ -1316,7 +1316,7 @@ void established_socket_on_ssl_sent_shutdown_event(struct established_socket * t
 			// What to do here ...
 			FT_ERROR_P("Unexpected error %d  during SSL shutdown, closing", ssl_err);
 			established_socket_error(this, errno_ssl_cmd == 0 ? ECONNRESET : errno_ssl_cmd, 0UL, "SSL shutdown (unknown)");
-			FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
 
@@ -1329,7 +1329,7 @@ static void established_socket_on_read(struct ev_loop * loop, struct ev_io * wat
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 
 	if ((revents & EV_ERROR) != 0)
 	{
@@ -1367,7 +1367,7 @@ static void established_socket_on_read(struct ev_loop * loop, struct ev_io * wat
 	}
 
 end:
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 }
 
 
@@ -1376,7 +1376,7 @@ static void established_socket_on_write(struct ev_loop * loop, struct ev_io * wa
 	struct established_socket * this = watcher->data;
 	assert(this != NULL);
 
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 
 	if ((revents & EV_ERROR) != 0)
 	{
@@ -1411,7 +1411,7 @@ static void established_socket_on_write(struct ev_loop * loop, struct ev_io * wa
 	}
 
 end:
-	FT_TRACE(L_TRACEID_SOCK_STREAM, "END " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
+	FT_TRACE(FT_TRACE_ID_SOCK_STREAM, "END " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 }
 
 void ft_stream_diagnose(struct established_socket * this)

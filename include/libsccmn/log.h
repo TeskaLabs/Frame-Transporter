@@ -12,10 +12,10 @@ Log levels:
   'A': audit
 */
 
-enum log_trace_ids
+enum ft_log_trace_ids
 {
-	L_TRACEID_SOCK_STREAM = 0x0001,
-	L_TRACEID_EVENT_LOOP = 0x0002,
+	FT_TRACE_ID_SOCK_STREAM = 0x0001,
+	FT_TRACE_ID_EVENT_LOOP = 0x0002,
 	FT_TRACE_ID_LISTENER = 0x0004,
 };
 
