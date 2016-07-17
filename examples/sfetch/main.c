@@ -71,7 +71,7 @@ int main(int argc, char const *argv[])
 	struct ft_stream sock;
 
 	//ft_log_verbose(true);
-	//ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
+	//ft_config.log_trace_mask |= FT_TRACE_ID_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
 	ft_initialise();	
 

@@ -209,7 +209,7 @@ int main(int argc, char const *argv[])
 	ft_log_verbose(true);
 	ft_initialise();
 
-	//ft_config.log_trace_mask |= FT_TRACE_ID_SOCK_STREAM | FT_TRACE_ID_EVENT_LOOP;
+	//ft_config.log_trace_mask |= FT_TRACE_ID_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
 	// Initialize context
 	ok = ft_context_init(&context);
