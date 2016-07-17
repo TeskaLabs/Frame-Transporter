@@ -41,18 +41,18 @@
 // Forward declarations
 struct context;
 
-#include <libsccmn/config.h>
-#include <libsccmn/log.h>
-#include <libsccmn/ini.h>
-#include <libsccmn/heartbeat.h>
-#include <libsccmn/frame.h>
-#include <libsccmn/fpool.h>
-#include <libsccmn/context.h>
+#include <ft/config.h>
+#include <ft/log.h>
+#include <ft/ini.h>
+#include <ft/heartbeat.h>
+#include <ft/frame.h>
+#include <ft/fpool.h>
+#include <ft/context.h>
 
-#include <libsccmn/cols/list.h>
+#include <ft/cols/list.h>
 
-#include <libsccmn/sock/listener.h>
-#include <libsccmn/sock/stream.h>
+#include <ft/sock/listener.h>
+#include <ft/sock/stream.h>
 
 // Global init function
 void ft_initialise(void); // Call this at very beginning
