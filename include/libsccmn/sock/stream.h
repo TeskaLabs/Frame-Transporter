@@ -90,7 +90,7 @@ bool established_socket_write(struct established_socket *, struct frame * frame)
 
 bool established_socket_ssl_enable(struct established_socket *, SSL_CTX *ctx);
 
-void established_socket_diag(struct established_socket *);
+void ft_stream_diagnose(struct established_socket *);
 
 ///
 
