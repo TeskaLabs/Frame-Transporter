@@ -90,12 +90,12 @@ static inline size_t frame_currect_dvec_size(struct frame * this)
 }
 
 // Following function requires access to frame object internals
+// and for this reason it is here and not with ft_vec object
 static inline void * ft_vec_ptr(struct ft_vec * this)
 {
 	assert(this != NULL);
 	assert(this->frame != NULL);
 	return this->frame->data + this->offset + this->position;
 }
-
 
 #endif // FT_FRAME_H_
