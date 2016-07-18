@@ -1,4 +1,8 @@
 language: c
+
+compiler:
+    - clang
+
 script:
     - make clean
     - USE_COVERAGE=1 make all
