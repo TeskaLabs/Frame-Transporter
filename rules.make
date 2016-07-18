@@ -19,7 +19,7 @@ CPPFLAGS+=-I $(ROOTDIR)/include
 LDLIBS+=-Wall
 
 ifdef USE_COVERAGE
-CFLAGS+=-coverage -fprofile-arcs
+CFLAGS+=-coverage
 LDLIBS+=-coverage
 endif
 
