@@ -30,5 +30,5 @@ notifications:
     slack: teskalabs:6pYgZhD2AwcKGkeuNbS4IH4s
 
 after_success:
-    - ls ./src
-    - (cd ./src && bash <(curl -s https://codecov.io/bash) )
+    - (cd ./src && ( find . -name "*.c" | xargs gcov ) )
+    - (cd ./src && bash <(curl -s https://codecov.io/bash) -X gcov )
