@@ -30,4 +30,5 @@ notifications:
     slack: teskalabs:6pYgZhD2AwcKGkeuNbS4IH4s
 
 after_success:
+    - ls ./src
     - (cd ./src && bash <(curl -s https://codecov.io/bash) )
