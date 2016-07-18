@@ -27,3 +27,6 @@ before_script:
 
 notifications:
     slack: teskalabs:6pYgZhD2AwcKGkeuNbS4IH4s
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
