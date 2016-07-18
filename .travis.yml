@@ -2,8 +2,9 @@ language: c
 script:
     - make clean
     - USE_COVERAGE=1 make all
-    - USE_COVERAGE=1 make examples
     - USE_COVERAGE=1 make test
+    - USE_COVERAGE=1 make coverage
+    - make clean all examples
     - (cd examples/reply/ && ./test_reply_01.sh)
     - (cd examples/reply/ && ./test_reply_02.sh)
     - (cd examples/reply/ && ./test_reply_03.sh)
@@ -14,7 +15,6 @@ script:
     - (cd examples/sreply/ && ./test_sreply_01.sh)
     - (cd examples/sreply/ && ./test_sreply_02.sh)
     - (cd examples/sreply/ && ./test_sreply_03.sh)
-    - USE_COVERAGE=1 make coverage
 
 before_install:
     - sudo apt-get update -qq
