@@ -8,7 +8,7 @@ all: $(BIN)
 	@echo " [UT]" $(BIN)
 	@./$(BIN)
 
-LDLIBS+=-lcheck -L$(ROOTDIR)/src -lsccmn
+LDLIBS+=-lcheck -L$(ROOTDIR)/src -lft
 
 ROOTDIR=..
 include $(ROOTDIR)/rules.make

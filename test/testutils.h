@@ -1,5 +1,5 @@
-#ifndef __LIBSCCMN_TESTUTILS_H__
-#define __LIBSCCMN_TESTUTILS_H__
+#ifndef FT_TESTUTILS_H_
+#define FT_TESTUTILS_H_
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,4 +16,4 @@ void generate_random_file(const char * fname, size_t size, size_t nitems);
 void digest_file(EVP_MD_CTX * mdctx, const char * fname);
 void digest_print(unsigned char digest[EVP_MAX_MD_SIZE], unsigned int digest_size);
 
-#endif // __LIBSCCMN_TESTUTILS_H__
+#endif // FT_TESTUTILS_H_

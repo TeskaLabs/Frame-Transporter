@@ -1,4 +1,4 @@
-LIB=libsccmn.a
+LIB=libft.a
 
 OBJS=\
 	boolean.o \
