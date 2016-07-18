@@ -9,6 +9,11 @@
 /examples/sfetch/sfetch
 /examples/sreply/sreply
 
+# Coverage files
+*.gcov
+*.gcda
+*.gcno
+
 # Object files
 *.o
 *.ko

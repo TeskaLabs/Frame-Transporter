@@ -3,6 +3,3 @@ OPENSSLLIBPATH=/usr/lib
 
 EVDYNAMIC=1
 EVLIBPATH=/usr/lib
-
-CFLAGS+=-coverage
-USE_COVERAGE=1

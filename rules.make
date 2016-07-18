@@ -18,6 +18,11 @@ CFLAGS+=-Wall -std=gnu99 -static
 CPPFLAGS+=-I $(ROOTDIR)/include
 LDLIBS+=-Wall
 
+ifdef USE_COVERAGE
+CFLAGS+=-coverage
+LDLIBS+=-coverage
+endif
+
 .PHONY: clean all subdirs ${CLEANSUBDIRS} ${SUBDIRS}
 
 # OpenSSL
@@ -58,7 +63,7 @@ subdirs:
 
 clean:
 	@echo " [RM] in" $(CURDIR)
-	@$(RM) $(BIN) $(LIB) $(CLEAN) $(EXTRACLEAN) ${OBJS}
+	@$(RM) $(BIN) $(LIB) $(CLEAN) $(EXTRACLEAN) ${OBJS} *.gcov *.gcda *.gcno
 	@$(foreach dir, $(SUBDIRS) $(CLEANSUBDIRS), $(MAKE) -C $(dir) clean;)
 
 
