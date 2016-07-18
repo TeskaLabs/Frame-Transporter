@@ -10,10 +10,8 @@ examples:
 	@${MAKE} -C examples
 
 coverage:
-	@for cfile in $$(find ./src ./test ./examples -name "*.c"); \
-	do \
-		( cd $$(dirname $${cfile}) && gcov $$(basename $${cfile}) ) ; \
-	done
+	@(cd test && gcov -p *.c)
+	@(cd src && gcov -p *.c)
 
 ROOTDIR=.
 include $(ROOTDIR)/rules.make

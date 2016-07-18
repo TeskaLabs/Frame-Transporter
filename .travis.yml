@@ -3,18 +3,18 @@ script:
     - make clean
     - USE_COVERAGE=1 make all
     - USE_COVERAGE=1 make test
-    - USE_COVERAGE=1 make coverage
-    - make clean all examples
+    - USE_COVERAGE=1 make examples
     - (cd examples/reply/ && ./test_reply_01.sh)
     - (cd examples/reply/ && ./test_reply_02.sh)
     - (cd examples/reply/ && ./test_reply_03.sh)
     - (cd examples/reply/ && ./test_reply_04.sh)
     - (cd examples/forward/ && ./test_forward_01.sh)
     - (cd examples/stun/ && ./test_stun_01.sh)
-    - (cd examples/sfetch/ && ./test_sfetch_01.sh)
     - (cd examples/sreply/ && ./test_sreply_01.sh)
     - (cd examples/sreply/ && ./test_sreply_02.sh)
     - (cd examples/sreply/ && ./test_sreply_03.sh)
+#    - (cd examples/sfetch/ && ./test_sfetch_01.sh)
+    - USE_COVERAGE=1 make coverage
 
 before_install:
     - sudo apt-get update -qq
