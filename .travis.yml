@@ -14,7 +14,6 @@ script:
     - (cd examples/sreply/ && ./test_sreply_02.sh)
     - (cd examples/sreply/ && ./test_sreply_03.sh)
 #    - (cd examples/sfetch/ && ./test_sfetch_01.sh)
-    - USE_COVERAGE=1 make coverage
 
 before_install:
     - sudo apt-get update -qq
@@ -31,4 +30,4 @@ notifications:
     slack: teskalabs:6pYgZhD2AwcKGkeuNbS4IH4s
 
 after_success:
-    - bash <(curl -s https://codecov.io/bash)
+    - (cd ./src && bash <(curl -s https://codecov.io/bash) )
