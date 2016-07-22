@@ -273,11 +273,17 @@ bool ft_listener_list_cntl(struct ft_list * list, const int control_code)
 {
 	assert(list != NULL);
 
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
+
 	bool ok = true;
 	FT_LIST_FOR(list, node)
 	{
+		FT_TRACE(FT_TRACE_ID_LISTENER, "node");
 		ok &= ft_listener_cntl((struct ft_listener *)node->data, control_code);
 	}
+
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END ok:%c", ok ? 'y' : 'N');
+
 	return ok;
 }
 
