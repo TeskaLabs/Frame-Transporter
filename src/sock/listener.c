@@ -318,6 +318,8 @@ int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate *
 	{
 		struct addrinfo * res;
 
+		if (strcmp(host, "*") == 0) host = NULL;
+
 		rc = getaddrinfo(host, port, &hints, &res);
 		if (rc != 0)
 		{
@@ -370,4 +372,108 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 	FT_TRACE(FT_TRACE_ID_LISTENER, "END rc:%d", rc);
 
 	return rc;
+}
+
+
+int ft_listener_list_extend_auto(struct ft_list * list, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value)
+{
+	assert(list != NULL);
+	assert(delegate != NULL);
+	assert(context != NULL);
+
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
+
+	int rc;
+	regex_t regex;
+	regmatch_t match[10];
+
+	// Multiple listen entries supported
+	char * addr = NULL;
+	char * port = NULL;
+	int ai_family = -1;
+
+	// Port only
+	rc = regcomp(&regex, "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", REG_EXTENDED);
+	assert(rc == 0);
+	rc = regexec(&regex, value, 2, match, 0);
+	if (rc == 0)
+	{
+		ai_family = PF_UNSPEC; // IPv4 and IPv6
+		port = strndup(value + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
+		addr = strdup("*");
+		regfree(&regex);
+		goto fin_getaddrinfo;
+	}
+	regfree(&regex);
+
+
+	// IPv4 (1.2.3.4:443)
+	rc = regcomp(&regex, "^(((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", REG_EXTENDED);
+	assert(rc == 0);
+	rc = regexec(&regex, value, 10, match, 0);
+	if (rc == 0)
+	{
+		ai_family = PF_INET;
+		addr = strndup(value + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
+		port = strndup(value + match[7].rm_so, match[7].rm_eo - match[7].rm_so);
+		regfree(&regex);
+		goto fin_getaddrinfo;
+	}
+	regfree(&regex);
+
+	// IPv6 ([::1]:443)
+	rc = regcomp(&regex, "^\\[(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\\]:([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", REG_EXTENDED);
+	assert(rc == 0);
+	rc = regexec(&regex, value, 2, match, 0);
+	if (rc == 0)
+	{
+		ai_family = PF_INET6;
+		addr = strndup(value + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
+		char * x = strrchr(value,':');
+		assert(x!=NULL);
+		port = strdup(x+1);
+		regfree(&regex);
+		goto fin_getaddrinfo;
+	}
+	regfree(&regex);
+
+	// Hostname (localhost:443)
+	rc = regcomp(&regex, "^([^:]*):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", REG_EXTENDED);
+	assert(rc == 0);
+	rc = regexec(&regex, value, 2, match, 0);
+	if (rc == 0)
+	{
+		ai_family = PF_UNSPEC; // IPv4 and IPv6
+		addr = strndup(value + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
+		char * x = strrchr(value,':');
+		assert(x!=NULL);
+		port = strdup(x+1);
+		regfree(&regex);
+		goto fin_getaddrinfo;
+	}
+	regfree(&regex);
+
+	if (addr != NULL) free(addr);
+	if (port != NULL) free(port);
+
+	FT_ERROR("Invalid format of address/port for listen: '%s'", value);
+
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END error");
+
+	return -1;
+
+fin_getaddrinfo:
+	assert(ai_family >= 0);
+	assert(addr != NULL);
+	assert(port != NULL);
+
+	int ret = ft_listener_list_extend(list, delegate, context, ai_family, ai_socktype, addr, port);
+
+	free(addr);
+	free(port);
+
+	FT_TRACE(FT_TRACE_ID_LISTENER, "END ret:%d", ret);
+
+	return ret;
+
 }

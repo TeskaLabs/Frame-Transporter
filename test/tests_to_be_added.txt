@@ -7,6 +7,8 @@
 - context
 - listening sockets AF_UNIX
 - listening sockets: listening_socket_chain_extend_getaddrinfo
+- ft_listener_list
+- ft_listener '*' as host
 - context_evloop_run
 - context SIGHUP (maybe done)
 - context SIGTERM

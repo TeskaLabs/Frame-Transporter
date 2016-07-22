@@ -67,6 +67,7 @@ bool ft_listener_list_init(struct ft_list *);
 
 int ft_listener_list_extend(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port);
 int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list);
+int ft_listener_list_extend_auto(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value);
 
 bool ft_listener_list_cntl(struct ft_list *, const int control_code);
 
