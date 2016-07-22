@@ -8,6 +8,7 @@
 /examples/stun/stun
 /examples/sfetch/sfetch
 /examples/sreply/sreply
+/examples/http_server/httpserver
 
 # Coverage files
 *.gcov

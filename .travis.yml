@@ -18,10 +18,11 @@ script:
     - (cd examples/sreply/ && ./test_sreply_02.sh)
     - (cd examples/sreply/ && ./test_sreply_03.sh)
 #    - (cd examples/sfetch/ && ./test_sfetch_01.sh)
+    - (cd examples/http_server/ && ./test_httpserver_01.sh)
 
 before_install:
     - sudo apt-get update -qq
-    - sudo apt-get install openssl libev-dev netcat pv socat hugepages -qq
+    - sudo apt-get install openssl libev-dev netcat pv socat hugepages apache2-utils -qq
     - wget http://downloads.sourceforge.net/project/check/check/0.10.0/check-0.10.0.tar.gz -O /tmp/libcheck.tar.gz
     - tar xf /tmp/libcheck.tar.gz -C /tmp
     - (cd /tmp/check-0.10.0/ && ./configure --prefix=/usr && make && sudo make install)

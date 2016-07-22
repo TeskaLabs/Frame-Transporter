@@ -3,7 +3,8 @@ SUBDIRS=\
 	forward \
 	stun \
 	sfetch \
-	sreply
+	sreply \
+	http_server
 
 all: subdirs
 
