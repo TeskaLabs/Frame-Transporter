@@ -50,7 +50,7 @@ int main(int argc, char const *argv[])
 
 #ifdef MAP_HUGETLB
 	FT_INFO("Using hugetlb pages!");
-	ft_pool_set_alloc(&context.frame_pool, ft_pool_alloc_hugetlb);
+	ft_pool_set_alloc(&app.context.frame_pool, ft_pool_alloc_hugetlb);
 #endif
 
 	// Install termination handler
