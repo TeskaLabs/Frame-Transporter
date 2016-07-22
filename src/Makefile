@@ -18,5 +18,11 @@ OBJS=\
 
 all: $(LIB)
 
+coverage:
+	gcov *.c
+	gcov -o=cols cols/*.c 
+	gcov -o=mempool mempool/*.c 
+	gcov -o=sock sock/*.c 
+
 ROOTDIR=..
 include $(ROOTDIR)/rules.make

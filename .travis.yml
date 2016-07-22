@@ -34,5 +34,5 @@ notifications:
     slack: teskalabs:6pYgZhD2AwcKGkeuNbS4IH4s
 
 after_success:
-    - (cd ./src && ( find . -name "*.c" | xargs gcov ) )
+    - USE_COVERAGE=1 make coverage
     - (cd ./src && bash <(curl -s https://codecov.io/bash) -X gcov )
