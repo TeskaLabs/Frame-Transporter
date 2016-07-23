@@ -425,8 +425,8 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 		FT_WARN("Partial read due to read shutdown (%zd bytes)", ft_frame_pos(this->read_frame));
 		bool upstreamed = this->delegate->read(this, this->read_frame);
 		if (!upstreamed) ft_frame_return(this->read_frame);
+		this->read_frame = NULL;
 	}
-	this->read_frame = NULL;
 
 	// Uplink (to delegate) end-of-stream
 	struct ft_frame * frame = NULL;
