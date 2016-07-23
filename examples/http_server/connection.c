@@ -9,6 +9,8 @@ static int connection_on_message_begin(http_parser * parser)
 
 	assert(this->response_frame == NULL);
 
+	this->idling = false;
+
 	this->response_frame = ft_pool_borrow(&app.context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	if (this->response_frame == NULL) return -1;
 
@@ -16,7 +18,9 @@ static int connection_on_message_begin(http_parser * parser)
 	struct ft_vec * vec = ft_frame_get_vec(this->response_frame);
 	if (vec == NULL) return -1;
 
-	ft_vec_sprintf(vec, "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-type: text/plain\r\n\r\nHello World\r\n");
+	ft_vec_sprintf(vec, "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\nContent-type: text/plain\r\n\r\n");
+
+	ft_vec_sprintf(vec, "D\r\nHello world\r\n\r\n0\r\n\r\n");
 
 	return 0;
 }
@@ -35,8 +39,11 @@ static int connection_on_message_complete(http_parser * parser)
 	if (!ok) return -1;
 	this->response_frame = NULL;
 
-	ok = ft_stream_cntl(&this->stream, FT_STREAM_WRITE_SHUTDOWN);
-	if (!ok) return -1;
+	this->idling = true;
+
+	//TODO: If client don't want to do Keep-Alive, shutdown a socket by
+//	ok = ft_stream_cntl(&this->stream, FT_STREAM_WRITE_SHUTDOWN);
+//	if (!ok) return -1;
 
 	return 0;
 }
@@ -68,6 +75,11 @@ bool connection_on_read(struct ft_stream * stream, struct ft_frame * frame)
 			break;
 
 		case FT_FRAME_TYPE_STREAM_END:
+			if (this->idling)
+			{
+				ft_stream_write(&this->stream, frame); // Close write end as well
+				return true;
+			}
 			// Signalise that EOF has been received
 			nparsed = http_parser_execute(&this->http_request_parser, &http_request_parser_settings, NULL, 0);
 			break;
@@ -125,6 +137,7 @@ bool connection_init(struct connection * this, struct ft_listener * listening_so
 	assert(fd >= 0);
 
 	this->response_frame = NULL;
+	this->idling = true;
 
 	ok = ft_stream_accept(&this->stream, &stream_delegate, listening_socket, fd, peer_addr, peer_addr_len);
 	if (!ok) return false;

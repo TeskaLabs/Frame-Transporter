@@ -31,6 +31,7 @@ struct connection
 	struct ft_stream stream;
 	http_parser http_request_parser;
 	struct ft_frame * response_frame;
+	bool idling;
 };
 
 bool connection_init(struct connection * , struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
