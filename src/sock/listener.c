@@ -14,7 +14,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	assert(delegate != NULL);
 	assert(context != NULL);
 	
-	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN");
+	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fa:%d st:%d pr:%d", ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 
 	this->delegate = delegate;
 	this->context = context;
