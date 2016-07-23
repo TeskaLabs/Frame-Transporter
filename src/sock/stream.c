@@ -2,6 +2,13 @@
 
 // TODO: Conceptual: Consider implementing readv() and writev() versions for more complicated frame formats (eh, on linux it is implemented as memcpy)
 // TODO: Consider adding a support for HTTPS proxy
+// TODO: SO_KEEPALIVE
+// TODO: SO_LINGER (in a non-blocking mode?)
+// TODO: SO_PRIORITY
+// TODO: SO_RCVBUF
+// TODO: SO_SNDBUF (??)
+// TODO: SO_RCVLOWAT (consider using)
+// TODO: SO_RCVTIMEO & SO_SNDTIMEO
 
 static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void _ft_stream_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
