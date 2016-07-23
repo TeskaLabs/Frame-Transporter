@@ -13,7 +13,7 @@ trap finish EXIT
 ./httpserver &
 sleep 0.2
 
-# HTTP/1.0
-ab -n 4000 -c 8 http://localhost:18080/test
+# Keep-alive version
+ab -k -n 50000 -c 8 http://localhost:18080/test
 
 echo "TEST $0 OK"

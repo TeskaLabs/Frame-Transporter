@@ -19,6 +19,7 @@ script:
     - (cd examples/sreply/ && ./test_sreply_03.sh)
     - (cd examples/sfetch/ && ./test_sfetch_01.sh)
     - (cd examples/http_server/ && ./test_httpserver_01.sh)
+    - (cd examples/http_server/ && ./test_httpserver_02.sh)
 
 before_install:
     - sudo apt-get update -qq

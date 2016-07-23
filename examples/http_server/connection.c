@@ -15,15 +15,10 @@ static int connection_on_message_begin(http_parser * parser)
 	if (this->response_frame == NULL) return -1;
 
 	ft_frame_format_simple(this->response_frame);
-	struct ft_vec * vec = ft_frame_get_vec(this->response_frame);
-	if (vec == NULL) return -1;
-
-	ft_vec_sprintf(vec, "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\nContent-type: text/plain\r\n\r\n");
-
-	ft_vec_sprintf(vec, "D\r\nHello world\r\n\r\n0\r\n\r\n");
 
 	return 0;
 }
+
 
 static int connection_on_message_complete(http_parser * parser)
 {
@@ -33,17 +28,30 @@ static int connection_on_message_complete(http_parser * parser)
 
 	bool ok;
 
+	// Prepare response
+	struct ft_vec * vec = ft_frame_get_vec(this->response_frame);
+	if (vec == NULL) return -1;
+	ft_vec_sprintf(vec, "HTTP/%d.%d 200 OK\r\nConnection: %s\r\nTransfer-Encoding: chunked\r\nContent-type: text/plain\r\n\r\n",
+		parser->http_major,
+		parser->http_minor,
+		http_should_keep_alive(parser) == 0 ? "close" : "keep-alive"
+	);
+	ft_vec_sprintf(vec, "D\r\nHello world\r\n\r\n0\r\n\r\n");
+
 	ft_frame_flip(this->response_frame);
+	//ft_frame_fprintf(this->response_frame, stdout);
 
 	ok = ft_stream_write(&this->stream, this->response_frame);
 	if (!ok) return -1;
 	this->response_frame = NULL;
 
 	this->idling = true;
-
-	//TODO: If client don't want to do Keep-Alive, shutdown a socket by
-//	ok = ft_stream_cntl(&this->stream, FT_STREAM_WRITE_SHUTDOWN);
-//	if (!ok) return -1;
+	// If this is HTTP/1.0, close connection
+	if ((parser->http_major == 1) && (parser->http_minor == 0) && (http_should_keep_alive(parser) == 0))
+	{
+		ok = ft_stream_cntl(&this->stream, FT_STREAM_WRITE_SHUTDOWN);
+		if (!ok) return -1;
+	}
 
 	return 0;
 }
@@ -63,6 +71,7 @@ bool connection_on_read(struct ft_stream * stream, struct ft_frame * frame)
 	
 	int nparsed;
 	ft_frame_flip(frame);
+	//ft_frame_fprintf(frame, stdout);
 	struct ft_vec * vec = ft_frame_get_vec(frame);
 	size_t recved = (vec != NULL) ? ft_vec_len(vec) : 0;
 
@@ -77,7 +86,10 @@ bool connection_on_read(struct ft_stream * stream, struct ft_frame * frame)
 		case FT_FRAME_TYPE_STREAM_END:
 			if (this->idling)
 			{
-				ft_stream_write(&this->stream, frame); // Close write end as well
+				if (!this->stream.flags.write_open)
+					ft_frame_return(frame);
+				else
+					ft_stream_write(&this->stream, frame); // Close write end as well
 				return true;
 			}
 			// Signalise that EOF has been received
