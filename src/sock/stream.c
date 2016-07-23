@@ -137,6 +137,8 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
 
+	FT_DEBUG("Incoming TCP connection has been accepted");
+
 	bool ok = _ft_stream_init(
 		this, delegate, listening_socket->context, 
 		fd,
@@ -176,6 +178,7 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
 
+
 	bool ok = _ft_stream_init(
 		this, delegate, context,
 		fd,
@@ -194,7 +197,7 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 	this->flags.active = true;
 	this->flags.ssl_server = false;
 
-	FT_DEBUG("Connecting ...");
+	FT_DEBUG("Starting TCP connection");
 
 	int rc = connect(fd, addr->ai_addr, addr->ai_addrlen);
 	if (rc != 0)
@@ -219,8 +222,6 @@ void ft_stream_fini(struct ft_stream * this)
 	assert(this != NULL);
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
-
-	FT_DEBUG("Socket finalized");
 
 	if(this->delegate->fini != NULL) this->delegate->fini(this);	
 
