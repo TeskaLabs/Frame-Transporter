@@ -10,6 +10,8 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	int rc;
 	int fd = -1;
 
+	const int on = 1;
+
 	assert(this != NULL);
 	assert(delegate != NULL);
 	assert(context != NULL);
@@ -71,7 +73,6 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	}
 
 	// Set reuse address option
-	int on = 1;
 	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
 	if (rc == -1)
 	{
@@ -81,7 +82,6 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 
 #ifdef SO_REUSEPORT
 	// Set reuse port option
-	on = 1;
 	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, (const char *) &on, sizeof(on));
 	if (rc == -1)
 	{
@@ -89,6 +89,17 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 		goto error_exit;
 	}
 #endif
+
+	// For IPv6, enable IPV6_V6ONLY option
+	if (this->ai_family == AF_INET6)
+	{
+		rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&on, sizeof(on)); 
+		if (rc == -1)
+		{
+			FT_ERROR_ERRNO(errno, "Failed when setting option IPV6_V6ONLY to listen socket");
+			goto error_exit;
+		}
+	}
 
 	bool res = ft_fd_nonblock(fd);
 	if (!res) FT_WARN_ERRNO(errno, "Failed when setting listen socket to non-blocking mode");
