@@ -1,6 +1,6 @@
 # Frame transporter
 
-The high-performance networking library.
+The high-performance networking library for C and POSIX.
 
 Features include:
 
@@ -9,6 +9,11 @@ Features include:
 * TCP socket abstraction
 * SSL/TLS encryption ([OpenSSL](https://www.openssl.org))
 * Logging
+
+## Copyright and License
+
+Copyright (c) 2016, TeskaLabs Ltd, Ales Teska  
+The project is released under the BSD license.
 
 ---
 [![Build Status](https://travis-ci.org/TeskaLabs/Frame_Transporter.svg?branch=master)](https://travis-ci.org/TeskaLabs/Frame_Transporter)
