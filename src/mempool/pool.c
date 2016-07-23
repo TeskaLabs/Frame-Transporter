@@ -10,14 +10,17 @@ bool ft_pool_init(struct ft_pool * this, struct ft_context * context)
 {
 	assert(this != NULL);
 	this->zones = NULL;
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
 	
 	this->alloc_fnct = ft_pool_alloc_default;
-
 
 	if (context != NULL)
 	{
 		ft_context_at_heartbeat(context, _ft_pool_heartbeat_callback, this);
 	}
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 
 	return true;
 }
@@ -27,6 +30,8 @@ void ft_pool_fini(struct ft_pool * this)
 {
 	assert(this != NULL);
 
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
+
 	while(this->zones != NULL)
 	{
 		struct ft_poolzone * zone = this->zones;
@@ -34,6 +39,8 @@ void ft_pool_fini(struct ft_pool * this)
 
 		_ft_poolzone_del(zone);
 	}
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 
 	//TODO: Unregister heartbeat
 }
@@ -45,11 +52,17 @@ struct ft_frame * _ft_pool_borrow_real(struct ft_pool * this, uint64_t frame_typ
 	struct ft_frame * frame =  NULL;
 	struct ft_poolzone ** last_zone_next = &this->zones;
 
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN ft:%08llx %s:%u", (unsigned long long) frame_type, file, line);
+
 	// Borrow from existing zone
 	for (struct ft_poolzone * zone = this->zones; zone != NULL; zone = zone->next)
 	{
 		frame = _ft_poolzone_borrow(zone, frame_type, file, line);
-		if (frame != NULL) return frame;
+		if (frame != NULL)
+		{
+			FT_TRACE(FT_TRACE_ID_MEMPOOL, "END f:%p", frame);
+			return frame;
+		}
 
 		last_zone_next = &zone->next;
 	}
@@ -58,6 +71,7 @@ struct ft_frame * _ft_pool_borrow_real(struct ft_pool * this, uint64_t frame_typ
 	if (*last_zone_next == NULL)
 	{
 		FT_WARN("Frame pool ran out of memory");
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN out-out-mem");
 		return NULL;
 	}
 
@@ -65,9 +79,11 @@ struct ft_frame * _ft_pool_borrow_real(struct ft_pool * this, uint64_t frame_typ
 	if (frame == NULL)
 	{
 		FT_WARN("Frame pool ran out of memory (2)");
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN out-out-mem 2");
 		return NULL;
 	}
 
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END f:%p", frame);
 	return frame;
 }
 
@@ -83,6 +99,8 @@ static void _ft_pool_heartbeat_callback(struct ft_context * context, void * data
 {
 	struct ft_pool * this = (struct ft_pool *)data;
 	assert(this != NULL);
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN fa:%zd zc:%zd", ft_pool_count_available_frames(this), ft_pool_count_zones(this));
 
 	ev_tstamp now = ev_now(context->ev_loop);
 
@@ -123,6 +141,8 @@ static void _ft_pool_heartbeat_callback(struct ft_context * context, void * data
 		// Delete zone
 		_ft_poolzone_del(zone_free);
 	}
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 }
 
 

@@ -30,6 +30,8 @@ static inline void ft_frame_return(struct ft_frame * frame)
 	int rc;
 	struct ft_poolzone * zone = frame->zone;
 
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN f:%p", frame);
+
 	frame->type = FT_FRAME_TYPE_FREE;
 
 	frame->next = zone->available_frames;
@@ -53,6 +55,8 @@ static inline void ft_frame_return(struct ft_frame * frame)
 	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);
 	if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool return");
 
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 }
 
 #endif // FT_MEMPOOL_POOL_H_
