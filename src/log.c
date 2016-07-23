@@ -142,7 +142,9 @@ void _ft_log_openssl_err_v(const char level, const char * format, va_list args)
 
 static void _ft_log_libev_on_syserr(const char * msg)
 {
-	FT_WARN("LibEv: %s", msg);
+	// See ERROR HANDLING in libev
+	FT_FATAL("%s", msg);
+	abort();
 }
 
 ///
