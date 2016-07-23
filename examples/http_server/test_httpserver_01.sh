@@ -13,6 +13,6 @@ trap finish EXIT
 ./httpserver &
 sleep 0.2
 
-ab -n1000 -c2 http://localhost:18080/test
+ab -n10000 -c4 http://localhost:18080/test
 
 echo "TEST $0 OK"

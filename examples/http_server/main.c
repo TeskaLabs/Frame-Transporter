@@ -23,6 +23,25 @@ static void on_termination_cb(struct ft_context * context, void * data)
 	}
 }
 
+static void on_check_cb(struct ev_loop * loop, ev_prepare * check, int revents)
+{
+	// Called periodically during each event loop
+
+	struct application * app = (struct application *)check->data;
+	assert(app != NULL);
+
+restart:
+	FT_LIST_FOR(&app->connections, node)
+	{
+		struct connection * connection = (struct connection *)node->data;
+		if (connection_is_closed(connection))
+		{
+			ft_list_remove(&app->connections, node);
+			goto restart; // List has been changed during iteration
+		}
+	}
+}
+
 ///
 
 int main(int argc, char const *argv[])
@@ -30,7 +49,7 @@ int main(int argc, char const *argv[])
 	bool ok;
 
 	//ft_log_verbose(true);
-	//ft_config.log_trace_mask |= FT_TRACE_ID_STREAM | FT_TRACE_ID_EVENT_LOOP;
+	//ft_config.log_trace_mask |= FT_TRACE_ID_MEMPOOL;
 
 	ft_initialise();
 	
@@ -57,10 +76,11 @@ int main(int argc, char const *argv[])
 	ft_context_at_termination(&app.context, on_termination_cb, &app);
 
 	// Registed check handler
-//	ev_prepare prepare_w;
-//	ev_prepare_init(&prepare_w, on_check_cb);
-//	ev_prepare_start(context.ev_loop, &prepare_w);
-//	ev_unref(context.ev_loop);
+	ev_prepare prepare_w;
+	ev_prepare_init(&prepare_w, on_check_cb);
+	ev_prepare_start(app.context.ev_loop, &prepare_w);
+	prepare_w.data = &app;
+	ev_unref(app.context.ev_loop);
 
 	ok = listen_start(&app.listen);
 	if (!ok) return EXIT_FAILURE;

@@ -109,6 +109,13 @@ static struct ft_stream_delegate stream_delegate =
 
 ///
 
+bool connection_is_closed(struct connection * this)
+{
+	return (ft_stream_is_shutdown(&this->stream));
+}
+
+///
+
 bool connection_init(struct connection * this, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	bool ok;
@@ -150,6 +157,7 @@ static void connection_fini(struct connection * this)
 void connection_fini_list(struct ft_list * list, struct ft_list_node * node)
 {
 	struct connection * stream = (struct connection *)node->data;
+	assert(stream != NULL);
 
 	connection_fini(stream);	
 }

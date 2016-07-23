@@ -36,6 +36,8 @@ struct connection
 bool connection_init(struct connection * , struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
 void connection_fini_list(struct ft_list * list, struct ft_list_node * node);
 
+bool connection_is_closed(struct connection *);
+
 void connection_terminate(struct connection *);
 
 // class app
