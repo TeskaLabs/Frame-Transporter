@@ -958,7 +958,7 @@ bool ft_stream_write(struct ft_stream * this, struct ft_frame * frame)
 
 	if (this->flags.write_open == false)
 	{
-		FT_WARN_P("Socket is not open for writing");
+		FT_WARN("Stream is not open for writing (f:%p ft: %08llx)", frame, (unsigned long long) frame->type);
 		return false;
 	}
 
