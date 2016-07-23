@@ -79,6 +79,15 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 		goto error_exit;
 	}
 
+	// Set reuse port option
+	on = 1;
+	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, (const char *) &on, sizeof(on));
+	if (rc == -1)
+	{
+		FT_ERROR_ERRNO(errno, "Failed when setting option SO_REUSEPORT to listen socket");
+		goto error_exit;
+	}
+
 	bool res = ft_fd_nonblock(fd);
 	if (!res) FT_WARN_ERRNO(errno, "Failed when setting listen socket to non-blocking mode");
 
