@@ -52,9 +52,11 @@ static inline void ft_frame_return(struct ft_frame * frame)
 	}
 
 	// Advise that we will use it
-	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);
-	if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool return");
-
+	if (zone->flags.madvice_when_used)
+	{
+		rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);
+		if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool return");
+	}
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 }

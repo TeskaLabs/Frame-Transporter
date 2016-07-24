@@ -14,6 +14,7 @@ struct ft_poolzone
 		unsigned int freeable : 1; // If true, then the zone can be returned (unmmaped) back to OS when all frames are returned
 		unsigned int erase_on_return : 1; // If true, frames will be erased using bzero() on ft_frame_return()
 		unsigned int mlock_when_used : 1; // If true, frames will be mlock()-ed into memory when in use (prevention of swapping to the disk)
+		unsigned int madvice_when_used : 1; // If true, posix_madvise(POSIX_MADV_WILLNEED) resp. posix_madvise(POSIX_MADV_DONTNEED) will be called when frame is borrowed/returned
 		unsigned int free_on_hb : 1; // If true, zone will be removed during next heartbeat
 	} flags;
 

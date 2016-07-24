@@ -13,6 +13,7 @@ bool ft_poolzone_init(struct ft_poolzone * this, uint8_t * data, size_t alloc_si
 	this->flags.erase_on_return = false;
 	this->flags.mlock_when_used = false;
 	this->flags.free_on_hb = false;
+	this->flags.madvice_when_used = false;
 	this->alloc_size = alloc_size;
 	this->next = NULL;
 
@@ -126,8 +127,11 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 	}
 
 	// Advise that we will use it
-	rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
-	if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool borrow");
+	if (frame->zone->flags.madvice_when_used)
+	{
+		rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
+		if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool borrow");
+	}
 
 	return frame;
 }
