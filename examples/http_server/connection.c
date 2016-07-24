@@ -140,7 +140,7 @@ bool connection_is_closed(struct connection * this)
 
 ///
 
-bool connection_init(struct connection * this, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+bool connection_init_http(struct connection * this, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	bool ok;
 	
@@ -161,6 +161,18 @@ bool connection_init(struct connection * this, struct ft_listener * listening_so
 	// Prepare parser
 	http_parser_init(&this->http_request_parser, HTTP_REQUEST);
 	this->http_request_parser.data = this;
+
+	return true;
+}
+
+bool connection_init_https(struct connection * this, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+{
+	bool ok = connection_init_http(this, listening_socket, fd, peer_addr, peer_addr_len);
+	if (!ok) return false;
+
+	// Initiate SSL
+	ok = ft_stream_enable_ssl(&this->stream, app.ssl_ctx);
+	if (!ok) return false;
 
 	return true;
 }

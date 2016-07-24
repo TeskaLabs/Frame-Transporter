@@ -3,9 +3,15 @@
 ///
 
 struct application app = {
+	.ssl_ctx = NULL,
+
 	.config = {
 		.initialized = false,
 		.config_file = "./httpserver.conf",
+
+		.ssl_used = false,
+		.ssl_key_file = "./key.pem",
+		.ssl_cert_file = "./cert.pem",
 	}
 };
 
@@ -47,6 +53,7 @@ restart:
 int main(int argc, char const *argv[])
 {
 	bool ok;
+	int rc;
 
 	//ft_log_verbose(true);
 	//ft_config.log_trace_mask |= FT_TRACE_ID_MEMPOOL;
@@ -67,11 +74,35 @@ int main(int argc, char const *argv[])
 	ok = application_configure(&app);
 	if (!ok) return EXIT_FAILURE;
 
+	// Initialize OpenSSL context if needed
+	if (app.config.ssl_used)
+	{
+		app.ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+		if (app.ssl_ctx == NULL) return EXIT_FAILURE;
+
+		long ssloptions = SSL_OP_ALL | SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION | SSL_OP_NO_COMPRESSION
+		| SSL_OP_CIPHER_SERVER_PREFERENCE | SSL_OP_SINGLE_DH_USE;
+		SSL_CTX_set_options(app.ssl_ctx, ssloptions);
+
+		rc = SSL_CTX_use_PrivateKey_file(app.ssl_ctx, app.config.ssl_key_file, SSL_FILETYPE_PEM);
+		if (rc != 1)
+		{
+			FT_FATAL_OPENSSL("Loading private key from '%s'", app.config.ssl_key_file);
+			return EXIT_FAILURE;
+		}
+
+		rc = SSL_CTX_use_certificate_file(app.ssl_ctx, app.config.ssl_cert_file, SSL_FILETYPE_PEM);
+		if (rc != 1)
+		{
+			FT_FATAL_OPENSSL("Loading certificate from '%s'", app.config.ssl_cert_file);
+			return EXIT_FAILURE;
+		}
+	}
+
 #ifdef MAP_HUGETLB
 	FT_INFO("Using hugetlb pages!");
 	ft_pool_set_alloc(&app.context.frame_pool, ft_pool_alloc_hugetlb);
 #endif
-
 	// Install termination handler
 	ft_context_at_termination(&app.context, on_termination_cb, &app);
 

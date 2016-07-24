@@ -14,12 +14,22 @@ static int application_configure_handler(void * user, const char * section, cons
 	if (false) {
 	}
 
-	else if (MATCH("httpserver", "listen"))
+	else if (MATCH("http", "listen"))
 	{
-		ok = listen_extend(&this->listen, &this->context, value);
+		ok = listen_extend_http(&this->listen, &this->context, value);
 		if (!ok) return 1;
 		return 0;
 	}
+
+	else if (MATCH("https", "listen"))
+	{
+		this->config.ssl_used = true;
+		ok = listen_extend_https(&this->listen, &this->context, value);
+		if (!ok) return 1;
+		return 0;
+	}
+
+	FT_ERROR("Unknown configuration entry '%s'/'%s'", section, name);
 
 	return 1;
 }

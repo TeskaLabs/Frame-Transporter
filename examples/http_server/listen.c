@@ -2,7 +2,7 @@
 
 ///
 
-static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+static bool listen_on_accept(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len, bool (*connection_init)(struct connection * , struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len))
 {
 	bool ok;
 
@@ -23,10 +23,30 @@ static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const st
 	return true;
 }
 
-static struct ft_listener_delegate listener_delegate =
+///
+
+static bool on_accept_http_cb(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
-	.accept = on_accept_cb,
+	return listen_on_accept(listening_socket, fd, client_addr, client_addr_len, connection_init_http);
+}
+
+static struct ft_listener_delegate listener_http_delegate =
+{
+	.accept = on_accept_http_cb,
 };
+
+///
+
+static bool on_accept_https_cb(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
+{
+	return listen_on_accept(listening_socket, fd, client_addr, client_addr_len, connection_init_https);
+}
+
+static struct ft_listener_delegate listener_https_delegate =
+{
+	.accept = on_accept_https_cb,
+};
+
 
 ///
 
@@ -60,14 +80,25 @@ void listen_fini(struct listen * this)
 
 ///
 
-bool listen_extend(struct listen * this, struct ft_context * context, const char * value)
+bool listen_extend_http(struct listen * this, struct ft_context * context, const char * value)
 {
 	int rc;
 
 	assert(this != NULL);
 	assert(context != NULL);
 
-	rc = ft_listener_list_extend_auto(&this->listeners, &listener_delegate, context, SOCK_STREAM, value);
+	rc = ft_listener_list_extend_auto(&this->listeners, &listener_http_delegate, context, SOCK_STREAM, value);
+	return (rc >= 0);
+}
+
+bool listen_extend_https(struct listen * this, struct ft_context * context, const char * value)
+{
+	int rc;
+
+	assert(this != NULL);
+	assert(context != NULL);
+
+	rc = ft_listener_list_extend_auto(&this->listeners, &listener_https_delegate, context, SOCK_STREAM, value);
 	return (rc >= 0);
 }
 
