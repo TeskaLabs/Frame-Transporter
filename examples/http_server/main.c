@@ -64,6 +64,14 @@ int main(int argc, char const *argv[])
 	ok = ft_context_init(&app.context);
 	if (!ok) return EXIT_FAILURE;
 
+	ft_pidfile_filename("./httpserver.pid");
+	pid_t isrun = ft_pidfile_is_running();
+	if (isrun >= 0)
+	{
+		FT_FATAL("Pid file exists, server is already running (process pid: %d)?", isrun);
+		return EXIT_FAILURE;
+	}
+
 	// Initialize a list for listening sockets
 	ok = listen_init(&app.listen, &app.context);
 	if (!ok) return EXIT_FAILURE;
@@ -117,7 +125,6 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 	// Daemonise
-	ft_pidfile_filename("./httpserver.pid");
 	pid_t pid = ft_deamonise(&app.context);
 	if (pid == -1) return EXIT_FAILURE;
 	if (pid > 0) return EXIT_SUCCESS; // Exit parent process
