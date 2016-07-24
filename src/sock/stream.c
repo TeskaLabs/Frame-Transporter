@@ -1188,13 +1188,13 @@ static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (zero ret)");
+			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL accept (zero ret)");
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
-			FT_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d)", rc);
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (syscall)");
+			FT_WARN_ERRNO(errno_con, "SSL accept (syscall, rc: %d)", rc);
+			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL accept (syscall)");
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
@@ -1204,7 +1204,7 @@ static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
 				unsigned long ssl_err_tmp = ERR_peek_error();
 				FT_WARN_OPENSSL("SSL error during handshake");
 				assert(errno_con == 0 );
-				_ft_stream_error(this, 0, ssl_err_tmp, "SSL connect (SSL error)");
+				_ft_stream_error(this, 0, ssl_err_tmp, "SSL accept (SSL error)");
 			}
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
@@ -1212,7 +1212,7 @@ static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
 		default:
 			// SSL Handshake failed (in a strange way)
 			FT_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (unknown)");
+			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL accept (unknown)");
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
