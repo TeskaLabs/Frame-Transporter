@@ -63,9 +63,9 @@ subdirs:
 
 clean:
 	@echo " [RM] in" $(CURDIR)
-	@$(RM) $(BIN) $(LIB) $(CLEAN) $(EXTRACLEAN) ${OBJS} *.gcov *.gcda *.gcno
+	@$(RM) $(BIN) $(LIB) $(CLEAN) $(EXTRACLEAN) ${OBJS}
 	@$(foreach dir, $(SUBDIRS) $(CLEANSUBDIRS), $(MAKE) -C $(dir) clean;)
-
+	@find . -name "*.gcov" -or -name "*.gcda" -or -name "*.gcno" | xargs $(RM) -f
 
 # Compile command
 
