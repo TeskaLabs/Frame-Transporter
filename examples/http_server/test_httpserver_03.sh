@@ -10,10 +10,12 @@ function finish
 }
 trap finish EXIT
 
-./httpserver &
+./httpserver
 sleep 0.2
 
 # HTTP/1.0 (SSL)
 ab -n 4000 -c 8 https://localhost:18443/test
+
+kill $(cat ./httpserver.pid)
 
 echo "TEST $0 OK"

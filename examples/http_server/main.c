@@ -116,12 +116,24 @@ int main(int argc, char const *argv[])
 	ok = listen_start(&app.listen);
 	if (!ok) return EXIT_FAILURE;
 
+	// Daemonise
+	ft_pidfile_filename("./httpserver.pid");
+	pid_t pid = ft_deamonise(&app.context);
+	if (pid == -1) return EXIT_FAILURE;
+	if (pid > 0) return EXIT_SUCCESS; // Exit parent process
+
+	ok = ft_pidfile_create();
+	if (!ok) return EXIT_FAILURE;
+
 	// Enter event loop
 	ft_context_run(&app.context);
 
 	// Clean up
 	listen_fini(&app.listen);
 	ft_context_fini(&app.context);
+
+	ok = ft_pidfile_remove();
+	if (!ok) return EXIT_FAILURE;
 
 	return EXIT_SUCCESS;
 }
