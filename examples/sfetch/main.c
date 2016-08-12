@@ -67,6 +67,7 @@ struct ft_stream_delegate stream_delegate =
 int main(int argc, char const *argv[])
 {
 	bool ok;
+	int rc;
 	struct ft_context context;
 	struct ft_stream sock;
 
@@ -86,6 +87,10 @@ int main(int argc, char const *argv[])
 	// Initialize OpenSSL context
 	ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 	if (ssl_ctx == NULL) return EXIT_FAILURE;
+
+	rc = SSL_CTX_load_verify_locations(ssl_ctx, "curl-ca-bundle.crt", NULL);
+	if (rc != 1) return EXIT_FAILURE;
+
 
 	struct addrinfo * target_addr;
 	// Resolve target
@@ -116,6 +121,8 @@ int main(int argc, char const *argv[])
 	ok = ft_stream_enable_ssl(&sock, ssl_ctx);
 	if (!ok) return EXIT_FAILURE;
 
+	// Configure SNI
+	SSL_set_tlsext_host_name(sock.ssl, argv[1]);
 
 	struct ft_frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	if (frame == NULL) return EXIT_FAILURE;

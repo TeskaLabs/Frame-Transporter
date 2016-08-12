@@ -51,7 +51,7 @@ wp.com 443
 nih.gov 443
 issuu.com 443
 www.macromedia.com 443
-e-recht24.de 443
+www.e-recht24.de 443
 go.com 443
 theguardian.com 443
 mozilla.org 443
@@ -78,7 +78,7 @@ amazon.de 443
 washingtonpost.com 443
 cpanel.com 443
 www.weibo.com 443
-reuters.com 443
+www.reuters.com 443
 telegraph.co.uk 443
 rambler.ru 443
 www.aol.com 443
@@ -181,7 +181,6 @@ loc.gov 443
 cbc.ca 443
 www.nps.gov 443
 hp.com 443
-www.163.com 443
 whitehouse.gov 443
 www.businessweek.com 443
 www.engadget.com 443
@@ -229,7 +228,7 @@ umich.edu 443
 alexa.com 443
 marriott.com 443
 house.gov 443
-state.gov 443
+www.state.gov 443
 www.ed.gov 443
 yale.edu 443
 paypal.com 443
@@ -240,7 +239,7 @@ shopify.com 443
 nazwa.pl 443
 myshopify.com 443
 cnbc.com 443
-zdnet.com 443
+www.zdnet.com 443
 marketwatch.com 443
 odnoklassniki.ru 443
 www.ifeng.com 443
