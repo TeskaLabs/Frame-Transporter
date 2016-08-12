@@ -1126,9 +1126,19 @@ static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 			return;
 
 		case SSL_ERROR_SYSCALL:
-			FT_WARN_ERRNO(errno_con, "SSL accept (syscall, rc: %d)", rc);
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL handshake (syscall)");
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
+			if ((rc ==  0) && (errno_con == 0))
+			{
+				// rc== 0, errno_read == 0 -> Other side called close()
+				FT_WARN("SSL handshake (peer close), rc:%d", rc);
+				_ft_stream_error(this, ECONNRESET, 0UL, "SSL handshake (peer close)");
+				FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " peer close", TRACE_ARGS);
+			}
+			else
+			{
+				FT_WARN_ERRNO(errno_con, "SSL handshake (syscall, rc: %d)", rc);
+				_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL handshake (syscall)");
+				FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
+			}
 			return;
 
 		case SSL_ERROR_SSL:
