@@ -94,6 +94,11 @@ static void stream_pairs_on_remove(struct ft_list * list, struct ft_list_node * 
 	ft_stream_fini(&pair->stream_out);
 }
 
+static int on_ssl_cert_verify_callback(X509_STORE_CTX *ctx, void *arg)
+{
+    return 1;
+}
+
 ///
 
 static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len)
@@ -220,6 +225,8 @@ int main(int argc, char const *argv[])
 	// Initialize OpenSSL context
 	ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 	if (ssl_ctx == NULL) return EXIT_FAILURE;
+
+	SSL_CTX_set_cert_verify_callback(ssl_ctx, on_ssl_cert_verify_callback, NULL);
 
 	ft_list_init(&stream_pairs, stream_pairs_on_remove);
 
