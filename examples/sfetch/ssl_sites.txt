@@ -324,7 +324,6 @@ hhs.gov 443
 entrepreneur.com 443
 www.usa.gov 443
 www.accuweather.com 443
-com.com 443
 oxfordjournals.org 443
 www.mtv.com 443
 woothemes.com 443
