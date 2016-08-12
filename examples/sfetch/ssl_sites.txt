@@ -254,7 +254,6 @@ xing.com 443
 oracle.com 443
 xiti.com 443
 istockphoto.com 443
-1688.com 443
 register.it 443
 www.yellowbook.com 443
 exblog.jp 443
