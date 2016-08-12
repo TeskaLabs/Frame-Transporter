@@ -108,6 +108,7 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	this->write_shutdown_at = NAN;
 	this->flags.write_open = true;
 	this->flags.ssl_status = 0;
+	this->flags.ssl_hsconf = false;
 	this->flags.read_throttle = false;	
 	this->ssl = NULL;
 
@@ -1052,17 +1053,30 @@ bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 }
 
 
-static void _ft_stream_on_ssl_handshake_connect_event(struct ft_stream * this)
+static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 {
-	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 	int rc;
+	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
-	rc = SSL_connect(this->ssl);
+	assert(this != NULL);
+	assert(this->flags.ssl_status == 1);
+	assert(this->ssl != NULL);
+
+	if (this->flags.ssl_hsconf == false)
+	{
+		if (this->flags.ssl_server)
+			SSL_set_accept_state(this->ssl);
+		else
+			SSL_set_connect_state(this->ssl);
+		this->flags.ssl_hsconf = true;
+	}
+
+	rc = SSL_do_handshake(this->ssl);
 	if (rc == 1) // Handshake is  completed
 	{
 		//TODO: long verify_result = SSL_get_verify_result(seacatcc_context.gwconn_ssl_handle);
 
-		FT_DEBUG("SSL connection established");
+		FT_DEBUG("SSL handshake completed");
 
 		// Wire I/O event callbacks
 		_ft_stream_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
@@ -1078,96 +1092,7 @@ static void _ft_stream_on_ssl_handshake_connect_event(struct ft_stream * this)
 		// Simulate a write event to dump frames in the write queue
 		_ft_stream_on_write_event(this);
 
-		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
-		return;
-	}
-
-	int errno_con = errno;
-	int ssl_err = SSL_get_error(this->ssl, rc);
-	switch (ssl_err)
-	{
-		case SSL_ERROR_WANT_READ:
-			_ft_stream_read_set_event(this, SSL_HANDSHAKE_WANT_READ);
-			_ft_stream_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_READ (rc: %d)", TRACE_ARGS, rc);
-			return;
-
-		case SSL_ERROR_WANT_WRITE:
-			_ft_stream_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
-			_ft_stream_write_set_event(this, SSL_HANDSHAKE_WANT_WRITE);
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_WANT_WRITE (rc: %d)", TRACE_ARGS, rc);
-			return;
-
-		case SSL_ERROR_ZERO_RETURN:
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (SSL_ERROR_ZERO_RETURN)");
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
-			return;
-
-		case SSL_ERROR_SYSCALL:
-			if ((rc == 0) && (errno_con == 0))
-			{
-				FT_DEBUG("Server closed a connection during handshake");
-				errno_con = ENOTCONN;
-			}
-			else if ((rc == -1) && (errno_con == ECONNRESET))
-			{
-				FT_DEBUG("Connection closed by server during handshake");
-			}
-			else
-			{
-				FT_WARN_ERRNO(errno_con, "SSL connect (syscall, rc: %d, errno: %d, ssl_err: %lu, ssl_status: %d)", rc, errno_con, ERR_peek_error(), SSL_get_shutdown(this->ssl));
-			}
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (SSL_ERROR_SYSCALL)");
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
-			return;
-
-		case SSL_ERROR_SSL:
-			{
-				unsigned long ssl_err_tmp = ERR_peek_error();
-				FT_WARN_OPENSSL("SSL error during handshake");
-				assert(errno_con == 0);
-				_ft_stream_error(this, 0, ssl_err_tmp, "SSL connect (SSL_ERROR_SSL)");
-			}
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
-			return;
-
-		default:
-			FT_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL connect (unknown)");
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
-			return;
-
-	}
-}
-
-
-static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
-{
-	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
-	int rc;
-
-	rc = SSL_accept(this->ssl);
-	if (rc == 1) // Handshake is  completed
-	{
-		//TODO: long verify_result = SSL_get_verify_result(seacatcc_context.gwconn_ssl_handle);
-
-		FT_DEBUG("SSL connection established");
-
-		// Wire I/O event callbacks
-		_ft_stream_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
-		_ft_stream_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
-
-		ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
-
-		this->connected_at = ev_now(this->context->ev_loop);
-		this->flags.connecting = false;
-		this->flags.ssl_status = 2;
-		if (this->delegate->connected != NULL) this->delegate->connected(this);
-
-		// Simulate a write event to dump frames in the write queue
-		_ft_stream_on_write_event(this);
-
-		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " established", TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " completed", TRACE_ARGS);
 		return;
 	}
 
@@ -1188,13 +1113,13 @@ static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
 			return;
 
 		case SSL_ERROR_ZERO_RETURN:
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL accept (zero ret)");
+			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL handshake (zero ret)");
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_ZERO_RETURN", TRACE_ARGS);
 			return;
 
 		case SSL_ERROR_SYSCALL:
 			FT_WARN_ERRNO(errno_con, "SSL accept (syscall, rc: %d)", rc);
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL accept (syscall)");
+			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL handshake (syscall)");
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SYSCALL", TRACE_ARGS);
 			return;
 
@@ -1204,7 +1129,7 @@ static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
 				unsigned long ssl_err_tmp = ERR_peek_error();
 				FT_WARN_OPENSSL("SSL error during handshake");
 				assert(errno_con == 0 );
-				_ft_stream_error(this, 0, ssl_err_tmp, "SSL accept (SSL error)");
+				_ft_stream_error(this, 0, ssl_err_tmp, "SSL handshake (SSL error)");
 			}
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
 			return;
@@ -1212,23 +1137,10 @@ static void _ft_stream_on_ssl_handshake_accept_event(struct ft_stream * this)
 		default:
 			// SSL Handshake failed (in a strange way)
 			FT_WARN_P("Unexpected error %d  during handhake, closing", ssl_err);
-			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL accept (unknown)");
+			_ft_stream_error(this, errno_con == 0 ? ECONNRESET : errno_con, 0UL, "SSL handshake (unknown)");
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
 			return;
 	}
-}
-
-
-static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
-{
-	assert(this != NULL);
-	assert(this->flags.ssl_status == 1);
-	assert(this->ssl != NULL);
-
-	if (this->flags.ssl_server)
-		_ft_stream_on_ssl_handshake_accept_event(this);
-	else 
-		_ft_stream_on_ssl_handshake_connect_event(this);
 
 }
 
