@@ -1010,6 +1010,7 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 
 ///
 
+
 bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 {
 	assert(this != NULL);
@@ -1025,7 +1026,7 @@ bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 		FT_WARN_OPENSSL("ft_stream_enable_ssl:SSL_new");
 		return false;
 	}
-	
+
 	// Link SSL with socket
 	int rc = SSL_set_fd(this->ssl, this->write_watcher.fd);
 	if (rc != 1)
@@ -1034,7 +1035,7 @@ bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 		return false;
 	}
 
-	// Set an socket reference
+	// Set an object reference
 	assert((ft_config.stream_ssl_ex_data_index != -1) && (ft_config.stream_ssl_ex_data_index != -2));
 	rc = SSL_set_ex_data(this->ssl, ft_config.stream_ssl_ex_data_index, this);
 	if (rc != 1)
@@ -1074,7 +1075,14 @@ static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 	rc = SSL_do_handshake(this->ssl);
 	if (rc == 1) // Handshake is  completed
 	{
-		//TODO: long verify_result = SSL_get_verify_result(seacatcc_context.gwconn_ssl_handle);
+		long verify_result = SSL_get_verify_result(this->ssl);
+		if (verify_result != X509_V_OK)
+		{
+			FT_WARN("Failed to verify SSL peer: %ld", verify_result);
+			_ft_stream_error(this, ECONNRESET, 0UL, "SSL handshake (verify failed)");
+			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " verify failed %ld", TRACE_ARGS, verify_result);
+			return;
+		}
 
 		FT_DEBUG("SSL handshake completed");
 

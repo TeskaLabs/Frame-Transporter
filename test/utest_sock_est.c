@@ -369,6 +369,15 @@ void sock_est_ssl_1_on_error(struct ft_stream * established_sock)
 }
 
 
+static int sock_est_ssl_client_verify_callback(X509_STORE_CTX *ctx, void *arg)
+{
+	struct ft_stream * this = ft_stream_from_x509_store_ctx(ctx);
+	ck_assert_ptr_ne(this, NULL);
+
+    return 1;
+}
+
+
 struct ft_stream_delegate sock_est_ssl_1_delegate = 
 {
 	.connected = sock_est_ssl_1_on_connected,
@@ -412,6 +421,8 @@ START_TEST(sock_est_ssl_client_utest)
 
 	SSL_CTX * ssl_ctx = SSL_CTX_new(TLSv1_2_client_method());
 	ck_assert_ptr_ne(ssl_ctx, NULL);
+
+	SSL_CTX_set_cert_verify_callback(ssl_ctx, sock_est_ssl_client_verify_callback, NULL);
 
 	struct ft_context context;
 	ok = ft_context_init(&context);
