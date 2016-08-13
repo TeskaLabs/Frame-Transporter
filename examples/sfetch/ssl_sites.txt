@@ -202,7 +202,7 @@ nydailynews.com 443
 fb.me 443
 nbcnews.com 443
 www.irs.gov 443
-hostgator.com 443
+www.hostgator.com 443
 booking.com 443
 www.slate.com 443
 www.naver.com 443
