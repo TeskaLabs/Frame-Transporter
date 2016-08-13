@@ -277,7 +277,7 @@ ftc.gov 443
 wikihow.com 443
 liveinternet.ru 443
 www.census.gov 443
-scientificamerican.com 443
+www.scientificamerican.com 443
 surveymonkey.com 443
 ewebdevelopment.com 443
 google.nl 443
