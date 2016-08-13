@@ -290,7 +290,7 @@ usgs.gov 443
 www.cntv.cn 443
 prestashop.com 443
 cyberchimps.com 443
-dell.com 443
+www.dell.com 443
 fb.com 443
 cafepress.com 443
 att.com 443
