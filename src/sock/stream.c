@@ -519,7 +519,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 
 		if (this->ssl == NULL)
 		{
-			rc = read(this->read_watcher.fd, p_to_read, size_to_read);
+			rc = recv(this->read_watcher.fd, p_to_read, size_to_read, 0);
 
 			if (rc <= 0) // Handle error situation
 			{
@@ -805,7 +805,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 
 		if (this->ssl == NULL)
 		{
-			rc = write(this->write_watcher.fd, p_to_write, size_to_write);
+			rc = send(this->write_watcher.fd, p_to_write, size_to_write, 0);
 			if (rc < 0) // Handle error situation
 			{
 				if (errno == EAGAIN)
