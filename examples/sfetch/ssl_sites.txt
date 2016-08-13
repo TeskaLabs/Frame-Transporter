@@ -305,7 +305,6 @@ www.tkqlhce.com 443
 www.ap.org 443
 inc.com 443
 fortune.com 443
-worldbank.org 443
 www.windowsphone.com 443
 example.com 443
 jugem.jp 443
