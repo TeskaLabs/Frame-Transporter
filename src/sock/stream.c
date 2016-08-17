@@ -788,7 +788,12 @@ static void _ft_stream_write_real(struct ft_stream * this)
 			else
 			{
 				int rc = shutdown(this->write_watcher.fd, SHUT_WR);
-				if (rc != 0) FT_WARN_ERRNO_P(errno, "shutdown()");
+				if (rc != 0)
+				{
+					if (errno == ENOTCONN) { /* NO-OP ... this can happen when connection is closed quickly after connecting */ }
+					else
+						FT_WARN_ERRNO_P(errno, "shutdown()");
+				}
 			}
 
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
