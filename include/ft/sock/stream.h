@@ -23,18 +23,20 @@ struct ft_stream
 
 	struct
 	{
-		unsigned int read_shutdown : 1;  // Socket is read-wise connected
-		unsigned int write_shutdown : 1; // Socket is write-wise connected
-		unsigned int write_open : 1;      // Write queue is open for adding new frames
-		unsigned int write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
-		unsigned int connecting : 1;
-		unsigned int active : 1;  // Yes - we initiated connection using connect(), No - accept()
-		unsigned int read_partial : 1; // When yes, read() callback is triggered for any incoming data
-		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established
-		unsigned int ssl_server : 1; // Yes - we are SSL server (SSL_accept will be used in accept), No - we are SSL client (SSL_connect will be used)
-		unsigned int ssl_hsconf: 1; // Yes - handshake direction has been configured (accept/connect)
+		bool connecting : 1;
+		bool active : 1;  // Yes - we initiated connection using connect(), No - accept()
 
-		unsigned int read_throttle : 1;
+		bool read_partial : 1; // When yes, read() callback is triggered for any incoming data
+		bool read_throttle : 1;
+		bool read_shutdown : 1;  // Socket is read-wise connected
+
+		bool write_shutdown : 1; // Socket is write-wise connected
+		bool write_open : 1;      // Write queue is open for adding new frames
+		bool write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
+
+		bool ssl_server : 1; // Yes - we are SSL server (SSL_accept will be used in accept), No - we are SSL client (SSL_connect will be used)
+		bool ssl_hsconf: 1; // Yes - handshake direction has been configured (accept/connect)
+		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established
 	} flags;
 
 	int ai_family;
