@@ -81,7 +81,8 @@ struct ft_stream
 		unsigned long write_bytes;
 	} stats;
 
-	// Custom data field
+	// Custom data fields
+	void * protocol;
 	void * data;
 };
 

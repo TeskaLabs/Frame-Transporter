@@ -91,6 +91,7 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	if (!res) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	this->data = NULL;
+	this->protocol = NULL;
 	this->delegate = delegate;
 	this->context = context;
 	this->read_frame = NULL;
