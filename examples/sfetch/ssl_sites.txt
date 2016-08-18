@@ -376,7 +376,6 @@ sec.gov 443
 viadeo.com 443
 dol.gov 443
 pcmag.com 443
-areasnap.com 443
 ietf.org 443
 nginx.org 443
 java.com 443
