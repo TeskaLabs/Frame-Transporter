@@ -15,6 +15,14 @@ while read p; do
 	fi
 done < ssl_sites.txt
 
+if [ "$COUNTER_FAILED" -gt "5" ]; then
+    echo "TEST $0 FAILED $COUNTER_OK $COUNTER_OK"
+    exit 1
+fi
 
+if [ "$COUNTER_OK" -lt "410" ]; then
+    echo "TEST $0 FAILED $COUNTER_OK $COUNTER_OK"
+    exit 1
+fi
 
-echo "TEST $0 OK $COUNTER_OK $COUNTER_FAILED"
+echo "TEST $0 OK $COUNTER_OK $COUNTER_OK"
