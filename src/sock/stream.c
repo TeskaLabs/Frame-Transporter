@@ -283,9 +283,9 @@ static void _ft_stream_error(struct ft_stream * this, int sys_errno, unsigned lo
 	assert(((sys_errno == 0) && (ssl_error != 0)) || ((sys_errno != 0) && (ssl_error == 0)));
 
 	if (sys_errno != 0)
-		FT_WARN_ERRNO(sys_errno, "Socket system error when %s", when);
+		FT_WARN_ERRNO(sys_errno, "System error on stream when %s", when);
 	else
-		FT_WARN("Socket SSL error %lx when %s", ssl_error, when);
+		FT_WARN("SSL error %lx on stream when %s", ssl_error, when);
 
 	this->error.sys_errno = sys_errno;
 	this->error.ssl_error = ssl_error;
@@ -823,6 +823,8 @@ static void _ft_stream_write_real(struct ft_stream * this)
 				}
 
 				_ft_stream_error(this, errno, 0UL, "writing");
+
+				FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " write error", TRACE_ARGS);
 				return;
 			}
 			else if (rc == 0)
@@ -831,6 +833,8 @@ static void _ft_stream_write_real(struct ft_stream * this)
 				FT_WARN("Zero write occured, will retry soon");
 				this->flags.write_ready = false;
 				_ft_stream_write_set_event(this, WRITE_WANT_WRITE);
+
+				FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " zero write", TRACE_ARGS);
 				return;
 			}
 		}
