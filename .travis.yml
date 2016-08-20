@@ -51,6 +51,7 @@ addons:
         project:
             name: "TeskaLabs/Frame_Transporter"
             description: "Build submitted via Travis CI"
+        notification_email: ales.teska@gmail.com
         build_command_prepend: "make clean"
         build_command:   "make -j 4"
         branch_pattern: coverity_scan
