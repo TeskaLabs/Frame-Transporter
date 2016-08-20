@@ -12,7 +12,7 @@ struct ft_stream_delegate
 
 	void (*fini)(struct ft_stream *);
 
-	void (*error)(struct ft_stream *);
+	void (*error)(struct ft_stream *); // Don't use this for close() or shutdown, it will be done automatically and it can lead to wierd results
 };
 
 struct ft_stream
