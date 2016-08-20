@@ -4,9 +4,9 @@ compiler:
     - gcc
 
 env:
-  global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN
-   - secure: "YdI6A0gKU6Y13nyQBFlCQcy+vwWYnhhEwu2u8jHO5nO69c+5p+1+4oJ0wG07v9bLZhONhc8bXqyDdBwJf4AzPCAl6lHeN9VJ701OAEF0CIzpVwt33b5bAs7wWlSt960f4U2/o80F7QTGMMqaL8AOirzXrPTkgsW7YkpopCneIlXYbfvKEtGQUGyDb0+oYIxY1Yhw+vEOZd6WN5iV7y92aA6cV3CiTg+x/JLkqDXysFh9s3NWqZqbW//ZnxdTDTFgSWv6ZT3OsZGnefX5/2437OW5fDb0vfTk6MVZ9AL+8OBBEDjps3WdKO4ohQtI9a2NzEYZZjOgFGfbZIj97mUG1EmzLFrjACHgsbc4My80Wmhml7n8R6VICUS7xVdJFEKbBFBq9/IkJQq9v22PS7KHu1Liqlwj+CDiGIWstc6jHl9M43cTzWtx0Zz2ad/56ufr8gRU1xproXtUYWnud6ACPUSSEqHVrl+IQEf9/eWZCLUU6oPnnhhPRZSh5uhYv+z3/VvUmvsOWEfkyjGLMaX0fUtU7+XSilC4SB6/vHfFYqwDTotURjJDgfMgHhl5AO202SG9cYKnJGVRvAFKOHfGUw5LcTfBDK5yAPzLzhcwZQeLwm/m9EOLRKYNu1yMKdAJlzIlWawlj19AEklhYiw/26lxWU/HYNp1DvyEtp4XXM4="
+    global:
+        # The next declaration is the encrypted COVERITY_SCAN_TOKEN
+        - secure: "YdI6A0gKU6Y13nyQBFlCQcy+vwWYnhhEwu2u8jHO5nO69c+5p+1+4oJ0wG07v9bLZhONhc8bXqyDdBwJf4AzPCAl6lHeN9VJ701OAEF0CIzpVwt33b5bAs7wWlSt960f4U2/o80F7QTGMMqaL8AOirzXrPTkgsW7YkpopCneIlXYbfvKEtGQUGyDb0+oYIxY1Yhw+vEOZd6WN5iV7y92aA6cV3CiTg+x/JLkqDXysFh9s3NWqZqbW//ZnxdTDTFgSWv6ZT3OsZGnefX5/2437OW5fDb0vfTk6MVZ9AL+8OBBEDjps3WdKO4ohQtI9a2NzEYZZjOgFGfbZIj97mUG1EmzLFrjACHgsbc4My80Wmhml7n8R6VICUS7xVdJFEKbBFBq9/IkJQq9v22PS7KHu1Liqlwj+CDiGIWstc6jHl9M43cTzWtx0Zz2ad/56ufr8gRU1xproXtUYWnud6ACPUSSEqHVrl+IQEf9/eWZCLUU6oPnnhhPRZSh5uhYv+z3/VvUmvsOWEfkyjGLMaX0fUtU7+XSilC4SB6/vHfFYqwDTotURjJDgfMgHhl5AO202SG9cYKnJGVRvAFKOHfGUw5LcTfBDK5yAPzLzhcwZQeLwm/m9EOLRKYNu1yMKdAJlzIlWawlj19AEklhYiw/26lxWU/HYNp1DvyEtp4XXM4="
 
 script:
     - make clean
@@ -47,10 +47,10 @@ after_success:
     - (cd ./src && bash <(curl -s https://codecov.io/bash) -X gcov )
 
 addons:
-  coverity_scan:
-    project:
-      name: "TeskaLabs/Frame_Transporter"
-      description: "Build submitted via Travis CI"
-    build_command_prepend: "make clean"
-    build_command:   "make -j 4"
-    branch_pattern: coverity_scan
+    coverity_scan:
+        project:
+            name: "TeskaLabs/Frame_Transporter"
+            description: "Build submitted via Travis CI"
+        build_command_prepend: "make clean"
+        build_command:   "make -j 4"
+        branch_pattern: coverity_scan
