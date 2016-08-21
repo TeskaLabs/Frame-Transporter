@@ -243,6 +243,64 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 	return true;
 }
 
+bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd)
+{
+	int rc;
+	bool ok;
+
+    int sock_type;
+    socklen_t sock_type_length = sizeof(sock_type);
+    rc = getsockopt(fd, SOL_SOCKET, SO_TYPE, &sock_type, &sock_type_length);
+	if (rc != 0)
+	{
+		FT_ERROR_ERRNO_P(errno, "getsockopt");
+		return false;
+	}
+
+	if (sock_type != SOCK_STREAM)
+	{
+		FT_ERROR("Stream can handle only SOCK_STREAM addresses");
+		return false;
+	}
+
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
+	rc = getsockname(fd, (struct sockaddr *)&addr, &addrlen);
+	if (rc != 0)
+	{
+		FT_ERROR_ERRNO_P(errno, "getsockname");
+		return false;
+	}
+
+	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
+
+	ok = _ft_stream_init(
+		this, delegate, context,
+		fd,
+		(const struct sockaddr *) &addr, addrlen,
+		addr.ss_family,
+		sock_type,
+		0 // We don't have better info, we can use SO_PROTOCOL but available only on fresh Linux
+	);
+	if (!ok)
+	{
+		FT_TRACE(FT_TRACE_ID_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
+		return false;
+	}
+
+	this->flags.connecting = false;
+	this->flags.active = false;
+	this->flags.ssl_server = true;
+	this->connected_at = this->created_at;
+
+	ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
+	if (!ok) FT_WARN_P("Failed to set events properly");
+
+	FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+
+	return true;
+}
+
 void ft_stream_fini(struct ft_stream * this)
 {
 	assert(this != NULL);
