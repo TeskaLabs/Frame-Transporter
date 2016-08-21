@@ -75,19 +75,22 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 
 	assert(ai_socktype == SOCK_STREAM);
 
+	if ((ai_family == AF_INET) || (ai_family == AF_INET6))
+	{
 	// Disable Nagle
 #ifdef TCP_NODELAY
-	int flag = 1;
-	int rc_tcp_nodelay = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
-	if (rc_tcp_nodelay == -1) FT_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_NODELAY)");
+		int flag = 1;
+		int rc_tcp_nodelay = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
+		if (rc_tcp_nodelay == -1) FT_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_NODELAY)");
 #endif
 
 	// Set Congestion Window size
 #ifdef TCP_CWND
-	int cwnd = 10; // from SPDY best practicies
-	int rc_tcp_cwnd = setsockopt(fd, IPPROTO_TCP, TCP_CWND, &cwnd, sizeof(cwnd));
-	if (rc_tcp_cwnd == -1) FT_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_CWND)");
+		int cwnd = 10; // from SPDY best practicies
+		int rc_tcp_cwnd = setsockopt(fd, IPPROTO_TCP, TCP_CWND, &cwnd, sizeof(cwnd));
+		if (rc_tcp_cwnd == -1) FT_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_CWND)");
 #endif
+	}	
 
 	bool res = ft_fd_nonblock(fd);
 	if (!res) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
@@ -173,7 +176,7 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 	this->flags.connecting = false;
 	this->flags.active = false;
 	this->flags.ssl_server = true;
-	this->connected_at = this->created_at;	
+	this->connected_at = this->created_at;
 
 	ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 	if (!ok) FT_WARN_P("Failed to set events properly");
