@@ -40,7 +40,7 @@ struct ft_stream
 	} flags;
 
 	int ai_family;
-	int ai_socktype;
+	int ai_socktype; // Always SOCK_STREAM
 	int ai_protocol;
 
 	struct sockaddr_storage ai_addr;

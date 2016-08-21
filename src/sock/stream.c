@@ -73,6 +73,8 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	assert(delegate != NULL);
 	assert(context != NULL);
 
+	assert(ai_socktype == SOCK_STREAM);
+
 	// Disable Nagle
 #ifdef TCP_NODELAY
 	int flag = 1;
@@ -146,6 +148,12 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
 
+	if (listening_socket->ai_socktype != SOCK_STREAM)
+	{
+		FT_ERROR("Stream can handle only SOCK_STREAM addresses");
+		return false;
+	}
+
 	FT_DEBUG("Accepting a socket connection");
 
 	bool ok = _ft_stream_init(
@@ -178,6 +186,12 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 
 bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
 {
+	if (addr->ai_socktype != SOCK_STREAM)
+	{
+		FT_ERROR("Stream can handle only SOCK_STREAM addresses");
+		return false;
+	}
+
 	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 	if (fd < 0)
 	{
