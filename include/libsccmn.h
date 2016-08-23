@@ -41,7 +41,6 @@
 #include <libsccmn/log.h>
 #include <libsccmn/ini.h>
 #include <libsccmn/heartbeat.h>
-#include <libsccmn/fpool.h>
 
 #include <libsccmn/sock_listen.h>
 
