@@ -32,39 +32,37 @@ static inline uint8_t * ft_load_u8(uint8_t * cursor, uint8_t * value)
 
 static inline uint8_t * ft_load_u16(uint8_t * cursor, uint16_t * value)
 {
-//TODO: This ...
-//	cursor[0] = 0xFF & (value >> 8);
-//	cursor[1] = 0xFF & value;
+	*value = cursor[1] | (cursor[0] << 8);
 	return ft_skip_u16(cursor);
 }
 
 static inline uint8_t * ft_load_u24(uint8_t * cursor, uint32_t * value)
 {
-//TODO: This ...
+	*value = cursor[2] | (cursor[1] << 8) | (cursor[0] << 16);
 	return ft_skip_u24(cursor);
 }
 
 static inline uint8_t * ft_load_u32(uint8_t * cursor, uint32_t * value)
 {
-//TODO: This ...
+	*value = cursor[3] | (cursor[2] << 8) | (cursor[1] << 16) | (cursor[0] << 24);
 	return ft_skip_u32(cursor);
 }
 
 
-static inline uint8_t * ft_store_u8(uint8_t * cursor, uint8_t * value)
+static inline uint8_t * ft_store_u8(uint8_t * cursor, uint8_t value)
 {
-	*cursor = *value;
+	*cursor = value;
 	return ft_skip_u8(cursor);
 }
 
-static inline uint8_t * ft_store_u16(uint8_t * cursor, uint16_t * value)
+static inline uint8_t * ft_store_u16(uint8_t * cursor, uint16_t value)
 {
 	cursor[0] = 0xFF & (value >> 8);
 	cursor[1] = 0xFF & value;
 	return ft_skip_u16(cursor);
 }
 
-static inline uint8_t * ft_store_u24(uint8_t * cursor, uint32_t * value)
+static inline uint8_t * ft_store_u24(uint8_t * cursor, uint32_t value)
 {
 	cursor[0] = 0xFF & (value >> 16);
 	cursor[1] = 0xFF & (value >> 8);
@@ -72,7 +70,7 @@ static inline uint8_t * ft_store_u24(uint8_t * cursor, uint32_t * value)
 	return ft_skip_u24(cursor);
 }
 
-static inline uint8_t * ft_store_u32(uint8_t * cursor, uint32_t * value)
+static inline uint8_t * ft_store_u32(uint8_t * cursor, uint32_t value)
 {
 	cursor[0] = 0xFF & (value >> 24);
 	cursor[1] = 0xFF & (value >> 16);
