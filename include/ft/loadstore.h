@@ -3,6 +3,11 @@
 
 // Contains fast load/store functions that are usable e.g. for a parsing of the protocol
 
+static inline uint8_t * ft_skip_bytes(uint8_t * cursor, size_t bytes)
+{
+	return cursor+bytes;
+}
+
 static inline uint8_t * ft_skip_u8(uint8_t * cursor)
 {
 	return cursor+1;
