@@ -39,6 +39,8 @@ struct ft_list
 
     struct ft_list_node * head;
     struct ft_list_node * tail;
+
+    void * data; // User field
 };
 
 bool ft_list_init(struct ft_list *, ft_list_on_remove_callback on_remove_callback);
