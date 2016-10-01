@@ -157,8 +157,6 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 		return false;
 	}
 
-	FT_DEBUG("Accepting a socket connection");
-
 	bool ok = _ft_stream_init(
 		this, delegate, listening_socket->context, 
 		fd,
