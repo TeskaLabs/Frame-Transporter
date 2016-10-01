@@ -38,7 +38,7 @@ bool ft_poolzone_init(struct ft_poolzone * this, uint8_t * data, size_t alloc_si
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
-	FT_DEBUG("Allocated frame pool zone of %zu bytes, %zd frames", this->alloc_size, this->frames_total);
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "Allocated frame pool zone of %zu bytes, %zd frames", this->alloc_size, this->frames_total);
 
 	return true;
 }
@@ -204,7 +204,7 @@ struct ft_poolzone * ft_pool_alloc_hugetlb(struct ft_pool * this)
 			alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
 		} while (alloc_size > hugetlb_size);
 
-		FT_DEBUG("Hugetlb page will be used for frame pool zone (huge table size: %ld)", hugetlb_size);
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "Hugetlb page will be used for frame pool zone (huge table size: %ld)", hugetlb_size);
 
 		struct ft_poolzone * ret = ft_poolzone_new_mmap(frame_count, false,  MAP_PRIVATE | MAP_ANON | MAP_HUGETLB);
 		if (ret != NULL) return ret;
@@ -217,7 +217,7 @@ cont_default:
 #else
 struct ft_poolzone * ft_pool_alloc_hugetlb(struct ft_pool * this)
 {
-	FT_DEBUG("Huge table frame pool allocator is not available");
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "Huge table frame pool allocator is not available");
 	return ft_pool_alloc_default(this);
 }
 #endif
