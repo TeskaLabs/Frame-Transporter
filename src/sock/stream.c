@@ -418,7 +418,7 @@ static void _ft_stream_on_connect_event(struct ft_stream * this)
 		return;
 	}
 
-	FT_DEBUG("TCP connection established");
+	FT_DEBUG("Connection established");
 	_ft_stream_write_unset_event(this, CONNECT_WANT_WRITE);
 
 	if (this->ssl != NULL)
@@ -665,7 +665,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 						this->error.sys_errno = 0;
 						this->error.ssl_error = 0;
 
-						// Now close also the TCP socket
+						// Now close also the trasport layer socket
 						rc = shutdown(this->write_watcher.fd, SHUT_RD);
 						if ((rc != 0) && (errno != ENOTCONN)) FT_WARN_ERRNO_P(errno, "shutdown()");
 
@@ -681,7 +681,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 							 || ((rc == -1 )&& (errno_read == ECONNRESET)) \
 						   )
 						{
-							// Both SSL and TCP connection has been closed (not via SSL_RECEIVED_SHUTDOWN)
+							// Both SSL and transport layer connection has been closed (not via SSL_RECEIVED_SHUTDOWN)
 							// rc== 0, errno_read == 0 -> Other side called close() nicely
 							// rc==-1, errno_read == ECONNRESET -> Other side aborted() aka sent RST flag
 							int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
