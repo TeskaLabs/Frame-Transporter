@@ -1,7 +1,7 @@
 /rules.site
 /test/unittest
 /test/log.txt
-/test/sock_est_ssl_1_utest.bin
+/test/sock_stream_ssl_1_utest.bin
 
 /examples/reply/reply
 /examples/forward/forward
