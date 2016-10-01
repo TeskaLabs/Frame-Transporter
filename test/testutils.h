@@ -9,7 +9,7 @@
 
 #include <ft.h>
 
-bool resolve(struct addrinfo **res, const char * host, const char * port);
+bool resolve(struct addrinfo **res, const char * host, const char * port, int family, int socktype, int protocol);
 pid_t popen2(const char *command, int *infp, int *outfp);
 
 void generate_random_file(const char * fname, size_t size, size_t nitems);

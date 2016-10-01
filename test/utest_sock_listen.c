@@ -41,7 +41,7 @@ START_TEST(sock_listen_single_utest)
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1", "12345");
+	ok = resolve(&rp, "127.0.0.1", "12345", AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 

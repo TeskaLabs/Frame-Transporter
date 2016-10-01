@@ -10,7 +10,7 @@ OBJS=\
 	daemon.o \
 	sock/listener.o \
 	sock/stream.o \
-	sock/seqpacket.o \
+	sock/dgram.o \
 	mempool/frame.o \
 	mempool/pool.o \
 	mempool/zone.o \

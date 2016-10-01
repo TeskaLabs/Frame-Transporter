@@ -2,14 +2,14 @@
 
 ///
 
-bool resolve(struct addrinfo **res, const char * host, const char * port)
+bool resolve(struct addrinfo **res, const char * host, const char * port, int family, int socktype, int protocol)
 {
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = family;
+	hints.ai_socktype = socktype;
 	hints.ai_flags = AI_PASSIVE;
-	hints.ai_protocol = 0;
+	hints.ai_protocol = protocol;
 	hints.ai_canonname = NULL;
 	hints.ai_addr = NULL;
 	hints.ai_next = NULL;

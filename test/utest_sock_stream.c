@@ -116,7 +116,7 @@ START_TEST(sock_stream_1_utest)
 
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1", "12345");
+	ok = resolve(&rp, "127.0.0.1", "12345", AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
@@ -231,7 +231,7 @@ START_TEST(sock_stream_2_utest)
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1", "12345");
+	ok = resolve(&rp, "127.0.0.1", "12345", AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
@@ -290,7 +290,7 @@ START_TEST(sock_stream_conn_fail_utest)
 	ck_assert_int_eq(ok, true);
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1", "12346");
+	ok = resolve(&rp, "127.0.0.1", "12346", AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
@@ -436,7 +436,7 @@ START_TEST(sock_stream_ssl_client_utest)
 	usleep(60000);
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1", "12345");
+	ok = resolve(&rp, "127.0.0.1", "12345", AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
@@ -627,7 +627,7 @@ START_TEST(sock_stream_ssl_server_utest)
 	SSL_CTX_set_verify(sock_stream_ssl_server_ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, sock_stream_ssl_server_listen_verify_callback);
 
 	struct addrinfo * rp = NULL;
-	ok = resolve(&rp, "127.0.0.1", "12345");
+	ok = resolve(&rp, "127.0.0.1", "12345", AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
