@@ -26,8 +26,9 @@ struct ft_dgram
 		bool write_open : 1;      // Write queue is open for adding new frames
 		bool write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
 
-		bool bind : 1;
 		bool shutdown : 1;
+		bool bind : 1;  // ft_dgram_connect was successfully called
+		bool connect : 1;  // ft_dgram_connect was successfully called
 	} flags;
 
 	int ai_family;
@@ -73,7 +74,7 @@ struct ft_dgram
 
 bool ft_dgram_init(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol);
 bool ft_dgram_bind(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
-//bool ft_dgram_connect(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
+bool ft_dgram_connect(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
 void ft_dgram_fini(struct ft_dgram *);
 
 bool ft_dgram_write(struct ft_dgram *, struct ft_frame * frame);

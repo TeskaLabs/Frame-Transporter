@@ -18,7 +18,7 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 		strcpy(hoststr, "???");
 		strcpy(portstr, "???");
 	}
-	FT_INFO("Incoming frame: %s:%s f:%p ft: %08llx", hoststr, portstr, frame, (unsigned long long) frame->type);
+	FT_DEBUG("Incoming frame: fd:%d %s:%s f:%p ft:%08llx", dgram->read_watcher.fd, hoststr, portstr, frame, (unsigned long long) frame->type);
 
 	if (frame->type == FT_FRAME_TYPE_STREAM_END)
 		return false;
@@ -55,14 +55,16 @@ struct ft_dgram_delegate sock_dgram_1_delegate =
 
 START_TEST(sock_dgram_1_utest)
 {
-	struct ft_dgram dgram_sock;
+	struct ft_dgram dgram_sock1;
+	struct ft_dgram dgram_sock2;
+	struct addrinfo * rp;
 	int rc;
 	bool ok;
 
 	sock_dgram_1_result_counter = 0;
 
-	ft_config.log_verbose = true;
-	ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP;
+	//ft_config.log_verbose = true;
+	//ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP;
 
 
 	generate_random_file("./sock_dgram_1_utest.bin", 4096, 1);
@@ -91,36 +93,69 @@ START_TEST(sock_dgram_1_utest)
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
-	struct addrinfo * rp = NULL;
+	rp = NULL;
 	ok = resolve(&rp, "127.0.0.1", "12345", AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = ft_dgram_init(&dgram_sock, &sock_dgram_1_delegate, &context, rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+	ok = ft_dgram_init(&dgram_sock1, &sock_dgram_1_delegate, &context, rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 	ck_assert_int_eq(ok, true);
 
-	ok = ft_dgram_bind(&dgram_sock, rp->ai_addr, rp->ai_addrlen);
+	ok = ft_dgram_bind(&dgram_sock1, rp->ai_addr, rp->ai_addrlen);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_dgram_bind(&dgram_sock1, rp->ai_addr, rp->ai_addrlen);
+	ck_assert_int_eq(ok, false);
+
+
+
+	ok = ft_dgram_init(&dgram_sock2, &sock_dgram_1_delegate, &context, rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_dgram_connect(&dgram_sock2, rp->ai_addr, rp->ai_addrlen);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_dgram_connect(&dgram_sock2, rp->ai_addr, rp->ai_addrlen);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
 
-	FILE * p = popen("socat open:sock_dgram_1_utest.bin udp-sendto:127.0.0.1:12345", "w");
-	ck_assert_ptr_ne(p, NULL);
+	struct ft_frame * frame = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	ck_assert_ptr_ne(frame, NULL);
 
-	fflush(p);
+
+	FILE * f = fopen("./sock_dgram_1_utest.bin", "rb");
+	ck_assert_ptr_ne(f, NULL);
+
+	ok = ft_frame_fload(frame, f);
+	ck_assert_int_eq(ok, true);
+
+	fclose(f);
+
+
+	ft_frame_flip(frame);
+
+	ok = ft_dgram_write(&dgram_sock2, frame);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_dgram_cntl(&dgram_sock2, FT_DGRAM_SHUTDOWN);
+	ck_assert_int_eq(ok, true);
+
 
 	ft_context_run(&context);
 
-	rc = pclose(p);
-	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
-	ck_assert_int_eq(rc, 0);
+	ck_assert_int_eq(dgram_sock1.stats.read_events, 1);
+	ck_assert_int_eq(dgram_sock1.stats.write_events, 1);
+	ck_assert_int_eq(dgram_sock1.stats.read_bytes, 4096);
+	ck_assert_int_eq(dgram_sock1.stats.write_bytes, 4096);
 
-	ck_assert_int_eq(dgram_sock.stats.read_events, 1);
-	ck_assert_int_eq(dgram_sock.stats.write_events, 1);
-	ck_assert_int_eq(dgram_sock.stats.read_bytes, 4096);
-	ck_assert_int_eq(dgram_sock.stats.write_bytes, 4096);
+	ck_assert_int_eq(dgram_sock2.stats.read_events, 0);
+	ck_assert_int_eq(dgram_sock2.stats.write_events, 1);
+	ck_assert_int_eq(dgram_sock2.stats.read_bytes, 0);
+	ck_assert_int_eq(dgram_sock2.stats.write_bytes, 4096);
 
-	ft_dgram_fini(&dgram_sock);
+	ft_dgram_fini(&dgram_sock1);
+	ft_dgram_fini(&dgram_sock2);
 
 	ft_context_fini(&context);
 

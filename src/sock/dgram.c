@@ -31,10 +31,11 @@ static void _ft_dgram_on_write_event(struct ft_dgram * this);
 
 ///
 
-#define TRACE_FMT "fd:%d B:%c S:%c Rt:%c Re:%c Rw:%c Wo:%c Wr:%c We:%c Ww:%c E:(%d)"
+#define TRACE_FMT "fd:%d B:%c C:%c S:%c Rt:%c Re:%c Rw:%c Wo:%c Wr:%c We:%c Ww:%c E:(%d)"
 #define TRACE_ARGS \
 	this->read_watcher.fd, \
 	(this->flags.bind) ? 'Y' : '.', \
+	(this->flags.connect) ? 'Y' : '.', \
 	(this->flags.shutdown) ? 'Y' : '.', \
 	(this->flags.read_throttle) ? 'Y' : '.', \
 	(this->read_events & READ_WANT_READ) ? 'R' : '.', \
@@ -92,6 +93,7 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	this->flags.write_open = true;
 	this->flags.shutdown = false;
 	this->flags.bind = false;
+	this->flags.connect = false;
 
 	this->error.sys_errno = 0;
 
@@ -123,99 +125,6 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 
 	return true;
 }
-
-bool ft_dgram_bind(struct ft_dgram * this, const struct sockaddr * addr, socklen_t addrlen)
-{
-	bool ok;
-	int rc;
-
-	assert(this != NULL);
-	assert(addr != NULL);
-	assert(this->read_watcher.fd >= 0);
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
-
-	if (this->flags.bind == true) FT_WARN("Datagram socket is bound already");
-
-	rc = bind(this->read_watcher.fd, addr, addrlen);
-	if (rc != 0)
-	{
-		if (errno != EINPROGRESS)
-		{
-			FT_ERROR_ERRNO(errno, "bind()");
-			FT_TRACE(FT_TRACE_ID_DGRAM, "END bind err" TRACE_FMT, TRACE_ARGS);
-			return false;
-		}
-	}
-
-	this->flags.bind = true;
-
-	ok = ft_dgram_cntl(this, FT_DGRAM_READ_START);
-	if (!ok) FT_WARN_P("Failed to set events properly");
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
-
-	return true;
-}
-
-/*
-bool ft_dgram_connect(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
-{
-	assert(addr != NULL);
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN");
-
-	if (addr->ai_socktype != SOCK_DGRAM)
-	{
-		FT_ERROR("Datagram socket can handle only SOCK_DGRAM addresses");
-		return false;
-	}
-
-	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-	if (fd < 0)
-	{
-		FT_ERROR_ERRNO(errno, "socket(%d, %d, %d)", addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-		return false;
-	}
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "SOCKET fd:%d", fd);
-
-	bool ok = _ft_dgram_init(
-		this, delegate, context,
-		fd,
-		addr->ai_addr, addr->ai_addrlen,
-		addr->ai_family,
-		addr->ai_socktype,
-		addr->ai_protocol
-	);
-	if (!ok)
-	{
-		FT_TRACE(FT_TRACE_ID_DGRAM, "END error" TRACE_FMT, TRACE_ARGS);
-		return false;
-	}
-
-	this->flags.active = true;
-	this->connected_at = this->created_at;
-
-	int rc = connect(fd, addr->ai_addr, addr->ai_addrlen);
-	if (rc != 0)
-	{
-		if (errno != EINPROGRESS)
-		{
-			FT_ERROR_ERRNO(errno, "connect()");
-			FT_TRACE(FT_TRACE_ID_DGRAM, "END connect err" TRACE_FMT, TRACE_ARGS);
-			return false;
-		}
-	}
-
-	ok = ft_dgram_cntl(this, FT_DGRAM_WRITE_START);
-	if (!ok) FT_WARN_P("Failed to set events properly");
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
-
-	return true;
-}
-*/
 
 void ft_dgram_fini(struct ft_dgram * this)
 {
@@ -262,6 +171,76 @@ void ft_dgram_fini(struct ft_dgram * this)
 		ft_frame_return(frame);
 	}
 	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
+}
+
+///
+
+bool ft_dgram_bind(struct ft_dgram * this, const struct sockaddr * addr, socklen_t addrlen)
+{
+	bool ok;
+	int rc;
+
+	assert(this != NULL);
+	assert(addr != NULL);
+	assert(this->read_watcher.fd >= 0);
+
+	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
+	if (this->flags.bind == true) FT_WARN("Datagram socket is bound already");
+
+	rc = bind(this->read_watcher.fd, addr, addrlen);
+	if (rc != 0)
+	{
+		if (errno != EINPROGRESS)
+		{
+			FT_ERROR_ERRNO(errno, "bind()");
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END bind err" TRACE_FMT, TRACE_ARGS);
+			return false;
+		}
+	}
+
+	this->flags.bind = true;
+
+	ok = ft_dgram_cntl(this, FT_DGRAM_READ_START);
+	if (!ok) FT_WARN_P("Failed to set events properly");
+
+	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
+
+	return true;
+}
+
+bool ft_dgram_connect(struct ft_dgram * this, const struct sockaddr * addr, socklen_t addrlen)
+{
+	bool ok;
+	int rc;
+
+	assert(this != NULL);
+	assert(addr != NULL);
+	assert(this->read_watcher.fd >= 0);
+
+	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
+	if (this->flags.connect == true) FT_WARN("Datagram socket is connected already");
+
+	rc = connect(this->read_watcher.fd, addr, addrlen);
+	if (rc != 0)
+	{
+		if (errno != EINPROGRESS)
+		{
+			FT_ERROR_ERRNO(errno, "connect()");
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END connect err" TRACE_FMT, TRACE_ARGS);
+			return false;
+		}
+	}
+
+	this->flags.connect = true;
+
+	ok = ft_dgram_cntl(this, FT_DGRAM_WRITE_START);
+	if (!ok) FT_WARN_P("Failed to set events properly");
+
+	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
+
+	return true;	
 }
 
 ///
@@ -578,14 +557,24 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		assert(iov[0].iov_len > 0);
 
 		struct msghdr msghdr = {
-			.msg_name = &this->write_frames->addr,
-			.msg_namelen = sizeof(this->write_frames->addr),
 			.msg_iov = iov,
 			.msg_iovlen = 1,
 			.msg_control = NULL,
 			.msg_controllen = 0,
 			.msg_flags = 0
 		};
+
+		// If socket is connected, then a frame address will be ignored
+		if (this->flags.connect)
+		{
+			msghdr.msg_name = NULL;
+			msghdr.msg_namelen = 0;
+		}
+		else
+		{
+			msghdr.msg_name = &this->write_frames->addr;
+			msghdr.msg_namelen = sizeof(this->write_frames->addr);			
+		}
 
 		rc = sendmsg(this->write_watcher.fd, &msghdr, 0);
 		if (rc < 0) // Handle error situation
