@@ -24,8 +24,8 @@ struct ft_listener
 	bool listening;
 	int backlog;
 
-	struct sockaddr_storage ai_addr;
-	socklen_t ai_addrlen;
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
 
 	struct
 	{

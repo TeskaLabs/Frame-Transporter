@@ -29,8 +29,8 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	this->ai_family = ai->ai_family;
 	this->ai_socktype = ai->ai_socktype;
 	this->ai_protocol = ai->ai_protocol;
-	memcpy(&this->ai_addr, ai->ai_addr, ai->ai_addrlen);
-	this->ai_addrlen = ai->ai_addrlen;
+	memcpy(&this->addr, ai->ai_addr, ai->ai_addrlen);
+	this->addrlen = ai->ai_addrlen;
 
 	this->stats.accept_events = 0;
 
@@ -38,7 +38,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 
 	if (this->ai_family == AF_UNIX)
 	{
-		struct sockaddr_un * un = (struct sockaddr_un *)&this->ai_addr;
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->addr;
 		strcpy(addrstr, un->sun_path);
 	}
 
@@ -47,7 +47,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 		char hoststr[NI_MAXHOST];
 		char portstr[NI_MAXHOST];
 
-		rc = getnameinfo((const struct sockaddr *)&this->ai_addr, this->ai_addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
+		rc = getnameinfo((const struct sockaddr *)&this->addr, this->addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
 		if (rc != 0)
 		{
 			if (rc == EAI_FAMILY)
@@ -114,7 +114,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 #endif // TCP_DEFER_ACCEPT
 
 	// Bind socket
-	rc = bind(fd, (const struct sockaddr *)&this->ai_addr, this->ai_addrlen);
+	rc = bind(fd, (const struct sockaddr *)&this->addr, this->addrlen);
 	if (rc != 0)
 	{
 		FT_ERROR_ERRNO(errno, "bind to %s ", addrstr);
@@ -152,7 +152,7 @@ void ft_listener_fini(struct ft_listener * this)
 
 	if (this->ai_family == AF_UNIX)
 	{
-		struct sockaddr_un * un = (struct sockaddr_un *)&this->ai_addr;
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->addr;
 		
 		rc = unlink(un->sun_path);
 		if (rc != 0) FT_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
