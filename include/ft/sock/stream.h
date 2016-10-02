@@ -43,8 +43,8 @@ struct ft_stream
 	int ai_socktype; // Always SOCK_STREAM
 	int ai_protocol;
 
-	struct sockaddr_storage ai_addr;
-	socklen_t ai_addrlen;
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
 
 	ev_tstamp created_at;
 	ev_tstamp connected_at;

@@ -1,14 +1,16 @@
 #include "../_ft_internal.h"
 
-// TODO: Conceptual: Consider implementing readv() and writev() versions for more complicated frame formats (eh, on linux it is implemented as memcpy)
-// TODO: Consider adding a support for HTTPS proxy
-// TODO: SO_KEEPALIVE
-// TODO: SO_LINGER (in a non-blocking mode?)
-// TODO: SO_PRIORITY
-// TODO: SO_RCVBUF
-// TODO: SO_SNDBUF (??)
-// TODO: SO_RCVLOWAT (consider using)
-// TODO: SO_RCVTIMEO & SO_SNDTIMEO
+//TODO: Conceptual: Consider implementing readv() and writev() versions for more complicated frame formats (eh, on linux it is implemented as memcpy)
+//TODO: Consider adding a support for HTTPS proxy
+//TODO: SO_KEEPALIVE
+//TODO: SO_LINGER (in a non-blocking mode?)
+//TODO: SO_PRIORITY
+//TODO: SO_RCVBUF
+//TODO: SO_SNDBUF (??)
+//TODO: SO_RCVLOWAT (consider using)
+//TODO: SO_RCVTIMEO & SO_SNDTIMEO
+
+//TODO: Fill frame addr and addrlen on frame receival
 
 static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void _ft_stream_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
@@ -124,8 +126,8 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	assert(this->context->ev_loop != NULL);
 	this->created_at = ev_now(this->context->ev_loop);
 
-	memcpy(&this->ai_addr, peer_addr, peer_addr_len);
-	this->ai_addrlen = peer_addr_len;
+	memcpy(&this->addr, peer_addr, peer_addr_len);
+	this->addrlen = peer_addr_len;
 
 	this->ai_family = ai_family;
 	this->ai_socktype = ai_socktype;
@@ -363,15 +365,14 @@ static void _ft_stream_error(struct ft_stream * this, int sys_errno, unsigned lo
 	this->error.sys_errno = sys_errno;
 	this->error.ssl_error = ssl_error;
 
-	if (this->delegate->error != NULL)
-		this->delegate->error(this);
-
+	this->flags.write_open = false;
 	this->flags.read_shutdown = true;
 	this->flags.write_shutdown = true;
-	
-	this->read_events = 0;
-	this->write_events = 0;
+	this->write_shutdown_at = this->read_shutdown_at = ev_now(this->context->ev_loop);
 
+	if (this->delegate->error != NULL)
+		this->delegate->error(this);
+	
 	ev_io_stop(this->context->ev_loop, &this->write_watcher);	
 	ev_io_stop(this->context->ev_loop, &this->read_watcher);	
 
