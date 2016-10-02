@@ -61,9 +61,9 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 }
 
 #ifdef RELEASE
-#define FT_TRACE(traceid, fmt, args...) do { if (0) _ft_log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_TRACE(traceid, fmt, args...) do { if (0) _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_TRACE(traceid, fmt, args...) if ((ft_config.log_trace_mask & traceid) != 0) _ft_log('T', "(%04X) %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
+#define FT_TRACE(traceid, fmt, args...) if ((ft_config.log_trace_mask & traceid) != 0) _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
 #endif
 
 #ifdef RELEASE
