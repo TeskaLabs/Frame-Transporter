@@ -9,6 +9,20 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 {
 	bool ok;
 
+	char hoststr[NI_MAXHOST];
+	char portstr[NI_MAXSERV];
+
+	int rc = getnameinfo((struct sockaddr *)&frame->addr, frame->addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
+	if (rc != 0)
+	{
+		strcpy(hoststr, "???");
+		strcpy(portstr, "???");
+	}
+	FT_INFO("Incoming frame: %s:%s f:%p ft: %08llx", hoststr, portstr, frame, (unsigned long long) frame->type);
+
+	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+		return false;
+
 //	ft_frame_fprintf(frame, stdout);
 	ft_frame_flip(frame);
 
@@ -18,12 +32,19 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 		ck_assert_int_eq(rc, 1);
 	}
 
+	ft_frame_reset_vec(frame);
+
 	sock_dgram_1_result_counter += 1;
 
-	ok = ft_dgram_cntl(dgram, FT_DGRAM_READ_STOP | FT_DGRAM_WRITE_STOP);
+	ok = ft_dgram_cntl(dgram, FT_DGRAM_READ_STOP);
 	ck_assert_int_eq(ok, true);
 
-	ft_frame_return(frame);
+	ok  = ft_dgram_write(dgram, frame);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_dgram_cntl(dgram, FT_DGRAM_SHUTDOWN);
+	ck_assert_int_eq(ok, true);
+
 	return true;
 }
 
@@ -75,8 +96,10 @@ START_TEST(sock_dgram_1_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(rp, NULL);
 
-	ok = ft_dgram_bind(&dgram_sock, &sock_dgram_1_delegate, &context, rp);
+	ok = ft_dgram_init(&dgram_sock, &sock_dgram_1_delegate, &context, rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+	ck_assert_int_eq(ok, true);
 
+	ok = ft_dgram_bind(&dgram_sock, rp->ai_addr, rp->ai_addrlen);
 	ck_assert_int_eq(ok, true);
 
 	freeaddrinfo(rp);
@@ -93,9 +116,9 @@ START_TEST(sock_dgram_1_utest)
 	ck_assert_int_eq(rc, 0);
 
 	ck_assert_int_eq(dgram_sock.stats.read_events, 1);
-	ck_assert_int_eq(dgram_sock.stats.write_events, 0);
+	ck_assert_int_eq(dgram_sock.stats.write_events, 1);
 	ck_assert_int_eq(dgram_sock.stats.read_bytes, 4096);
-	ck_assert_int_eq(dgram_sock.stats.write_bytes, 0);
+	ck_assert_int_eq(dgram_sock.stats.write_bytes, 4096);
 
 	ft_dgram_fini(&dgram_sock);
 

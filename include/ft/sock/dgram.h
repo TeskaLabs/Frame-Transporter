@@ -21,24 +21,23 @@ struct ft_dgram
 
 	struct
 	{
-		bool active : 1;  // Yes - we initiated connection using connect(), No - accept()
-		bool shutdown : 1;  // Socket is read-wise connected
-
 		bool read_throttle : 1;
 
 		bool write_open : 1;      // Write queue is open for adding new frames
 		bool write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
+
+		bool bind : 1;
+		bool shutdown : 1;
 	} flags;
 
 	int ai_family;
 	int ai_socktype;
 	int ai_protocol;
 
-	struct sockaddr_storage ai_addr;
-	socklen_t ai_addrlen;
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
 
 	ev_tstamp created_at;
-	ev_tstamp connected_at;
 	ev_tstamp shutdown_at;
 
 	struct 
@@ -72,9 +71,9 @@ struct ft_dgram
 	void * data;
 };
 
-//bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, int fd);
-bool ft_dgram_bind(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
-bool ft_dgram_connect(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
+bool ft_dgram_init(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol);
+bool ft_dgram_bind(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
+//bool ft_dgram_connect(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
 void ft_dgram_fini(struct ft_dgram *);
 
 bool ft_dgram_write(struct ft_dgram *, struct ft_frame * frame);

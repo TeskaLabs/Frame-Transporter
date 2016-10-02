@@ -31,9 +31,10 @@ static void _ft_dgram_on_write_event(struct ft_dgram * this);
 
 ///
 
-#define TRACE_FMT "fd:%d S:%c Rt:%c Re:%c Rw:%c Wo:%c Wr:%c We:%c Ww:%c a:%c E:(%d)"
+#define TRACE_FMT "fd:%d B:%c S:%c Rt:%c Re:%c Rw:%c Wo:%c Wr:%c We:%c Ww:%c E:(%d)"
 #define TRACE_ARGS \
 	this->read_watcher.fd, \
+	(this->flags.bind) ? 'Y' : '.', \
 	(this->flags.shutdown) ? 'Y' : '.', \
 	(this->flags.read_throttle) ? 'Y' : '.', \
 	(this->read_events & READ_WANT_READ) ? 'R' : '.', \
@@ -42,38 +43,37 @@ static void _ft_dgram_on_write_event(struct ft_dgram * this);
 	(this->flags.write_ready) ? 'Y' : '.', \
 	(this->write_events & WRITE_WANT_WRITE) ? 'W' : '.', \
 	(ev_is_active(&this->write_watcher)) ? 'Y' : '.', \
-	(this->flags.active) ? 'Y' : '.', \
 	this->error.sys_errno
 
 ///
 
-static bool _ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
+bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol)
 {
+	bool ok;
+
 	assert(this != NULL);
 	assert(delegate != NULL);
 	assert(context != NULL);
 
-	//TODO: This: assert(ai_socktype == SOCK_STREAM);
+	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN");
 
-	if ((ai_family == AF_INET) || (ai_family == AF_INET6))
+	if (socktype != SOCK_DGRAM)
 	{
-	// Disable Nagle
-#ifdef TCP_NODELAY
-		int flag = 1;
-		int rc_tcp_nodelay = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
-		if (rc_tcp_nodelay == -1) FT_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_NODELAY)");
-#endif
+		FT_ERROR("Datagram socket can handle only SOCK_DGRAM addresses");
+		return false;
+	}
 
-	// Set Congestion Window size
-#ifdef TCP_CWND
-		int cwnd = 10; // from SPDY best practicies
-		int rc_tcp_cwnd = setsockopt(fd, IPPROTO_TCP, TCP_CWND, &cwnd, sizeof(cwnd));
-		if (rc_tcp_cwnd == -1) FT_WARN_ERRNO(errno, "Couldn't setsockopt on client connection (TCP_CWND)");
-#endif
-	}	
+	int fd = socket(family, socktype, protocol);
+	if (fd < 0)
+	{
+		FT_ERROR_ERRNO(errno, "socket(%d, %d, %d)", family, socktype, protocol);
+		return false;
+	}
 
-	bool res = ft_fd_nonblock(fd);
-	if (!res) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
+	FT_TRACE(FT_TRACE_ID_DGRAM, "SOCKET fd:%d", fd);
+
+	ok = ft_fd_nonblock(fd);
+	if (!ok) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	this->data = NULL;
 	this->protocol = NULL;
@@ -87,22 +87,23 @@ static bool _ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * de
 	this->stats.write_direct = 0;
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
-	this->shutdown_at = NAN;
-	this->flags.shutdown = false;
-	this->flags.write_open = true;
 	this->flags.read_throttle = false;	
+	this->flags.write_open = true;
+	this->flags.write_open = true;
+	this->flags.shutdown = false;
+	this->flags.bind = false;
 
 	this->error.sys_errno = 0;
 
 	assert(this->context->ev_loop != NULL);
 	this->created_at = ev_now(this->context->ev_loop);
+	this->shutdown_at = NAN;
 
-	memcpy(&this->ai_addr, peer_addr, peer_addr_len);
-	this->ai_addrlen = peer_addr_len;
+	this->addrlen = 0;
 
-	this->ai_family = ai_family;
-	this->ai_socktype = ai_socktype;
-	this->ai_protocol = ai_protocol;
+	this->ai_family = family;
+	this->ai_socktype = socktype;
+	this->ai_protocol = protocol;
 
 	ev_io_init(&this->read_watcher, _ft_dgram_on_read, fd, EV_READ);
 	ev_set_priority(&this->read_watcher, -1); // Read has always lower priority than writing
@@ -115,48 +116,28 @@ static bool _ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * de
 	this->write_events = 0;
 	this->flags.write_ready = false;
 
+	ok = ft_dgram_cntl(this, FT_DGRAM_WRITE_START);
+	if (!ok) FT_WARN_P("Failed to set events properly");
+
+	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
+
 	return true;
 }
 
-bool ft_dgram_bind(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
+bool ft_dgram_bind(struct ft_dgram * this, const struct sockaddr * addr, socklen_t addrlen)
 {
+	bool ok;
+	int rc;
+
+	assert(this != NULL);
 	assert(addr != NULL);
+	assert(this->read_watcher.fd >= 0);
 
-	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN");
+	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
-	if (addr->ai_socktype != SOCK_DGRAM)
-	{
-		FT_ERROR("Stream can handle only SOCK_DGRAM addresses");
-		return false;
-	}
+	if (this->flags.bind == true) FT_WARN("Datagram socket is bound already");
 
-	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-	if (fd < 0)
-	{
-		FT_ERROR_ERRNO(errno, "socket(%d, %d, %d)", addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-		return false;
-	}
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "SOCKET fd:%d", fd);
-
-	bool ok = _ft_dgram_init(
-		this, delegate, context, 
-		fd,
-		addr->ai_addr, addr->ai_addrlen,
-		addr->ai_family,
-		addr->ai_socktype,
-		addr->ai_protocol
-	);
-	if (!ok)
-	{
-		FT_TRACE(FT_TRACE_ID_DGRAM, "END error" TRACE_FMT, TRACE_ARGS);
-		return false;
-	}
-
-	this->flags.active = false;
-	this->connected_at = this->created_at;
-
-	int rc = bind(fd, addr->ai_addr, addr->ai_addrlen);
+	rc = bind(this->read_watcher.fd, addr, addrlen);
 	if (rc != 0)
 	{
 		if (errno != EINPROGRESS)
@@ -167,6 +148,8 @@ bool ft_dgram_bind(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 		}
 	}
 
+	this->flags.bind = true;
+
 	ok = ft_dgram_cntl(this, FT_DGRAM_READ_START);
 	if (!ok) FT_WARN_P("Failed to set events properly");
 
@@ -175,7 +158,7 @@ bool ft_dgram_bind(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	return true;
 }
 
-
+/*
 bool ft_dgram_connect(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
 {
 	assert(addr != NULL);
@@ -184,7 +167,7 @@ bool ft_dgram_connect(struct ft_dgram * this, struct ft_dgram_delegate * delegat
 
 	if (addr->ai_socktype != SOCK_DGRAM)
 	{
-		FT_ERROR("Stream can handle only SOCK_DGRAM addresses");
+		FT_ERROR("Datagram socket can handle only SOCK_DGRAM addresses");
 		return false;
 	}
 
@@ -232,6 +215,7 @@ bool ft_dgram_connect(struct ft_dgram * this, struct ft_dgram_delegate * delegat
 
 	return true;
 }
+*/
 
 void ft_dgram_fini(struct ft_dgram * this)
 {
@@ -249,8 +233,12 @@ void ft_dgram_fini(struct ft_dgram * this)
 	this->read_watcher.fd = -1;
 	this->write_watcher.fd = -1;
 
-	this->flags.shutdown = true;
-	this->shutdown_at = ev_now(this->context->ev_loop);
+	if (this->flags.shutdown == false)
+	{
+		this->flags.shutdown = true;
+		this->shutdown_at = ev_now(this->context->ev_loop);
+	}
+
 	this->flags.write_open = false;
 	this->flags.write_ready = false;
 
@@ -278,40 +266,75 @@ void ft_dgram_fini(struct ft_dgram * this)
 
 ///
 
+static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
+{
+	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
+	// Stop futher reads on the socket
+	ft_dgram_cntl(this, FT_DGRAM_READ_STOP | FT_DGRAM_READ_STOP);
+
+	this->shutdown_at = ev_now(this->context->ev_loop);
+	this->flags.shutdown = true;
+	this->flags.write_open = false;
+
+	int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
+	if (rc != 0)
+	{
+		if (errno == ENOTCONN) { /* NO-OP ... this can happen when connection is closed quickly after connecting */ }
+		else
+			FT_WARN_ERRNO_P(errno, "shutdown()");
+	}
+
+	// Uplink (to delegate) end-of-stream
+	if (uplink_eos)
+	{
+		struct ft_frame * frame = NULL;
+		if ((this->read_frame != NULL) && (ft_frame_pos(this->read_frame) == 0))
+		{
+			// Recycle this->read_frame if there are no data read
+			frame = this->read_frame;
+			this->read_frame = NULL;
+
+			ft_frame_format_empty(frame);
+			ft_frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
+		}
+
+		if (frame == NULL)
+		{
+			frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+		}
+
+		if (frame == NULL)
+		{
+			FT_WARN("Failed to submit end-of-stream frame, throttling");
+			ft_dgram_cntl(this, FT_DGRAM_READ_PAUSE);
+			//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
+			return;
+		}
+
+		bool upstreamed = this->delegate->read(this, frame);
+		if (!upstreamed) ft_frame_return(frame);
+	}
+
+	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
+}
+
 static void _ft_dgram_error(struct ft_dgram * this, int sys_errno, const char * when)
 {
 	assert(sys_errno != 0);
 
-	FT_WARN_ERRNO(sys_errno, "System error on stream when %s", when);
+	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT " %s", TRACE_ARGS, when);
+	FT_WARN_ERRNO(sys_errno, "System error on datagram socket when %s", when);
 
 	this->error.sys_errno = sys_errno;
 
 	if (this->delegate->error != NULL)
 		this->delegate->error(this);
 
-	this->flags.shutdown = true;
-	
-	this->read_events = 0;
-	this->write_events = 0;
+	_ft_dgram_shutdown_real(this, false);
 
-	ev_io_stop(this->context->ev_loop, &this->write_watcher);	
-	ev_io_stop(this->context->ev_loop, &this->read_watcher);	
-
-	// Perform hard close of the socket
-	int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
-	if (rc != 0)
-	{
-		switch (errno)
-		{
-			case ENOTCONN:
-				break;
-
-			default:
-				FT_WARN_ERRNO(errno, "shutdown() in error handling");
-		}		
-	}
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, TRACE_FMT " %s", TRACE_ARGS, when);
+	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " %s", TRACE_ARGS, when);
 }
 
 ///
@@ -360,63 +383,11 @@ bool _ft_dgram_cntl_read_throttle(struct ft_dgram * this, bool throttle)
 	return true;
 }
 
-static void _ft_dgram_shutdown_real(struct ft_dgram * this)
-{
-	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
-
-	assert(this->flags.write_open == false);
-	assert(this->flags.shutdown == false);
-
-	// Stop futher reads on the socket
-	ft_dgram_cntl(this, FT_DGRAM_READ_STOP);
-	this->shutdown_at = ev_now(this->context->ev_loop);
-	this->flags.shutdown = true;
-
-	_ft_dgram_write_unset_event(this, WRITE_WANT_WRITE | READ_WANT_READ);
-
-	int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
-	if (rc != 0)
-	{
-		if (errno == ENOTCONN) { /* NO-OP ... this can happen when connection is closed quickly after connecting */ }
-		else
-			FT_WARN_ERRNO_P(errno, "shutdown()");
-	}
-
-	// Uplink (to delegate) end-of-stream
-	struct ft_frame * frame = NULL;
-	if ((this->read_frame != NULL) && (ft_frame_pos(this->read_frame) == 0))
-	{
-		// Recycle this->read_frame if there are no data read
-		frame = this->read_frame;
-		this->read_frame = NULL;
-
-		ft_frame_format_empty(frame);
-		ft_frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
-	}
-
-	if (frame == NULL)
-	{
-		frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
-	}
-
-	if (frame == NULL)
-	{
-		FT_WARN("Failed to submit end-of-stream frame, throttling");
-		ft_dgram_cntl(this, FT_DGRAM_READ_PAUSE);
-		//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
-		FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
-		return;
-	}
-
-	bool upstreamed = this->delegate->read(this, frame);
-	if (!upstreamed) ft_frame_return(frame);
-
-
-	FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
-}
 
 void _ft_dgram_on_read_event(struct ft_dgram * this)
 {
+	ssize_t rc;
+
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
@@ -450,14 +421,26 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 		struct ft_vec * frame_dvec = ft_frame_get_vec(this->read_frame);
 		assert(frame_dvec != NULL);
 
-		size_t size_to_read = frame_dvec->limit - frame_dvec->position;
-		assert(size_to_read > 0);
+		//TODO: Transform frame_dvec into iovec array (aka support multiple frame_vec)
+		struct iovec iov[1] = {
+			{
+				.iov_base = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position,
+				.iov_len = frame_dvec->limit - frame_dvec->position,
+			}
+		};
+		assert(iov[0].iov_len > 0);
 
-		void * p_to_read = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position;
+		struct msghdr msghdr = {
+			.msg_name = &this->read_frame->addr,
+			.msg_namelen = sizeof(this->read_frame->addr),
+			.msg_iov = iov,
+			.msg_iovlen = 1,
+			.msg_control = NULL,
+			.msg_controllen = 0,
+			.msg_flags = 0
+		};
 
-		ssize_t rc;
-		rc = recv(this->read_watcher.fd, p_to_read, size_to_read, 0);
-
+		rc = recvmsg(this->read_watcher.fd, &msghdr, 0);
 		if (rc <= 0) // Handle error situation
 		{
 			if (rc < 0)
@@ -474,11 +457,12 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 			else
 			{
 				FT_WARN_P("Recv on DGRAM returned 0 - why?");
+				
 				this->error.sys_errno = 0;
+				_ft_dgram_shutdown_real(this, true);
 			}
 
-			_ft_dgram_shutdown_real(this);
-			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT, TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END recvmsg:%zd " TRACE_FMT, rc, TRACE_ARGS);
 			return;
 		}
 
@@ -575,23 +559,35 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 
 			if (this->write_frames != NULL) FT_ERROR("There are data frames in the write queue after end-of-stream.");
 
-			_ft_dgram_shutdown_real(this);
+			_ft_dgram_shutdown_real(this, true);
 
 			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " shutdown", TRACE_ARGS);
 			return;
 		}
 
-		//TODO: How to support frames with more than one vector
-
 		struct ft_vec * frame_dvec = ft_frame_get_vec(this->write_frames);
 		assert(frame_dvec != NULL);
 
-		size_t size_to_write = frame_dvec->limit - frame_dvec->position;
-		assert(size_to_write > 0);
+		//TODO: Transform frame_dvec into iovec array (aka support multiple frame_vec)
+		struct iovec iov[1] = {
+			{
+				.iov_base = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position,
+				.iov_len = frame_dvec->limit - frame_dvec->position,
+			}
+		};
+		assert(iov[0].iov_len > 0);
 
-		const void * p_to_write = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position;
+		struct msghdr msghdr = {
+			.msg_name = &this->write_frames->addr,
+			.msg_namelen = sizeof(this->write_frames->addr),
+			.msg_iov = iov,
+			.msg_iovlen = 1,
+			.msg_control = NULL,
+			.msg_controllen = 0,
+			.msg_flags = 0
+		};
 
-		rc = send(this->write_watcher.fd, p_to_write, size_to_write, 0);
+		rc = sendmsg(this->write_watcher.fd, &msghdr, 0);
 		if (rc < 0) // Handle error situation
 		{
 			if (errno == EAGAIN)
@@ -599,6 +595,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 				// OS buffer is full, wait for next write event
 				this->flags.write_ready = false;
 				_ft_dgram_write_set_event(this, WRITE_WANT_WRITE);
+				FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " EAGAIN", TRACE_ARGS);
 				return;
 			}
 
@@ -688,7 +685,7 @@ bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 
 	if (this->flags.write_open == false)
 	{
-		FT_WARN("Stream is not open for writing (f:%p ft: %08llx)", frame, (unsigned long long) frame->type);
+		FT_WARN("Datagram socket is not open for writing (f:%p ft: %08llx)", frame, (unsigned long long) frame->type);
 		return false;
 	}
 
@@ -702,6 +699,7 @@ bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 
 	if (this->flags.write_ready == false)
 	{
+		_ft_dgram_write_set_event(this, WRITE_WANT_WRITE);
 		FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " queue", TRACE_ARGS);
 		return true;
 	}
