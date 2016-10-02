@@ -12,7 +12,7 @@ bool ft_pool_init(struct ft_pool * this, struct ft_context * context)
 	this->zones = NULL;
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
-	
+
 	this->alloc_fnct = ft_pool_alloc_default;
 
 	if (context != NULL)

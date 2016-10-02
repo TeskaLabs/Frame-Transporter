@@ -18,6 +18,10 @@ struct ft_frame
 	unsigned int vec_position;
 	unsigned int vec_limit;
 
+	// Used to store address of inbound/outbound socket
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
+
 	// Those two are used for tracing and debugging 
 	const char * borrowed_by_file;
 	unsigned int borrowed_by_line;

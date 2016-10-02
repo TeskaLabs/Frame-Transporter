@@ -116,6 +116,8 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 	frame->borrowed_by_line = line;
 	frame->zone->frames_used += 1;
 
+	frame->addrlen = 0;
+
 	frame->vec_position = 0;
 	frame->vec_limit = 0;
 
