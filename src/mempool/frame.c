@@ -147,9 +147,9 @@ bool ft_vec_strcat(struct ft_vec * this, const char * text)
 	return ft_vec_cat(this, text, strlen(text));
 }
 
-// Helper functions ...
+// File related functions ...
 
-bool ft_frame_fload(struct ft_frame * this, FILE * f)
+bool ft_frame_fread(struct ft_frame * this, FILE * f)
 {
 	assert(this != NULL);
 
@@ -185,9 +185,17 @@ bool ft_frame_fload(struct ft_frame * this, FILE * f)
 }
 
 
-void ft_frame_fprintf(struct ft_frame * this, FILE * f)
+bool ft_frame_fwrite(struct ft_frame * this, FILE * f)
 {
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	for (int i=-1; i>(-1-this->vec_limit); i -= 1)
-		fwrite(vec[i].frame->data + vec[i].offset, vec[i].limit, 1, f);
+	{
+		size_t rc = fwrite(vec[i].frame->data + vec[i].offset, vec[i].limit, 1, f);
+		if (rc != 1)
+		{
+			FT_ERROR_ERRNO(errno, "fwrite");
+			return false;
+		}
+	}
+	return true;
 }

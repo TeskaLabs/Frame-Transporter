@@ -39,7 +39,7 @@ static int connection_on_message_complete(http_parser * parser)
 	ft_vec_sprintf(vec, "D\r\nHello world\r\n\r\n0\r\n\r\n");
 
 	ft_frame_flip(this->response_frame);
-	//ft_frame_fprintf(this->response_frame, stdout);
+	//ft_frame_store(this->response_frame, stdout);
 
 	ok = ft_stream_write(&this->stream, this->response_frame);
 	if (!ok) return -1;
@@ -71,7 +71,7 @@ bool connection_on_read(struct ft_stream * stream, struct ft_frame * frame)
 	
 	int nparsed;
 	ft_frame_flip(frame);
-	//ft_frame_fprintf(frame, stdout);
+	//ft_frame_fwrite(frame, stdout);
 	struct ft_vec * vec = ft_frame_get_vec(frame);
 	size_t recved = (vec != NULL) ? ft_vec_len(vec) : 0;
 

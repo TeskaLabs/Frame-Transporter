@@ -14,7 +14,7 @@ bool on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 	if (frame->type == FT_FRAME_TYPE_RAW_DATA)
 	{
 		ft_frame_flip(frame);
-		ft_frame_fprintf(frame, stdout);
+		ft_frame_fwrite(frame, stdout);
 	}
 
 	ft_frame_return(frame);

@@ -23,7 +23,7 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 	if (frame->type == FT_FRAME_TYPE_STREAM_END)
 		return false;
 
-//	ft_frame_fprintf(frame, stdout);
+//	ft_frame_fwrite(frame, stdout);
 	ft_frame_flip(frame);
 
 	for (struct ft_vec * dvec = ft_frame_get_vec(frame); dvec != NULL; dvec = ft_frame_next_vec(frame))
@@ -127,7 +127,7 @@ START_TEST(sock_dgram_1_utest)
 	FILE * f = fopen("./sock_dgram_1_utest.bin", "rb");
 	ck_assert_ptr_ne(f, NULL);
 
-	ok = ft_frame_fload(frame, f);
+	ok = ft_frame_fread(frame, f);
 	ck_assert_int_eq(ok, true);
 
 	fclose(f);

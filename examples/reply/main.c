@@ -13,7 +13,7 @@ struct ft_list streams;
 
 bool on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
-//	ft_frame_fprintf(stdout, frame);	
+//	ft_frame_fwrite(frame, stdout);	
 	ft_frame_flip(frame);
 	bool ok = ft_stream_write(established_sock, frame);
 	if (!ok)

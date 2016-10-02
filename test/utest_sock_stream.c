@@ -348,7 +348,7 @@ bool sock_stream_ssl_1_on_read(struct ft_stream * established_sock, struct ft_fr
 
 		ft_frame_flip(frame);
 		ck_assert_int_gt(ft_frame_len(frame), 0);
-		//ft_frame_fprintf(stdout, frame);
+		//ft_frame_fwrite(stdout, frame);
 
 		for (struct ft_vec * dvec = ft_frame_get_vec(frame); dvec != NULL; dvec = ft_frame_next_vec(frame))
 		{
