@@ -36,8 +36,9 @@ size_t ft_frame_len(struct ft_frame *);
 void ft_frame_format_empty(struct ft_frame *);
 void ft_frame_format_simple(struct ft_frame *);
 
-//These are diagnostics functions
-void ft_frame_fprintf(struct ft_frame *, FILE * f);
+void ft_frame_fprintf(struct ft_frame *, FILE * f); //TODO: Rename this to "ft_frame_fstore"
+bool ft_frame_fload(struct ft_frame * , FILE * f);
+
 void ft_frame_debug(struct ft_frame *);
 
 static inline void ft_frame_flip(struct ft_frame * this)

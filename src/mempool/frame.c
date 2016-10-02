@@ -94,13 +94,6 @@ void ft_frame_format_simple(struct ft_frame * this)
 }
 
 
-void ft_frame_fprintf(struct ft_frame * this, FILE * f)
-{
-	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
-	for (int i=-1; i>(-1-this->vec_limit); i -= 1)
-		fwrite(vec[i].frame->data + vec[i].offset, vec[i].limit, 1, f);
-}
-
 void ft_frame_debug(struct ft_frame * this)
 {
 	FT_DEBUG("Frame structure: VP:%u/VL:%u d:%p", this->vec_position, this->vec_limit, this->data);
@@ -152,4 +145,49 @@ bool ft_vec_cat(struct ft_vec * this, const void * data, size_t data_len)
 bool ft_vec_strcat(struct ft_vec * this, const char * text)
 {
 	return ft_vec_cat(this, text, strlen(text));
+}
+
+// Helper functions ...
+
+bool ft_frame_fload(struct ft_frame * this, FILE * f)
+{
+	assert(this != NULL);
+
+	ft_frame_format_simple(this);
+
+	fseek(f, 0L, SEEK_END);
+	long sz = ftell(f);
+	rewind(f);
+
+	struct ft_vec * vec = ft_frame_get_vec(this);
+	assert(vec != NULL);
+	void * p = ft_vec_ptr(vec);
+	assert(p != NULL);
+
+	if (sz > vec->limit)
+	{
+		FT_WARN("File doesn't fit into a frame (%zd < %ld), truncating", vec->limit, sz);
+		sz = vec->limit;
+	}
+
+	size_t rc = fread(p, sz, 1, f);
+	if (rc != 1)
+	{
+		FT_ERROR_ERRNO(errno, "fread");
+	}
+
+	if (rc != 1)
+		return false;
+
+	ft_vec_advance(vec, sz);
+
+	return true;
+}
+
+
+void ft_frame_fprintf(struct ft_frame * this, FILE * f)
+{
+	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
+	for (int i=-1; i>(-1-this->vec_limit); i -= 1)
+		fwrite(vec[i].frame->data + vec[i].offset, vec[i].limit, 1, f);
 }

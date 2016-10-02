@@ -3,6 +3,7 @@
 
 //TODO: ft_frame_next_vec
 //TODO: ft_frame_reset_vec
+//TODO: ft_frame_fload and ft_frame_fstore (or ft_frame_fprintf)
 
 ////
 
