@@ -83,6 +83,12 @@ static inline struct ft_vec * ft_frame_get_vec(struct ft_frame * this)
 	return vec;
 }
 
+static inline void ft_frame_reset_vec(struct ft_frame * this)
+{
+	assert(this != NULL);
+	this->vec_position = 0;
+}
+
 // Following function requires access to frame object internals
 // and for this reason it is here and not with ft_vec object
 static inline void * ft_vec_ptr(struct ft_vec * this)

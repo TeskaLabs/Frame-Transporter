@@ -1,6 +1,9 @@
 #include "testutils.h"
 #include <../src/_ft_internal.h>
 
+//TODO: ft_frame_next_vec
+//TODO: ft_frame_reset_vec
+
 ////
 
 static bool frame_core_utest_vprintf(struct ft_vec * dvec, const char * fmt, ...)
