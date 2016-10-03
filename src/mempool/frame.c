@@ -11,6 +11,7 @@ void _ft_frame_init(struct ft_frame * this, uint8_t * data, size_t capacity, str
 	this->capacity = capacity;
 
 	this->addrlen = 0;
+	this->addr.ss_family = AF_UNSPEC;
 
 	this->borrowed_by_file = NULL;
 	this->borrowed_by_line = 0;

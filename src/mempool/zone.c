@@ -117,6 +117,7 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 	frame->zone->frames_used += 1;
 
 	frame->addrlen = 0;
+	frame->addr.ss_family = AF_UNSPEC;
 
 	frame->vec_position = 0;
 	frame->vec_limit = 0;
