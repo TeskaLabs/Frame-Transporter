@@ -3,6 +3,7 @@
 /test/log.txt
 /test/sock_stream_ssl_1_utest.bin
 /test/sock_dgram_1_utest.bin
+/test/sock_dgram_2_utest.bin
 
 /examples/reply/reply
 /examples/forward/forward

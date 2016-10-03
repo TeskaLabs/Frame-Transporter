@@ -51,6 +51,7 @@ static void _ft_dgram_on_write_event(struct ft_dgram * this);
 bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol)
 {
 	bool ok;
+	int i, rc;
 
 	assert(this != NULL);
 	assert(delegate != NULL);
@@ -72,6 +73,15 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	}
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "SOCKET fd:%d", fd);
+
+	// Set OS buffer size, it is important to maintain a capability to send larger frame in a single datagram
+	i = FRAME_SIZE;
+	rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &i, sizeof(i));
+	if (rc == -1) FT_WARN_ERRNO(errno, "setsockopt(%d, SOL_SOCKET, SO_SNDBUF, %d)", fd, i);
+
+	i = FRAME_SIZE;
+	rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &i, sizeof(i));
+	if (rc == -1) FT_WARN_ERRNO(errno, "setsockopt(%d, SOL_SOCKET, SO_RCVBUF, %d)", fd, i);
 
 	ok = ft_fd_nonblock(fd);
 	if (!ok) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
@@ -194,7 +204,7 @@ bool ft_dgram_bind(struct ft_dgram * this, const struct sockaddr * addr, socklen
 		if (errno != EINPROGRESS)
 		{
 			FT_ERROR_ERRNO(errno, "bind()");
-			FT_TRACE(FT_TRACE_ID_DGRAM, "END bind err" TRACE_FMT, TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END bind err " TRACE_FMT, TRACE_ARGS);
 			return false;
 		}
 	}
@@ -575,6 +585,8 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 			msghdr.msg_name = &this->write_frames->addr;
 			msghdr.msg_namelen = sizeof(this->write_frames->addr);			
 		}
+
+		FT_TRACE(FT_TRACE_ID_DGRAM, "sendmsg size:%zd " TRACE_FMT, iov[0].iov_len, TRACE_ARGS);
 
 		rc = sendmsg(this->write_watcher.fd, &msghdr, 0);
 		if (rc < 0) // Handle error situation
