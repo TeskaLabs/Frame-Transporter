@@ -20,13 +20,13 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 			char hoststr[NI_MAXHOST];
 			char portstr[NI_MAXSERV];
 			int rc = getnameinfo((struct sockaddr *)&frame->addr, frame->addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
-			if (rc != 0)
+			if (rc == 0)
 			{
-				strcpy(addrstr, "?:?");
+				snprintf(addrstr, sizeof(addrstr)-1, "%s:%s", hoststr, portstr);
 			}
 			else
 			{
-				snprintf(addrstr, sizeof(addrstr)-1, "%s:%s", hoststr, portstr);
+				snprintf(addrstr, sizeof(addrstr)-1, "?:?(%s)", gai_strerror(rc));
 			}
 			break;
 		}
@@ -240,12 +240,11 @@ START_TEST(sock_dgram_2_utest)
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
-	unlink("./sock_dgram_2_utest.sock");
-
 	struct sockaddr_un addr;
 	addr.sun_family = AF_LOCAL;
 	strncpy(addr.sun_path, "./sock_dgram_2_utest.sock", sizeof (addr.sun_path));
 	addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
+	unlink(addr.sun_path);
 
 	ok = ft_dgram_init(&dgram_sock1, &sock_dgram_1_delegate, &context, AF_LOCAL, SOCK_DGRAM, 0);
 	ck_assert_int_eq(ok, true);
@@ -265,6 +264,15 @@ START_TEST(sock_dgram_2_utest)
 	ck_assert_int_eq(ok, true);
 
 	ok = ft_dgram_connect(&dgram_sock2, (const struct sockaddr *)&addr, SUN_LEN(&addr));
+	ck_assert_int_eq(ok, true);
+
+	struct sockaddr_un addr2;
+	addr2.sun_family = AF_LOCAL;
+	strncpy(addr2.sun_path, "./sock_dgram_2_2_utest.sock", sizeof (addr.sun_path));
+	addr2.sun_path[sizeof(addr2.sun_path) - 1] = '\0';
+	unlink(addr2.sun_path);
+
+	ok = ft_dgram_bind(&dgram_sock2, (const struct sockaddr *)&addr2, SUN_LEN(&addr2));
 	ck_assert_int_eq(ok, true);
 
 
@@ -295,7 +303,7 @@ START_TEST(sock_dgram_2_utest)
 	ck_assert_int_eq(dgram_sock1.stats.read_events, 1);
 	ck_assert_int_eq(dgram_sock1.stats.write_events, 1);
 	ck_assert_int_eq(dgram_sock1.stats.read_bytes, 4096);
-	ck_assert_int_eq(dgram_sock1.stats.write_bytes, 0); //TODO: This should be 4096 
+	ck_assert_int_eq(dgram_sock1.stats.write_bytes, 4096);
 
 	ck_assert_int_eq(dgram_sock2.stats.read_events, 0);
 	ck_assert_int_eq(dgram_sock2.stats.write_events, 1);
