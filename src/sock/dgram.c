@@ -457,6 +457,7 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 
 		assert(rc > 0);
 		FT_TRACE(FT_TRACE_ID_DGRAM, "READ " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
+		this->read_frame->addrlen = msghdr.msg_namelen;
 		this->stats.read_bytes += rc;
 		ft_vec_advance(frame_dvec, rc);
 
@@ -583,10 +584,10 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		else
 		{
 			msghdr.msg_name = &this->write_frames->addr;
-			msghdr.msg_namelen = sizeof(this->write_frames->addr);			
+			msghdr.msg_namelen = this->write_frames->addrlen;
 		}
 
-		FT_TRACE(FT_TRACE_ID_DGRAM, "sendmsg size:%zd " TRACE_FMT, iov[0].iov_len, TRACE_ARGS);
+		FT_TRACE(FT_TRACE_ID_DGRAM, "sendmsg PRE size:%zd nl:%d " TRACE_FMT, iov[0].iov_len, msghdr.msg_namelen, TRACE_ARGS);
 
 		rc = sendmsg(this->write_watcher.fd, &msghdr, 0);
 		if (rc < 0) // Handle error situation
@@ -617,7 +618,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		}
 
 		assert(rc > 0);
-		FT_TRACE(FT_TRACE_ID_DGRAM, "WRITE " TRACE_FMT " rc:%zd", TRACE_ARGS, rc);
+		FT_TRACE(FT_TRACE_ID_DGRAM, "sendmsg POST rc:%zd " TRACE_FMT, rc, TRACE_ARGS);
 		this->stats.write_bytes += rc;
 		ft_vec_advance(frame_dvec, rc);
 		if (frame_dvec->position < frame_dvec->limit)
