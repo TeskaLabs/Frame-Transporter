@@ -3,6 +3,8 @@
 
 struct ft_stream;
 
+extern const char * ft_stream_class;
+
 struct ft_stream_delegate
 {
 	struct ft_frame * (*get_read_frame)(struct ft_stream *); // If NULL, then simple frame will be used
@@ -17,9 +19,12 @@ struct ft_stream_delegate
 
 struct ft_stream
 {
-	// Common fields
+	union
+	{
+		struct ft_socket socket;
+	} base;
+
 	struct ft_stream_delegate * delegate;
-	struct ft_context * context;
 
 	struct
 	{
@@ -38,13 +43,6 @@ struct ft_stream
 		bool ssl_hsconf: 1; // Yes - handshake direction has been configured (accept/connect)
 		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established
 	} flags;
-
-	int ai_family;
-	int ai_socktype; // Always SOCK_STREAM
-	int ai_protocol;
-
-	struct sockaddr_storage addr;
-	socklen_t addrlen;
 
 	ev_tstamp created_at;
 	ev_tstamp connected_at;
@@ -80,10 +78,6 @@ struct ft_stream
 		unsigned long read_bytes;
 		unsigned long write_bytes;
 	} stats;
-
-	// Custom data fields
-	void * protocol;
-	void * data;
 };
 
 bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd);

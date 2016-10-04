@@ -12,6 +12,8 @@
 
 //TODO: Fill frame addr and addrlen on frame receival
 
+const char * ft_stream_class = "ft_stream";
+
 static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void _ft_stream_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
 
@@ -69,13 +71,21 @@ static void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this);
 
 ///
 
-static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
+static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
 {
+	bool ok;
+
 	assert(this != NULL);
 	assert(delegate != NULL);
-	assert(context != NULL);
 
 	assert(ai_socktype == SOCK_STREAM);
+
+	ok = ft_socket_init_(
+		&this->base.socket, ft_stream_class, context,
+		ai_family, ai_socktype, ai_protocol,
+		peer_addr, peer_addr_len
+	);
+	if (!ok) return false;
 
 	if ((ai_family == AF_INET) || (ai_family == AF_INET6))
 	{
@@ -97,10 +107,7 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	bool res = ft_fd_nonblock(fd);
 	if (!res) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
-	this->data = NULL;
-	this->protocol = NULL;
 	this->delegate = delegate;
-	this->context = context;
 	this->read_frame = NULL;
 	this->write_frames = NULL;
 	this->write_frame_last = &this->write_frames;
@@ -123,15 +130,8 @@ static bool _ft_stream_init(struct ft_stream * this, struct ft_stream_delegate *
 	this->error.sys_errno = 0;
 	this->error.ssl_error = 0;
 
-	assert(this->context->ev_loop != NULL);
-	this->created_at = ev_now(this->context->ev_loop);
-
-	memcpy(&this->addr, peer_addr, peer_addr_len);
-	this->addrlen = peer_addr_len;
-
-	this->ai_family = ai_family;
-	this->ai_socktype = ai_socktype;
-	this->ai_protocol = ai_protocol;
+	assert(this->base.socket.context->ev_loop != NULL);
+	this->created_at = ev_now(this->base.socket.context->ev_loop);
 
 	ev_io_init(&this->read_watcher, _ft_stream_on_read, fd, EV_READ);
 	ev_set_priority(&this->read_watcher, -1); // Read has always lower priority than writing
@@ -153,19 +153,19 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
 
-	if (listening_socket->ai_socktype != SOCK_STREAM)
+	if (listening_socket->base.socket.ai_socktype != SOCK_STREAM)
 	{
 		FT_ERROR("Stream can handle only SOCK_STREAM addresses");
 		return false;
 	}
 
-	bool ok = _ft_stream_init(
-		this, delegate, listening_socket->context, 
+	bool ok = ft_stream_init_(
+		this, delegate, listening_socket->base.socket.context, 
 		fd,
 		peer_addr, peer_addr_len,
-		listening_socket->ai_family,
-		listening_socket->ai_socktype,
-		listening_socket->ai_protocol
+		listening_socket->base.socket.ai_family,
+		listening_socket->base.socket.ai_socktype,
+		listening_socket->base.socket.ai_protocol
 	);
 	if (!ok)
 	{
@@ -205,7 +205,7 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
 
 
-	bool ok = _ft_stream_init(
+	bool ok = ft_stream_init_(
 		this, delegate, context,
 		fd,
 		addr->ai_addr, addr->ai_addrlen,
@@ -274,7 +274,7 @@ bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegat
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN fd:%d", fd);
 
-	ok = _ft_stream_init(
+	ok = ft_stream_init_(
 		this, delegate, context,
 		fd,
 		(const struct sockaddr *) &addr, addrlen,
@@ -319,7 +319,7 @@ void ft_stream_fini(struct ft_stream * this)
 
 	this->flags.read_shutdown = true;
 	this->flags.write_shutdown = true;
-	this->write_shutdown_at = this->read_shutdown_at = ev_now(this->context->ev_loop);
+	this->write_shutdown_at = this->read_shutdown_at = ev_now(this->base.socket.context->ev_loop);
 	this->flags.write_open = false;
 	this->flags.write_ready = false;
 
@@ -368,13 +368,13 @@ static void _ft_stream_error(struct ft_stream * this, int sys_errno, unsigned lo
 	this->flags.write_open = false;
 	this->flags.read_shutdown = true;
 	this->flags.write_shutdown = true;
-	this->write_shutdown_at = this->read_shutdown_at = ev_now(this->context->ev_loop);
+	this->write_shutdown_at = this->read_shutdown_at = ev_now(this->base.socket.context->ev_loop);
 
 	if (this->delegate->error != NULL)
 		this->delegate->error(this);
 	
-	ev_io_stop(this->context->ev_loop, &this->write_watcher);	
-	ev_io_stop(this->context->ev_loop, &this->read_watcher);	
+	ev_io_stop(this->base.socket.context->ev_loop, &this->write_watcher);	
+	ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
 
 	// Perform hard close of the socket
 	int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
@@ -431,14 +431,14 @@ static void _ft_stream_on_connect_event(struct ft_stream * this)
 		FT_DEBUG("SSL handshake started");
 
 		// Save one loop
-		ev_invoke(this->context->ev_loop, &this->write_watcher, EV_WRITE);
+		ev_invoke(this->base.socket.context->ev_loop, &this->write_watcher, EV_WRITE);
 
 		return;
 	}
 
 	ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 
-	this->connected_at = ev_now(this->context->ev_loop);
+	this->connected_at = ev_now(this->base.socket.context->ev_loop);
 	this->flags.connecting = false;
 	if (this->delegate->connected != NULL) this->delegate->connected(this);
 
@@ -454,14 +454,14 @@ void _ft_stream_read_set_event(struct ft_stream * this, enum _ft_stream_read_eve
 {
 	this->read_events |= event;
 	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.read_shutdown == false))
-		ev_io_start(this->context->ev_loop, &this->read_watcher);
+		ev_io_start(this->base.socket.context->ev_loop, &this->read_watcher);
 }
 
 void _ft_stream_read_unset_event(struct ft_stream * this, enum _ft_stream_read_event event)
 {
 	this->read_events &= ~event;
 	if ((this->read_events == 0) || (this->flags.read_shutdown == true) || (this->flags.read_throttle == true))
-		ev_io_stop(this->context->ev_loop, &this->read_watcher);	
+		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
 }
 
 bool _ft_stream_cntl_read_start(struct ft_stream * this)
@@ -500,7 +500,7 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 
 	// Stop futher reads on the socket
 	ft_stream_cntl(this, FT_STREAM_READ_STOP);
-	this->read_shutdown_at = ev_now(this->context->ev_loop);
+	this->read_shutdown_at = ev_now(this->base.socket.context->ev_loop);
 	this->flags.read_shutdown = true;
 
 	// Uplink read frame, if there is one (this can result in a partial frame but that's ok)
@@ -526,7 +526,7 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 
 	if (frame == NULL)
 	{
-		frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+		frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	}
 
 	if (frame == NULL)
@@ -568,7 +568,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			}
 			else
 			{
-				this->read_frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
+				this->read_frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 				if (this->read_frame != NULL) ft_frame_format_simple(this->read_frame);
 			}
 
@@ -784,13 +784,13 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 void _ft_stream_write_set_event(struct ft_stream * this, enum _ft_stream_write_event event)
 {
 	this->write_events |= event;
-	if (this->write_events != 0) ev_io_start(this->context->ev_loop, &this->write_watcher);
+	if (this->write_events != 0) ev_io_start(this->base.socket.context->ev_loop, &this->write_watcher);
 }
 
 void _ft_stream_write_unset_event(struct ft_stream * this, enum _ft_stream_write_event event)
 {
 	this->write_events &= ~event;
-	if (this->write_events == 0) ev_io_stop(this->context->ev_loop, &this->write_watcher);
+	if (this->write_events == 0) ev_io_stop(this->base.socket.context->ev_loop, &this->write_watcher);
 }
 
 
@@ -849,7 +849,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 			if (this->write_frames != NULL) FT_ERROR("There are data frames in the write queue after end-of-stream.");
 
 			assert(this->flags.write_open == false);
-			this->write_shutdown_at = ev_now(this->context->ev_loop);
+			this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
 			this->flags.write_shutdown = true;
 
 			_ft_stream_write_unset_event(this, WRITE_WANT_WRITE);
@@ -1079,7 +1079,7 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct ft_frame * frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+	struct ft_frame * frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");
@@ -1176,7 +1176,7 @@ static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 
 		ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 
-		this->connected_at = ev_now(this->context->ev_loop);
+		this->connected_at = ev_now(this->base.socket.context->ev_loop);
 		this->flags.connecting = false;
 		this->flags.ssl_status = 2;
 		if (this->delegate->connected != NULL) this->delegate->connected(this);
@@ -1351,7 +1351,7 @@ static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, in
 
 	if (this->flags.read_throttle)
 	{
-		ev_io_stop(this->context->ev_loop, &this->read_watcher);
+		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);
 		goto end;
 	}
 

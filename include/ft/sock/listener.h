@@ -3,6 +3,8 @@
 
 struct ft_listener;
 
+extern const char * ft_listener_class;
+
 struct ft_listener_delegate
 {
 	bool (* accept)(struct ft_listener *, int fd, const struct sockaddr * client_addr, socklen_t client_addr_len);
@@ -11,29 +13,22 @@ struct ft_listener_delegate
 
 struct ft_listener
 {
+	union
+	{
+		struct ft_socket socket;
+	} base;
+
 	struct ft_listener_delegate * delegate;
-	struct ft_context * context;
 
 	struct ev_io watcher;
 
-	// Following members are from struct addrinfo
-	int ai_family;
-	int ai_socktype;
-	int ai_protocol;
-
 	bool listening;
 	int backlog;
-
-	struct sockaddr_storage addr;
-	socklen_t addrlen;
 
 	struct
 	{
 		unsigned int accept_events;
 	} stats;
-
-	// Custom data field
-	void * data;
 };
 
 bool ft_listener_init(struct ft_listener * , struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp);

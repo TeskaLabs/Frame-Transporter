@@ -53,6 +53,7 @@ struct ft_context;
 #include <ft/mempool/pool.h>
 #include <ft/context.h>
 
+#include <ft/sock/socket.h>
 #include <ft/sock/listener.h>
 #include <ft/sock/stream.h>
 #include <ft/sock/dgram.h>

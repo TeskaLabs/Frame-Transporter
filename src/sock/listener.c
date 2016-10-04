@@ -5,12 +5,15 @@
 
 static void _ft_listener_on_io(struct ev_loop *loop, struct ev_io *watcher, int revents);
 
+const char * ft_listener_class = "ft_listener";
+
 ///
 
 bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * ai)
 {
 	int rc;
 	int fd = -1;
+	bool ok;
 
 	const int on = 1;
 
@@ -20,25 +23,24 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fa:%d st:%d pr:%d", ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 
-	this->delegate = delegate;
-	this->context = context;
-	this->listening = false;
-	this->data = NULL;
-	this->backlog = ft_config.sock_listen_backlog;
+	ok = ft_socket_init_(
+		&this->base.socket, ft_listener_class, context,
+		ai->ai_family, ai->ai_socktype, ai->ai_protocol,
+		ai->ai_addr, ai->ai_addrlen
+	);
+	if (!ok) return false;
 
-	this->ai_family = ai->ai_family;
-	this->ai_socktype = ai->ai_socktype;
-	this->ai_protocol = ai->ai_protocol;
-	memcpy(&this->addr, ai->ai_addr, ai->ai_addrlen);
-	this->addrlen = ai->ai_addrlen;
+	this->delegate = delegate;
+	this->listening = false;
+	this->backlog = ft_config.sock_listen_backlog;
 
 	this->stats.accept_events = 0;
 
 	char addrstr[NI_MAXHOST+NI_MAXSERV];
 
-	if (this->ai_family == AF_UNIX)
+	if (this->base.socket.ai_family == AF_UNIX)
 	{
-		struct sockaddr_un * un = (struct sockaddr_un *)&this->addr;
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->base.socket.addr;
 		strcpy(addrstr, un->sun_path);
 	}
 
@@ -47,12 +49,12 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 		char hoststr[NI_MAXHOST];
 		char portstr[NI_MAXHOST];
 
-		rc = getnameinfo((const struct sockaddr *)&this->addr, this->addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
+		rc = getnameinfo((const struct sockaddr *)&this->base.socket.addr, this->base.socket.addrlen, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
 		if (rc != 0)
 		{
 			if (rc == EAI_FAMILY)
 			{
-				FT_WARN("Unsupported family: %d", this->ai_family);
+				FT_WARN("Unsupported family: %d", this->base.socket.ai_family);
 				// This is not a failure
 				FT_TRACE(FT_TRACE_ID_LISTENER, "END EAI_FAMILY");
 				return false;
@@ -67,7 +69,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	}
 
 	// Create socket
-	fd = socket(this->ai_family, this->ai_socktype, this->ai_protocol);
+	fd = socket(this->base.socket.ai_family, this->base.socket.ai_socktype, this->base.socket.ai_protocol);
 	if (fd < 0)
 	{
 		FT_ERROR_ERRNO(errno, "Failed creating listen socket");
@@ -93,7 +95,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 #endif
 
 	// For IPv6, enable IPV6_V6ONLY option
-	if (this->ai_family == AF_INET6)
+	if (this->base.socket.ai_family == AF_INET6)
 	{
 		rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&on, sizeof(on)); 
 		if (rc == -1)
@@ -114,7 +116,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 #endif // TCP_DEFER_ACCEPT
 
 	// Bind socket
-	rc = bind(fd, (const struct sockaddr *)&this->addr, this->addrlen);
+	rc = bind(fd, (const struct sockaddr *)&this->base.socket.addr, this->base.socket.addrlen);
 	if (rc != 0)
 	{
 		FT_ERROR_ERRNO(errno, "bind to %s ", addrstr);
@@ -144,15 +146,15 @@ void ft_listener_fini(struct ft_listener * this)
 
 	if (this->watcher.fd >= 0)
 	{
-		ev_io_stop(this->context->ev_loop, &this->watcher);
+		ev_io_stop(this->base.socket.context->ev_loop, &this->watcher);
 		rc = close(this->watcher.fd);
 		if (rc != 0) FT_ERROR_ERRNO(errno, "close()");
 		this->watcher.fd = -1;
 	}
 
-	if (this->ai_family == AF_UNIX)
+	if (this->base.socket.ai_family == AF_UNIX)
 	{
-		struct sockaddr_un * un = (struct sockaddr_un *)&this->addr;
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->base.socket.addr;
 		
 		rc = unlink(un->sun_path);
 		if (rc != 0) FT_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
@@ -187,7 +189,7 @@ bool _ft_listener_cntl_start(struct ft_listener * this)
 		this->listening = true;
 	}
 
-	ev_io_start(this->context->ev_loop, &this->watcher);
+	ev_io_start(this->base.socket.context->ev_loop, &this->watcher);
 	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 	return true;
 }
@@ -204,7 +206,7 @@ bool _ft_listener_cntl_stop(struct ft_listener * this)
 		return false;
 	}
 
-	ev_io_stop(this->context->ev_loop, &this->watcher);
+	ev_io_stop(this->base.socket.context->ev_loop, &this->watcher);
 	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", this->watcher.fd);
 	return true;
 }

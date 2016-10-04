@@ -9,6 +9,8 @@
 // TODO: SO_RCVLOWAT (consider using)
 // TODO: SO_RCVTIMEO & SO_SNDTIMEO
 
+const char * ft_dgram_class = "ft_dgram";
+
 static void _ft_dgram_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void _ft_dgram_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
 
@@ -55,15 +57,16 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 
 	assert(this != NULL);
 	assert(delegate != NULL);
-	assert(context != NULL);
+	assert(socktype == SOCK_DGRAM);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN");
 
-	if (socktype != SOCK_DGRAM)
-	{
-		FT_ERROR("Datagram socket can handle only SOCK_DGRAM addresses");
-		return false;
-	}
+	ok = ft_socket_init_(
+		&this->base.socket, ft_dgram_class, context,
+		family, socktype, protocol,
+		NULL, 0
+	);
+	if (!ok) return false;	
 
 	int fd = socket(family, socktype, protocol);
 	if (fd < 0)
@@ -86,10 +89,7 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	ok = ft_fd_nonblock(fd);
 	if (!ok) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
-	this->data = NULL;
-	this->protocol = NULL;
 	this->delegate = delegate;
-	this->context = context;
 	this->read_frame = NULL;
 	this->write_frames = NULL;
 	this->write_frame_last = &this->write_frames;
@@ -107,15 +107,9 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 
 	this->error.sys_errno = 0;
 
-	assert(this->context->ev_loop != NULL);
-	this->created_at = ev_now(this->context->ev_loop);
+	assert(this->base.socket.context->ev_loop != NULL);
+	this->created_at = ev_now(this->base.socket.context->ev_loop);
 	this->shutdown_at = NAN;
-
-	this->addrlen = 0;
-
-	this->ai_family = family;
-	this->ai_socktype = socktype;
-	this->ai_protocol = protocol;
 
 	ev_io_init(&this->read_watcher, _ft_dgram_on_read, fd, EV_READ);
 	ev_set_priority(&this->read_watcher, -1); // Read has always lower priority than writing
@@ -155,7 +149,7 @@ void ft_dgram_fini(struct ft_dgram * this)
 	if (this->flags.shutdown == false)
 	{
 		this->flags.shutdown = true;
-		this->shutdown_at = ev_now(this->context->ev_loop);
+		this->shutdown_at = ev_now(this->base.socket.context->ev_loop);
 	}
 
 	this->flags.write_open = false;
@@ -262,7 +256,7 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 	// Stop futher reads on the socket
 	ft_dgram_cntl(this, FT_DGRAM_READ_STOP | FT_DGRAM_READ_STOP);
 
-	this->shutdown_at = ev_now(this->context->ev_loop);
+	this->shutdown_at = ev_now(this->base.socket.context->ev_loop);
 	this->flags.shutdown = true;
 	this->flags.write_open = false;
 
@@ -290,7 +284,7 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 
 		if (frame == NULL)
 		{
-			frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+			frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 		}
 
 		if (frame == NULL)
@@ -332,14 +326,14 @@ void _ft_dgram_read_set_event(struct ft_dgram * this, enum _ft_dgram_read_event 
 {
 	this->read_events |= event;
 	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.shutdown == false))
-		ev_io_start(this->context->ev_loop, &this->read_watcher);
+		ev_io_start(this->base.socket.context->ev_loop, &this->read_watcher);
 }
 
 void _ft_dgram_read_unset_event(struct ft_dgram * this, enum _ft_dgram_read_event event)
 {
 	this->read_events &= ~event;
 	if ((this->read_events == 0) || (this->flags.shutdown == true) || (this->flags.read_throttle == true))
-		ev_io_stop(this->context->ev_loop, &this->read_watcher);	
+		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
 }
 
 bool _ft_dgram_cntl_read_start(struct ft_dgram * this)
@@ -393,7 +387,7 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 			}
 			else
 			{
-				this->read_frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
+				this->read_frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 				if (this->read_frame != NULL) ft_frame_format_simple(this->read_frame);
 			}
 
@@ -487,13 +481,13 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 void _ft_dgram_write_set_event(struct ft_dgram * this, enum _ft_dgram_write_event event)
 {
 	this->write_events |= event;
-	if (this->write_events != 0) ev_io_start(this->context->ev_loop, &this->write_watcher);
+	if (this->write_events != 0) ev_io_start(this->base.socket.context->ev_loop, &this->write_watcher);
 }
 
 void _ft_dgram_write_unset_event(struct ft_dgram * this, enum _ft_dgram_write_event event)
 {
 	this->write_events &= ~event;
-	if (this->write_events == 0) ev_io_stop(this->context->ev_loop, &this->write_watcher);
+	if (this->write_events == 0) ev_io_stop(this->base.socket.context->ev_loop, &this->write_watcher);
 }
 
 
@@ -723,7 +717,7 @@ bool _ft_dgram_cntl_shutdown(struct ft_dgram * this)
 	if (this->flags.shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct ft_frame * frame = ft_pool_borrow(&this->context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+	struct ft_frame * frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");
@@ -755,7 +749,7 @@ static void _ft_dgram_on_read(struct ev_loop * loop, struct ev_io * watcher, int
 
 	if (this->flags.read_throttle)
 	{
-		ev_io_stop(this->context->ev_loop, &this->read_watcher);
+		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);
 		goto end;
 	}
 

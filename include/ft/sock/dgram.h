@@ -3,6 +3,8 @@
 
 struct ft_dgram;
 
+extern const char * ft_dgram_class;
+
 struct ft_dgram_delegate
 {
 	struct ft_frame * (*get_read_frame)(struct ft_dgram *); // If NULL, then simple frame will be used
@@ -15,9 +17,12 @@ struct ft_dgram_delegate
 
 struct ft_dgram
 {
-	// Common fields
+	union
+	{
+		struct ft_socket socket;
+	} base;
+
 	struct ft_dgram_delegate * delegate;
-	struct ft_context * context;
 
 	struct
 	{
@@ -30,13 +35,6 @@ struct ft_dgram
 		bool bind : 1;  // ft_dgram_connect was successfully called
 		bool connect : 1;  // ft_dgram_connect was successfully called
 	} flags;
-
-	int ai_family;
-	int ai_socktype;
-	int ai_protocol;
-
-	struct sockaddr_storage addr;
-	socklen_t addrlen;
 
 	ev_tstamp created_at;
 	ev_tstamp shutdown_at;
@@ -66,10 +64,6 @@ struct ft_dgram
 		unsigned long read_bytes;
 		unsigned long write_bytes;
 	} stats;
-
-	// Custom data fields
-	void * protocol;
-	void * data;
 };
 
 bool ft_dgram_init(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol);
