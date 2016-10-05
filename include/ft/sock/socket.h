@@ -5,7 +5,7 @@ struct ft_socket
 {
 	struct ft_context * context;
 
-	const char * socket_class;
+	const char * clazz;
 
 	int ai_family;
 	int ai_socktype;
@@ -21,7 +21,7 @@ struct ft_socket
 
 
 static inline bool ft_socket_init_(
-	struct ft_socket * this, const char * socket_class, struct ft_context * context,
+	struct ft_socket * this, const char * clazz, struct ft_context * context,
 	int domain, int type, int protocol,
 	const struct sockaddr * addr, socklen_t addrlen
 )
@@ -31,7 +31,7 @@ static inline bool ft_socket_init_(
 
 
 	this->context = context;
-	this->socket_class = socket_class;
+	this->clazz = clazz;
 
 	this->ai_family = domain;
 	this->ai_socktype = type;
