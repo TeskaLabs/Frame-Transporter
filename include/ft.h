@@ -57,6 +57,7 @@ struct ft_context;
 #include <ft/sock/listener.h>
 #include <ft/sock/stream.h>
 #include <ft/sock/dgram.h>
+#include <ft/sock/uni.h>
 
 // Global init function
 void ft_initialise(void); // Call this at very beginning
