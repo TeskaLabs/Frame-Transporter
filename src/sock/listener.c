@@ -1,5 +1,4 @@
 #include "../_ft_internal.h"
-#include <sys/un.h>
 
 //TODO: SO_BINDTODEVICE
 
