@@ -210,8 +210,8 @@ START_TEST(sock_dgram_2_utest)
 
 	sock_dgram_1_result_counter = 0;
 
-	ft_config.log_verbose = true;
-	ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP;
+	// ft_config.log_verbose = true;
+	// ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP;
 
 
 	generate_random_file("./sock_dgram_2_utest.bin", 4096, 1);
@@ -255,6 +255,14 @@ START_TEST(sock_dgram_2_utest)
 	ok = ft_dgram_bind(&dgram_sock1, (const struct sockaddr *)&addr, SUN_LEN(&addr));
 	ck_assert_int_eq(ok, false);
 
+	ft_dgram_fini(&dgram_sock1);
+
+
+	ok = ft_dgram_init(&dgram_sock1, &sock_dgram_1_delegate, &context, AF_LOCAL, SOCK_DGRAM, 0);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_dgram_bind(&dgram_sock1, (const struct sockaddr *)&addr, SUN_LEN(&addr));
+	ck_assert_int_eq(ok, true);
 
 
 	ok = ft_dgram_init(&dgram_sock2, &sock_dgram_1_delegate, &context, AF_LOCAL, SOCK_DGRAM, 0);
