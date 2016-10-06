@@ -195,16 +195,34 @@ bool ft_dgram_bind(struct ft_dgram * this, const struct sockaddr * addr, socklen
 
 	if (this->flags.bind == true) FT_WARN("Datagram socket is bound already");
 
+	if ((this->base.socket.ai_family == AF_UNIX) && (addrlen > 0))
+	{
+		// Remove stalled unix socket
+		struct sockaddr_un * un = (struct sockaddr_un *)addr;
+
+		struct stat statbuf;
+		rc = stat(un->sun_path, &statbuf);
+		if ((rc == 0) && (S_ISSOCK(statbuf.st_mode)))
+		{
+			rc = unlink(un->sun_path);
+			if (rc != 0) FT_WARN_ERRNO(errno, "unlink(%s)", un->sun_path);
+			else FT_WARN("Stalled unix datagram socket '%s', deleting", un->sun_path);
+		}
+	}
+
 	rc = bind(this->read_watcher.fd, addr, addrlen);
 	if (rc != 0)
 	{
 		if (errno != EINPROGRESS)
 		{
-			FT_ERROR_ERRNO(errno, "bind()");
+			FT_ERROR_ERRNO(errno, "bind of datagram socket");
 			FT_TRACE(FT_TRACE_ID_DGRAM, "END bind err " TRACE_FMT, TRACE_ARGS);
 			return false;
 		}
 	}
+
+	this->base.socket.addrlen = addrlen;
+	memcpy(&this->base.socket.addr, addr, addrlen);
 
 	this->flags.bind = true;
 

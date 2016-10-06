@@ -125,7 +125,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	ev_io_init(&this->watcher, _ft_listener_on_io, fd, EV_READ);
 	this->watcher.data = this;
 
-	FT_DEBUG("Listening on %s", addrstr);
+	FT_DEBUG("Listening on '%s'", addrstr);
 	FT_TRACE(FT_TRACE_ID_LISTENER, "END fd:%d", fd);
 	return true;
 
