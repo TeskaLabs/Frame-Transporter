@@ -304,6 +304,8 @@ bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegat
 void ft_stream_fini(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
 
@@ -398,6 +400,7 @@ static void _ft_stream_error(struct ft_stream * this, int sys_errno, unsigned lo
 static void _ft_stream_on_connect_event(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
 	assert(this->flags.connecting == true);
 
 	FT_TRACE(FT_TRACE_ID_STREAM, TRACE_FMT, TRACE_ARGS);
@@ -452,6 +455,9 @@ static void _ft_stream_on_connect_event(struct ft_stream * this)
 
 void _ft_stream_read_set_event(struct ft_stream * this, enum _ft_stream_read_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	this->read_events |= event;
 	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.read_shutdown == false))
 		ev_io_start(this->base.socket.context->ev_loop, &this->read_watcher);
@@ -459,6 +465,9 @@ void _ft_stream_read_set_event(struct ft_stream * this, enum _ft_stream_read_eve
 
 void _ft_stream_read_unset_event(struct ft_stream * this, enum _ft_stream_read_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	this->read_events &= ~event;
 	if ((this->read_events == 0) || (this->flags.read_shutdown == true) || (this->flags.read_throttle == true))
 		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
@@ -549,6 +558,8 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 {
 	bool ok;
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->flags.connecting == false);
 	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) \
 		|| ((this->ssl != NULL) && (this->flags.ssl_status == 2))
@@ -783,12 +794,18 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 
 void _ft_stream_write_set_event(struct ft_stream * this, enum _ft_stream_write_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	this->write_events |= event;
 	if (this->write_events != 0) ev_io_start(this->base.socket.context->ev_loop, &this->write_watcher);
 }
 
 void _ft_stream_write_unset_event(struct ft_stream * this, enum _ft_stream_write_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	this->write_events &= ~event;
 	if (this->write_events == 0) ev_io_stop(this->base.socket.context->ev_loop, &this->write_watcher);
 }
@@ -797,6 +814,8 @@ void _ft_stream_write_unset_event(struct ft_stream * this, enum _ft_stream_write
 bool _ft_stream_cntl_write_start(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->write_watcher.fd >= 0);
 
 	_ft_stream_write_set_event(this, WRITE_WANT_WRITE);
@@ -807,6 +826,8 @@ bool _ft_stream_cntl_write_start(struct ft_stream * this)
 bool _ft_stream_cntl_write_stop(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->write_watcher.fd >= 0);
 
 	_ft_stream_write_unset_event(this, WRITE_WANT_WRITE);
@@ -819,6 +840,8 @@ static void _ft_stream_write_real(struct ft_stream * this)
 	ssize_t rc;
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->flags.write_ready == true);
 	assert(this->flags.connecting == false);
 	assert(((this->ssl == NULL) && (this->flags.ssl_status == 0)) || ((this->ssl != NULL) && (this->flags.ssl_status == 2)));
@@ -1012,6 +1035,8 @@ static void _ft_stream_write_real(struct ft_stream * this)
 void _ft_stream_on_write_event(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->flags.connecting == false);
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
@@ -1038,6 +1063,7 @@ void _ft_stream_on_write_event(struct ft_stream * this)
 bool ft_stream_write(struct ft_stream * this, struct ft_frame * frame)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -1073,6 +1099,7 @@ bool ft_stream_write(struct ft_stream * this, struct ft_frame * frame)
 bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
 	
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -1098,6 +1125,8 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	if (this->ssl != NULL)
 	{
 		FT_WARN("SSL already enabled on the socket");
@@ -1144,6 +1173,8 @@ static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->flags.ssl_status == 1);
 	assert(this->ssl != NULL);
 
@@ -1252,6 +1283,8 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 	// This function handles outgoing SSL shutdown (SSL_SENT_SHUTDOWN)
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	assert(this->flags.ssl_status != 0);
 	assert(this->ssl != NULL);
 
@@ -1337,7 +1370,9 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct ft_stream * this = watcher->data;
+	
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 
@@ -1384,7 +1419,9 @@ end:
 static void _ft_stream_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct ft_stream * this = watcher->data;
+	
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 
@@ -1427,6 +1464,8 @@ end:
 void ft_stream_diagnose(struct ft_stream * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+
 	fprintf(stderr, TRACE_FMT "\n", TRACE_ARGS);
 }
 

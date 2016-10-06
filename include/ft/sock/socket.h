@@ -3,9 +3,9 @@
 
 struct ft_socket
 {
-	struct ft_context * context;
-
 	const char * clazz;
+
+	struct ft_context * context;
 
 	int ai_family;
 	int ai_socktype;

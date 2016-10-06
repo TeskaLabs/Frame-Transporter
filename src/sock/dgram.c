@@ -133,6 +133,8 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 void ft_dgram_fini(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
 
@@ -185,6 +187,7 @@ bool ft_dgram_bind(struct ft_dgram * this, const struct sockaddr * addr, socklen
 	int rc;
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 	assert(addr != NULL);
 	assert(this->read_watcher.fd >= 0);
 
@@ -219,6 +222,7 @@ bool ft_dgram_connect(struct ft_dgram * this, const struct sockaddr * addr, sock
 	int rc;
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 	assert(addr != NULL);
 	assert(this->read_watcher.fd >= 0);
 
@@ -296,6 +300,8 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 			return;
 		}
 
+		assert(this->delegate != NULL);
+		assert(this->delegate->read != NULL);
 		bool upstreamed = this->delegate->read(this, frame);
 		if (!upstreamed) ft_frame_return(frame);
 	}
@@ -324,6 +330,9 @@ static void _ft_dgram_error(struct ft_dgram * this, int sys_errno, const char * 
 
 void _ft_dgram_read_set_event(struct ft_dgram * this, enum _ft_dgram_read_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	this->read_events |= event;
 	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.shutdown == false))
 		ev_io_start(this->base.socket.context->ev_loop, &this->read_watcher);
@@ -331,6 +340,9 @@ void _ft_dgram_read_set_event(struct ft_dgram * this, enum _ft_dgram_read_event 
 
 void _ft_dgram_read_unset_event(struct ft_dgram * this, enum _ft_dgram_read_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	this->read_events &= ~event;
 	if ((this->read_events == 0) || (this->flags.shutdown == true) || (this->flags.read_throttle == true))
 		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
@@ -339,6 +351,8 @@ void _ft_dgram_read_unset_event(struct ft_dgram * this, enum _ft_dgram_read_even
 bool _ft_dgram_cntl_read_start(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	assert(this->read_watcher.fd >= 0);
 
 	_ft_dgram_read_set_event(this, READ_WANT_READ);
@@ -349,6 +363,8 @@ bool _ft_dgram_cntl_read_start(struct ft_dgram * this)
 bool _ft_dgram_cntl_read_stop(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	assert(this->read_watcher.fd >= 0);
 
 	_ft_dgram_read_unset_event(this, READ_WANT_READ);
@@ -358,6 +374,8 @@ bool _ft_dgram_cntl_read_stop(struct ft_dgram * this)
 bool _ft_dgram_cntl_read_throttle(struct ft_dgram * this, bool throttle)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	this->flags.read_throttle = throttle;
 
 	if (throttle) _ft_dgram_read_unset_event(this, 0);
@@ -372,6 +390,7 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 	ssize_t rc;
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -480,12 +499,18 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 
 void _ft_dgram_write_set_event(struct ft_dgram * this, enum _ft_dgram_write_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	this->write_events |= event;
 	if (this->write_events != 0) ev_io_start(this->base.socket.context->ev_loop, &this->write_watcher);
 }
 
 void _ft_dgram_write_unset_event(struct ft_dgram * this, enum _ft_dgram_write_event event)
 {
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	this->write_events &= ~event;
 	if (this->write_events == 0) ev_io_stop(this->base.socket.context->ev_loop, &this->write_watcher);
 }
@@ -494,6 +519,8 @@ void _ft_dgram_write_unset_event(struct ft_dgram * this, enum _ft_dgram_write_ev
 bool _ft_dgram_cntl_write_start(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	assert(this->write_watcher.fd >= 0);
 
 	_ft_dgram_write_set_event(this, WRITE_WANT_WRITE);
@@ -504,6 +531,8 @@ bool _ft_dgram_cntl_write_start(struct ft_dgram * this)
 bool _ft_dgram_cntl_write_stop(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	assert(this->write_watcher.fd >= 0);
 
 	_ft_dgram_write_unset_event(this, WRITE_WANT_WRITE);
@@ -516,6 +545,8 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 	ssize_t rc;
 
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	assert(this->flags.write_ready == true);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT " Wf:%p", TRACE_ARGS, this->write_frames);	
@@ -651,6 +682,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 void _ft_dgram_on_write_event(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -676,6 +708,7 @@ void _ft_dgram_on_write_event(struct ft_dgram * this)
 bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -711,6 +744,7 @@ bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 bool _ft_dgram_cntl_shutdown(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 	
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -735,7 +769,9 @@ bool _ft_dgram_cntl_shutdown(struct ft_dgram * this)
 static void _ft_dgram_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct ft_dgram * this = watcher->data;
+
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 
@@ -764,7 +800,9 @@ end:
 static void _ft_dgram_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents)
 {
 	struct ft_dgram * this = watcher->data;
+
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT " e:%x ei:%u", TRACE_ARGS, revents, ev_iteration(loop));
 
@@ -786,6 +824,8 @@ end:
 void ft_dgram_diagnose(struct ft_dgram * this)
 {
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_dgram_class);
+
 	fprintf(stderr, TRACE_FMT "\n", TRACE_ARGS);
 }
 

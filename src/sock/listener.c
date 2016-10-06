@@ -142,6 +142,9 @@ void ft_listener_fini(struct ft_listener * this)
 {
 	int rc;
 
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_listener_class);
+
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
 	if (this->watcher.fd >= 0)
@@ -167,6 +170,9 @@ void ft_listener_fini(struct ft_listener * this)
 bool _ft_listener_cntl_start(struct ft_listener * this)
 {
 	int rc;
+
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_listener_class);
 
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
@@ -199,6 +205,9 @@ bool _ft_listener_cntl_stop(struct ft_listener * this)
 {
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_listener_class);
+
 	if (this->watcher.fd < 0)
 	{
 		FT_WARN("Listening (stop) on socket that is not open!");
@@ -215,7 +224,9 @@ bool _ft_listener_cntl_stop(struct ft_listener * this)
 static void _ft_listener_on_io(struct ev_loop * loop, struct ev_io *watcher, int revents)
 {
 	struct ft_listener * this = watcher->data;
+
 	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_listener_class);
 
 	FT_TRACE(FT_TRACE_ID_LISTENER, "BEGIN fd:%d", this->watcher.fd);
 
