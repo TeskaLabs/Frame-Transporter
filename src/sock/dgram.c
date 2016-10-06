@@ -714,6 +714,11 @@ bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 
 	if (this->flags.write_open == false)
 	{
+		if (frame->type == FT_FRAME_TYPE_STREAM_END)
+		{
+			ft_frame_return(frame);
+			return true;
+		}
 		FT_WARN("Datagram socket is not open for writing (f:%p ft: %08llx)", frame, (unsigned long long) frame->type);
 		return false;
 	}
