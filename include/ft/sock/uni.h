@@ -9,6 +9,22 @@ union ft_uni_socket
 };
 
 
+static inline bool ft_uni_socket_write(union ft_uni_socket * this, struct ft_frame * frame)
+{
+	if (this->socket_base.clazz == ft_dgram_class)
+	{
+		return ft_dgram_write(&this->dgram, frame);
+	}
+	else if (this->socket_base.clazz == ft_stream_class)
+	{
+		return ft_stream_write(&this->stream, frame);
+	}
+
+	FT_ERROR_P("Unknown/unsupported class '%s'", this->socket_base.clazz);
+	return false;
+}
+
+
 static inline void ft_uni_socket_fini(union ft_uni_socket * this)
 {
 	assert(this != NULL);
