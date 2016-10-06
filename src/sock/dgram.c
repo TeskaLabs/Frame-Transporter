@@ -145,6 +145,14 @@ void ft_dgram_fini(struct ft_dgram * this)
 	int rc = close(this->read_watcher.fd);
 	if (rc != 0) FT_WARN_ERRNO_P(errno, "close()");
 
+	if ((this->base.socket.ai_family == AF_UNIX) && (this->base.socket.addrlen > 0))
+	{
+		struct sockaddr_un * un = (struct sockaddr_un *)&this->base.socket.addr;
+		
+		rc = unlink(un->sun_path);
+		if (rc != 0) FT_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
+	}
+
 	this->read_watcher.fd = -1;
 	this->write_watcher.fd = -1;
 
