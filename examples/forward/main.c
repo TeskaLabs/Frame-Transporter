@@ -22,7 +22,7 @@ struct ft_list stream_pairs; // List of established_socket(s) pairs
 bool on_read_in_to_out(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	ft_frame_flip(frame);
-	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
+	struct stream_pair * pair = (struct stream_pair *)established_sock->base.socket.data;
 	bool ok = ft_stream_write(&pair->stream_out, frame);
 	if (!ok)
 	{
@@ -36,7 +36,7 @@ bool on_read_in_to_out(struct ft_stream * established_sock, struct ft_frame * fr
 bool on_read_out_to_in(struct ft_stream * established_sock, struct ft_frame * frame)
 {
 	ft_frame_flip(frame);
-	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
+	struct stream_pair * pair = (struct stream_pair *)established_sock->base.socket.data;
 	bool ok = ft_stream_write(&pair->stream_in, frame);
 	if (!ok)
 	{
@@ -49,7 +49,7 @@ bool on_read_out_to_in(struct ft_stream * established_sock, struct ft_frame * fr
 
 void on_error(struct ft_stream * established_sock)
 {
-	struct stream_pair * pair = (struct stream_pair *)established_sock->data;
+	struct stream_pair * pair = (struct stream_pair *)established_sock->base.socket.data;
 	//TODO: maybe even hard shutdown
 	ft_stream_cntl(&pair->stream_in, FT_STREAM_WRITE_SHUTDOWN);
 	ft_stream_cntl(&pair->stream_out, FT_STREAM_WRITE_SHUTDOWN);
@@ -110,17 +110,17 @@ static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const st
 		ft_list_node_del(new_node);
 		return false;
 	}
-	pair->stream_in.data = pair;
+	pair->stream_in.base.socket.data = pair;
 	ft_stream_set_partial(&pair->stream_in, true);
 
 	// Initialize connection on the outgoing connection
-	ok = ft_stream_connect(&pair->stream_out, &stream_out_delegate, listening_socket->context, target_addr);
+	ok = ft_stream_connect(&pair->stream_out, &stream_out_delegate, listening_socket->base.socket.context, target_addr);
 	if (!ok)
 	{
 		ft_list_node_del(new_node);
 		return false;
 	}
-	pair->stream_out.data = pair;
+	pair->stream_out.base.socket.data = pair;
 	ft_stream_set_partial(&pair->stream_out, true);
 
 	ft_list_add(&stream_pairs, new_node);

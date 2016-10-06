@@ -14,10 +14,10 @@ bool sock_listen_utest_accept_cb(struct ft_listener * listening_socket, int fd, 
 	else if (rc > 0)
 	{
 		buffer[rc] = '\0';
-		listening_socket->data = strdup(buffer);
+		listening_socket->base.socket.data = strdup(buffer);
 	}
 
-	ev_break(listening_socket->context->ev_loop, EVBREAK_ALL);
+	ev_break(listening_socket->base.socket.context->ev_loop, EVBREAK_ALL);
 	
 	return false;
 }
@@ -83,7 +83,7 @@ START_TEST(sock_listen_single_utest)
 	rc = pclose(p);
 	ck_assert_int_eq(rc, 0);
 
-	ck_assert_str_eq(sock.data, "1234\n");
+	ck_assert_str_eq(sock.base.socket.data, "1234\n");
 
 	ok = ft_listener_cntl(&sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);

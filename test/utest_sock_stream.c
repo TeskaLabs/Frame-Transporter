@@ -13,7 +13,7 @@ struct ft_frame * sock_stream_1_on_get_read_frame(struct ft_stream * established
 {
 	struct ft_vec * dvec;
 
-	struct ft_frame * frame = ft_pool_borrow(&established_sock->context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
+	struct ft_frame * frame = ft_pool_borrow(&established_sock->base.socket.context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_ne(frame, NULL);
 	ck_assert_int_eq(frame->vec_position, 0);
 	ck_assert_int_eq(frame->vec_limit, 0);

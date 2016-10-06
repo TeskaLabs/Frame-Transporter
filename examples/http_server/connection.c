@@ -66,7 +66,7 @@ static http_parser_settings http_request_parser_settings =
 
 bool connection_on_read(struct ft_stream * stream, struct ft_frame * frame)
 {
-	struct connection * this = (struct connection *)stream->data;
+	struct connection * this = (struct connection *)stream->base.socket.data;
 	assert(this != NULL);
 	
 	int nparsed;
@@ -153,7 +153,7 @@ bool connection_init_http(struct connection * this, struct ft_listener * listeni
 
 	ok = ft_stream_accept(&this->stream, &stream_delegate, listening_socket, fd, peer_addr, peer_addr_len);
 	if (!ok) return false;
-	this->stream.data = this;
+	this->stream.base.socket.data = this;
 
 	// Start read on the socket
 	ft_stream_set_partial(&this->stream, true);
