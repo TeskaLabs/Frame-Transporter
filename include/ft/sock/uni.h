@@ -9,7 +9,7 @@ union ft_uni_socket
 };
 
 
-void ft_uni_socket_fini(union ft_uni_socket * this)
+static inline void ft_uni_socket_fini(union ft_uni_socket * this)
 {
 	assert(this != NULL);
 	if (this->socket_base.clazz == ft_dgram_class)
