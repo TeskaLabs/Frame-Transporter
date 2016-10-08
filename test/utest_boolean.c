@@ -6,6 +6,10 @@ START_TEST(ft_parse_bool_01_utest)
 {
 	bool res = ft_parse_bool("0");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -13,6 +17,10 @@ START_TEST(ft_parse_bool_02_utest)
 {
 	bool res = ft_parse_bool("1");
 	ck_assert_int_eq(res, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -21,6 +29,10 @@ START_TEST(ft_parse_bool_03_utest)
 {
 	bool res = ft_parse_bool("true");
 	ck_assert_int_eq(res, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -28,6 +40,10 @@ START_TEST(ft_parse_bool_04_utest)
 {
 	bool res = ft_parse_bool("false");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -35,6 +51,10 @@ START_TEST(ft_parse_bool_05_utest)
 {
 	bool res = ft_parse_bool("True");
 	ck_assert_int_eq(res, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -42,6 +62,10 @@ START_TEST(ft_parse_bool_06_utest)
 {
 	bool res = ft_parse_bool("False");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -49,6 +73,10 @@ START_TEST(ft_parse_bool_07_utest)
 {
 	bool res = ft_parse_bool("TRUE");
 	ck_assert_int_eq(res, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -56,6 +84,10 @@ START_TEST(ft_parse_bool_08_utest)
 {
 	bool res = ft_parse_bool("FALSE");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -64,6 +96,10 @@ START_TEST(ft_parse_bool_09_utest)
 {
 	bool res = ft_parse_bool("no");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -71,6 +107,10 @@ START_TEST(ft_parse_bool_10_utest)
 {
 	bool res = ft_parse_bool("yes");
 	ck_assert_int_eq(res, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -78,6 +118,10 @@ START_TEST(ft_parse_bool_11_utest)
 {
 	bool res = ft_parse_bool("NO");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -85,6 +129,10 @@ START_TEST(ft_parse_bool_12_utest)
 {
 	bool res = ft_parse_bool("YES");
 	ck_assert_int_eq(res, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -93,6 +141,10 @@ START_TEST(ft_parse_bool_13_utest)
 {
 	bool res = ft_parse_bool("yess");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 1);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -100,6 +152,10 @@ START_TEST(ft_parse_bool_14_utest)
 {
 	bool res = ft_parse_bool("11");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 1);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -107,6 +163,10 @@ START_TEST(ft_parse_bool_15_utest)
 {
 	bool res = ft_parse_bool(" yes");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 1);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -114,6 +174,10 @@ START_TEST(ft_parse_bool_16_utest)
 {
 	bool res = ft_parse_bool("yes ");
 	ck_assert_int_eq(res, false);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 1);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

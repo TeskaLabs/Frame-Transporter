@@ -88,7 +88,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #ifdef RELEASE
 #define FT_DEBUG_P(fmt, args...) do { _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_DEBUG_P(fmt, args...) if (ft_config.log_verbose) { ft_log_stats.debug_count += 1;  _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); }
+#define FT_DEBUG_P(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1;  _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
 #define FT_INFO_P(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #define FT_WARN_P(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)

@@ -10,6 +10,10 @@ START_TEST(ft_skip_u8_utest)
 	cursor = ft_skip_u8(cursor);
 
 	ck_assert_ptr_eq(cursor, buffer + 1);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -21,6 +25,10 @@ START_TEST(ft_skip_u16_utest)
 	cursor = ft_skip_u16(cursor);
 
 	ck_assert_ptr_eq(cursor, buffer + 2);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -32,6 +40,10 @@ START_TEST(ft_skip_u24_utest)
 	cursor = ft_skip_u24(cursor);
 
 	ck_assert_ptr_eq(cursor, buffer + 3);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -43,6 +55,10 @@ START_TEST(ft_skip_u32_utest)
 	cursor = ft_skip_u32(cursor);
 
 	ck_assert_ptr_eq(cursor, buffer + 4);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -58,6 +74,10 @@ START_TEST(ft_store_u8_utest)
 
 	ck_assert_ptr_eq(cursor, buffer + 1);
 	ck_assert_int_eq(buffer[0], 0xF1);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -72,6 +92,10 @@ START_TEST(ft_store_u16_utest)
 	ck_assert_ptr_eq(cursor, buffer + 2);
 	ck_assert_int_eq(buffer[0], 0xF3);
 	ck_assert_int_eq(buffer[1], 0x5F);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -87,6 +111,10 @@ START_TEST(ft_store_u24_utest)
 	ck_assert_int_eq(buffer[0], 0xF3);
 	ck_assert_int_eq(buffer[1], 0x57);
 	ck_assert_int_eq(buffer[2], 0x9F);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -103,6 +131,10 @@ START_TEST(ft_store_u32_utest)
 	ck_assert_int_eq(buffer[1], 0x57);
 	ck_assert_int_eq(buffer[2], 0x9A);
 	ck_assert_int_eq(buffer[3], 0xCF);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -121,6 +153,10 @@ START_TEST(ft_load_u8_utest)
 
 	ck_assert_ptr_eq(cursor, buffer + 1);
 	ck_assert_int_eq(target, 0xF1);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -138,6 +174,10 @@ START_TEST(ft_load_u16_utest)
 
 	ck_assert_ptr_eq(cursor, buffer + 2);
 	ck_assert_int_eq(target, 0xF35F);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -156,6 +196,10 @@ START_TEST(ft_load_u24_utest)
 
 	ck_assert_ptr_eq(cursor, buffer + 3);
 	ck_assert_int_eq(target, 0xF3579F);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -175,6 +219,10 @@ START_TEST(ft_load_u32_utest)
 
 	ck_assert_ptr_eq(cursor, buffer + 4);
 	ck_assert_int_eq(target, 0xF3579ACF);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

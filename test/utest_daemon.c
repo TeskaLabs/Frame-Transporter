@@ -13,6 +13,10 @@ START_TEST(pidfile_nofile_utest)
 
 	ok = ft_pidfile_remove();
 	ck_assert_int_eq(ok, true);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -35,6 +39,9 @@ START_TEST(pidfile_wfile_utest)
 	unlink("./pidfile.pid");
 	ck_assert_int_eq(errno, ENOENT);
 
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

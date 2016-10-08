@@ -151,6 +151,10 @@ START_TEST(sock_stream_1_utest)
 	ft_context_fini(&context);
 
 	ck_assert_int_eq(sock_stream_1_result_counter, 1);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -261,6 +265,10 @@ START_TEST(sock_stream_2_utest)
 	ft_stream_fini(&established_sock);
 
 	ft_context_fini(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 1);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -322,6 +330,9 @@ START_TEST(sock_stream_conn_fail_utest)
 
 	ft_context_fini(&context);
 
+	ck_assert_int_eq(ft_log_stats.warn_count, 2);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -501,6 +512,9 @@ START_TEST(sock_stream_ssl_client_utest)
 
 	ft_context_fini(&context);
 
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -661,6 +675,11 @@ START_TEST(sock_stream_ssl_server_utest)
 	ft_context_fini(&context);
 
 	ck_assert_int_eq(sock_stream_ssl_server_utest_result_counter, 2);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
+
 }
 END_TEST
 

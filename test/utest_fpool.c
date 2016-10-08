@@ -42,6 +42,10 @@ START_TEST(fpool_alloc_up_utest)
 	}
 
 	ft_context_fini(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -113,6 +117,10 @@ START_TEST(fpool_alloc_down_utest)
 	}
 
 	ft_context_fini(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -173,6 +181,10 @@ START_TEST(fpool_alloc_custom_advice_utest)
 	ft_config.heartbeat_interval = heartbeat_interval_backup;
 
 	ft_context_fini(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

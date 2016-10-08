@@ -194,6 +194,10 @@ START_TEST(sock_dgram_1_utest)
     ck_assert_int_eq(memcmp(digest1, digest2, EVP_MD_size(EVP_sha256())), 0);
 
 	ck_assert_int_eq(sock_dgram_1_result_counter, 1);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 2);
+	ck_assert_int_eq(ft_log_stats.error_count, 1);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -328,6 +332,10 @@ START_TEST(sock_dgram_2_utest)
     ck_assert_int_eq(memcmp(digest1, digest2, EVP_MD_size(EVP_sha256())), 0);
 
 	ck_assert_int_eq(sock_dgram_1_result_counter, 1);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 4);
+	ck_assert_int_eq(ft_log_stats.error_count, 1);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

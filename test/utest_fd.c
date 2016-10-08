@@ -11,6 +11,10 @@ START_TEST(ft_fd_nonblock_utest)
 	ck_assert_int_eq(ret, true);
 
 	close(fd);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -24,6 +28,10 @@ START_TEST(ft_socket_keepalive_utest)
 	ck_assert_int_eq(ret, true);
 
 	close(fd);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -37,6 +45,10 @@ START_TEST(ft_fd_cloexec_utest)
 	ck_assert_int_eq(ret, true);
 
 	close(fd);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

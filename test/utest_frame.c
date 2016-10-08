@@ -92,6 +92,10 @@ START_TEST(frame_core_utest)
 	ck_assert_int_eq(pos, 66);
 
 	free(frame_data);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -134,6 +138,10 @@ START_TEST(ft_frame_flip_utest)
 	ck_assert_int_eq(pos, 333);
 
 	free(frame_data);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -166,6 +174,10 @@ START_TEST(ft_frame_create_vec_utest)
 
 	ck_assert_int_eq(frame.vec_position, 0);
 	ck_assert_int_eq(frame.vec_limit, 30);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 2);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -204,6 +216,10 @@ START_TEST(ft_frame_format_empty_utest)
 
 	x = ft_frame_len(&frame);
 	ck_assert_int_eq(x, 0);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -265,6 +281,10 @@ START_TEST(ft_frame_format_simple_utest)
 
 	x = ft_frame_len(&frame);
 	ck_assert_int_eq(x, 43);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

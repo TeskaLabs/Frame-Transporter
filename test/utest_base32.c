@@ -16,6 +16,10 @@ START_TEST(ft_base32_encode_utest)
 
 	ck_assert_int_eq(rc, 18);
 	ck_assert_str_eq(result, "GEZDGNBVGY3TQOJQAA");
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 

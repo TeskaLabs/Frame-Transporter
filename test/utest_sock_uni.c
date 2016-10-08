@@ -39,6 +39,9 @@ START_TEST(sock_uni_1_utest)
 
 	close(socket_vector[1]);
 
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
