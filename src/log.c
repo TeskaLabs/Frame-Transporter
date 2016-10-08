@@ -29,6 +29,16 @@ static inline const char * _ft_log_levelname(char level)
 	return lln_UNKNOWN;
 }
 
+struct ft_log_stats ft_log_stats = {
+	.trace_count = 0,
+	.debug_count = 0,
+	.info_count = 0,
+	.warn_count = 0,
+	.error_count = 0,
+	.fatal_count = 0,
+	.audit_count = 0,
+};
+
 ///
 
 static struct ft_context * _ft_log_context = NULL;

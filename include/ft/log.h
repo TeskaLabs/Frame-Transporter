@@ -23,12 +23,24 @@ enum ft_log_trace_ids
 };
 
 
+struct ft_log_stats
+{
+	unsigned int trace_count;
+	unsigned int debug_count;
+	unsigned int info_count;
+	unsigned int warn_count;
+	unsigned int error_count;
+	unsigned int fatal_count;
+	unsigned int audit_count;
+};
+
+extern struct ft_log_stats ft_log_stats;
+
+
 void _ft_log_v(const char level, const char * format, va_list args);
 static inline void _ft_log(const char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 static inline void _ft_log(const char level, const char * format, ...)
 {
-	if ((level == 'D') && (!ft_config.log_verbose)) return;
-
 	va_list args;
 	va_start(args, format);
 	_ft_log_v(level, format, args);
@@ -39,8 +51,6 @@ void _ft_log_errno_v(int errnum, const char level, const char * format, va_list 
 static inline void _ft_log_errno(int errnum, const char level, const char *format, ...) __attribute__((format(printf,3,4)));
 static inline void _ft_log_errno(int errnum, const char level, const char *format, ...)
 {
-	if ((level == 'D') && (!ft_config.log_verbose)) return;
-
 	va_list args;
 	va_start(args, format);
 	_ft_log_errno_v(errnum, level, format, args);
@@ -52,8 +62,6 @@ void _ft_log_openssl_err_v(char const level, const char * format, va_list args);
 static inline void _ft_log_openssl_err(char const level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 static inline void _ft_log_openssl_err(char const level, const char * format, ...)
 {
-	if ((level == 'D') && (!ft_config.log_verbose)) return;
-
 	va_list args;
 	va_start(args, format);
 	_ft_log_openssl_err_v(level, format, args);
@@ -63,71 +71,74 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #ifdef RELEASE
 #define FT_TRACE(traceid, fmt, args...) do { if (0) _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_TRACE(traceid, fmt, args...) if ((ft_config.log_trace_mask & traceid) != 0) _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args)
+#define FT_TRACE(traceid, fmt, args...) do { if ((ft_config.log_trace_mask & traceid) == 0) break; _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
 
 #ifdef RELEASE
-#define FT_DEBUG(fmt, args...) do { if (0) _ft_log('D', fmt, ## args); } while (0)
+#define FT_DEBUG(fmt, args...) do { _ft_log('D', fmt, ## args); } while (0)
 #else
-#define FT_DEBUG(fmt, args...) _ft_log('D', fmt, ## args)
+#define FT_DEBUG(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log('D', fmt, ## args); } while (0)
 #endif
-#define FT_INFO(fmt, args...)  _ft_log('I', fmt, ## args)
-#define FT_WARN(fmt, args...)  _ft_log('W', fmt, ## args)
-#define FT_ERROR(fmt, args...) _ft_log('E', fmt, ## args)
-#define FT_FATAL(fmt, args...) _ft_log('F', fmt, ## args)
-#define FT_AUDIT(fmt, args...) _ft_log('A', fmt, ## args)
+#define FT_INFO(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', fmt, ## args); } while (0)
+#define FT_WARN(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', fmt, ## args); } while (0)
+#define FT_ERROR(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log('E', fmt, ## args); } while (0)
+#define FT_FATAL(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log('F', fmt, ## args); } while (0)
+#define FT_AUDIT(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_P(fmt, args...) do { if (0) _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_P(fmt, args...) do { _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_DEBUG_P(fmt, args...) _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#define FT_DEBUG_P(fmt, args...) if (ft_config.log_verbose) { ft_log_stats.debug_count += 1;  _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); }
 #endif
-#define FT_INFO_P(fmt, args...)  _ft_log('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_WARN_P(fmt, args...)  _ft_log('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_ERROR_P(fmt, args...) _ft_log('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_FATAL_P(fmt, args...) _ft_log('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_AUDIT_P(fmt, args...) _ft_log('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#define FT_INFO_P(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_WARN_P(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_ERROR_P(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_FATAL_P(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_AUDIT_P(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_ERRNO(errnum, fmt, args...) do { if (0) _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
+#define FT_DEBUG_ERRNO(errnum, fmt, args...) do { _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
 #else
-#define FT_DEBUG_ERRNO(errnum, fmt, args...) _ft_log_errno(errnum, 'D', fmt, ## args)
+#define FT_DEBUG_ERRNO(errnum, fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
 #endif
-#define FT_INFO_ERRNO(errnum, fmt, args...)  _ft_log_errno(errnum, 'I', fmt, ## args)
-#define FT_WARN_ERRNO(errnum, fmt, args...)  _ft_log_errno(errnum, 'W', fmt, ## args)
-#define FT_ERROR_ERRNO(errnum, fmt, args...) _ft_log_errno(errnum, 'E', fmt, ## args)
-#define FT_FATAL_ERRNO(errnum, fmt, args...) _ft_log_errno(errnum, 'F', fmt, ## args)
-#define FT_AUDIT_ERRNO(errnum, fmt, args...) _ft_log_errno(errnum, 'A', fmt, ## args)
+#define FT_INFO_ERRNO(errnum, fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log_errno(errnum, 'I', fmt, ## args); } while (0)
+#define FT_WARN_ERRNO(errnum, fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log_errno(errnum, 'W', fmt, ## args); } while (0)
+#define FT_ERROR_ERRNO(errnum, fmt, args...) do { ft_log_stats.error_count += 1; _ft_log_errno(errnum, 'E', fmt, ## args); } while (0)
+#define FT_FATAL_ERRNO(errnum, fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log_errno(errnum, 'F', fmt, ## args); } while (0)
+#define FT_AUDIT_ERRNO(errnum, fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_errno(errnum, 'A', fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_ERRNO_P(errnum, fmt, args...) do { if (0) _ft_log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_ERRNO_P(errnum, fmt, args...) do { _ft_log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_INFO_ERRNO_P(errnum, fmt, args...)  _ft_log_errno(errnum, 'I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#define FT_DEBUG_ERRNO_P(errnum, fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
-#define FT_WARN_ERRNO_P(errnum, fmt, args...)  _ft_log_errno(errnum, 'W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_ERROR_ERRNO_P(errnum, fmt, args...) _ft_log_errno(errnum, 'E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_FATAL_ERRNO_P(errnum, fmt, args...) _ft_log_errno(errnum, 'F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_AUDIT_ERRNO_P(errnum, fmt, args...) _ft_log_errno(errnum, 'A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#define FT_INFO_ERRNO_P(errnum, fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log_errno(errnum, 'I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_WARN_ERRNO_P(errnum, fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log_errno(errnum, 'W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_ERROR_ERRNO_P(errnum, fmt, args...) do { ft_log_stats.error_count += 1; _ft_log_errno(errnum, 'E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_FATAL_ERRNO_P(errnum, fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log_errno(errnum, 'F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_AUDIT_ERRNO_P(errnum, fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_errno(errnum, 'A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_INFO_OPENSSL(fmt, args...) do { if (0) _ft_log_openssl_err('I', fmt, ## args); } while (0)
+#define FT_DEBUG_OPENSSL(fmt, args...) do { _ft_log_openssl_err('D', fmt, ## args); } while (0)
 #else
-#define FT_INFO_OPENSSL(fmt, args...)  _ft_log_openssl_err('I', fmt, ## args)
+#define FT_DEBUG_OPENSSL(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_openssl_err('D', fmt, ## args); } while (0)
 #endif
-#define FT_WARN_OPENSSL(fmt, args...)  _ft_log_openssl_err('W', fmt, ## args)
-#define FT_ERROR_OPENSSL(fmt, args...) _ft_log_openssl_err('E', fmt, ## args)
-#define FT_FATAL_OPENSSL(fmt, args...) _ft_log_openssl_err('F', fmt, ## args)
-#define FT_AUDIT_OPENSSL(fmt, args...) _ft_log_openssl_err('A', fmt, ## args)
+#define FT_INFO_OPENSSL(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log_openssl_err('I', fmt, ## args); } while (0)
+#define FT_WARN_OPENSSL(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log_openssl_err('W', fmt, ## args); } while (0)
+#define FT_ERROR_OPENSSL(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log_openssl_err('E', fmt, ## args); } while (0)
+#define FT_FATAL_OPENSSL(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log_openssl_err('F', fmt, ## args); } while (0)
+#define FT_AUDIT_OPENSSL(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_openssl_err('A', fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_INFO_OPENSSL_P(fmt, args...) do { if (0) _ft_log_openssl_err('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_OPENSSL_P(fmt, args...) do { _ft_log_openssl_err('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0) }
 #else
-#define FT_INFO_OPENSSL_P(fmt, args...)  _ft_log_openssl_err('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#define FT_DEBUG_OPENSSL_P(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_openssl_err('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
-#define FT_WARN_OPENSSL_P(fmt, args...)  _ft_log_openssl_err('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_ERROR_OPENSSL_P(fmt, args...) _ft_log_openssl_err('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_FATAL_OPENSSL_P(fmt, args...) _ft_log_openssl_err('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
-#define FT_AUDIT_OPENSSL_P(fmt, args...) _ft_log_openssl_err('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args)
+#define FT_INFO_OPENSSL_P(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log_openssl_err('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_WARN_OPENSSL_P(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log_openssl_err('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_ERROR_OPENSSL_P(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log_openssl_err('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_FATAL_OPENSSL_P(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log_openssl_err('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_AUDIT_OPENSSL_P(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_openssl_err('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
 /*
  * Call this to open or reopen log file.
