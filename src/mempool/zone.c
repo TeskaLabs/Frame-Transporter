@@ -46,7 +46,6 @@ bool ft_poolzone_init(struct ft_poolzone * this, uint8_t * data, size_t alloc_si
 void _ft_poolzone_del(struct ft_poolzone * this)
 {
 	assert(this != NULL);
-	assert(this->frames_used >= 0);
 
 	if (this->frames_used > 0)
 	{
