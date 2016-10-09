@@ -111,7 +111,7 @@ void _ft_log_errno_v(int errnum, const char level, const char * format, va_list 
 	char * im = strerror_r(errnum, le.message + le_message_length, sizeof(le.message)-le_message_length);
 	int len = strlen(im);
 	if (len > sizeof(le.message)-le_message_length) len = sizeof(le.message)-le_message_length;
-	if (im != (le.message + le_message_length)) strcpy(le.message + le_message_length, im, len);
+	if (im != (le.message + le_message_length)) strncpy(le.message + le_message_length, im, len);
 	le_message_length += len;
 #else
 	strerror_r(errnum, le.message + le_message_length, sizeof(le.message)-le_message_length);
