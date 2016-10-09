@@ -506,8 +506,8 @@ int ft_listener_list_extend_auto(struct ft_list * list, struct ft_listener_deleg
 	}
 	regfree(&regex);
 
-	if (addr != NULL) free(addr);
-	if (port != NULL) free(port);
+	assert(addr == NULL);
+	assert(port == NULL);
 
 	FT_ERROR("Invalid format of address/port for listen: '%s'", value);
 
