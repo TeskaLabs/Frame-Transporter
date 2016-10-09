@@ -37,7 +37,7 @@ static int _null_open(int f, int fd)
 		return -1;
 
 	if (fd2 == fd)
-		return fd;
+		return fd2;
 
 	if (dup2(fd2, fd) < 0)
 	{
