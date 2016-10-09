@@ -264,7 +264,7 @@ bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegat
 	}
 
 	struct sockaddr_storage addr;
-	socklen_t addrlen;
+	socklen_t addrlen = sizeof(addr);
 	rc = getsockname(fd, (struct sockaddr *)&addr, &addrlen);
 	if (rc != 0)
 	{
