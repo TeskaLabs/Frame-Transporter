@@ -46,7 +46,6 @@ struct ft_vec
 
 static inline void ft_vec_advance(struct ft_vec * this, size_t position_delta)
 {
-	assert((this->position + position_delta) >= 0);
 	assert((this->position + position_delta) <= this->limit);
 	assert((this->position + position_delta) <= this->capacity);
 
