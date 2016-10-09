@@ -53,8 +53,6 @@ size_t ft_frame_len(struct ft_frame * this)
 struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_t capacity)
 {
 	assert(this != NULL);	
-	assert(offset >= 0);
-	assert(capacity >= 0);
 
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	vec -= this->vec_limit + 1;
