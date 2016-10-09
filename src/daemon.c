@@ -40,7 +40,10 @@ static int _null_open(int f, int fd)
 		return fd;
 
 	if (dup2(fd2, fd) < 0)
+	{
+		close(fd2);
 		return -1;
+	}
 
 	close(fd2);
 	return fd;
