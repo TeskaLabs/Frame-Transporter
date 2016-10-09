@@ -27,6 +27,7 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <sys/un.h>
 #include <netdb.h>
 
 // Include libev

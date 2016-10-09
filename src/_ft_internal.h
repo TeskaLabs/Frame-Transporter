@@ -1,7 +1,6 @@
 #include <ft.h>
 #include <openssl/rand.h>
 #include <sys/mman.h>
-#include <sys/un.h>
 
 // Frame size should be above 16kb, which is a maximum record size of 16kB for SSLv3/TLSv1
 // See https://www.openssl.org/docs/manmaster/ssl/SSL_read.html
