@@ -156,7 +156,11 @@ bool ft_frame_fread(struct ft_frame * this, FILE * f)
 
 	fseek(f, 0L, SEEK_END);
 	long sz = ftell(f);
-	if (sz < 0) return false;
+	if (sz < 0)
+	{
+		FT_ERROR_ERRNO_P(errno, "ftell");
+		return false;
+	}
 	size_t ssz = sz;
 	rewind(f);
 
