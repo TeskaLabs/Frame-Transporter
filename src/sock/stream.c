@@ -1351,7 +1351,8 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 				assert(errno_ssl_cmd == 0);
 				_ft_stream_error(this, 0, ssl_err_tmp, "SSL shutdown (unknown)");
 			}
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " unknown", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " SSL_ERROR_SSL", TRACE_ARGS);
+			return;
 
 		case SSL_ERROR_ZERO_RETURN:
 		case SSL_ERROR_SYSCALL:
