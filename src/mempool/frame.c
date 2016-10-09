@@ -156,6 +156,8 @@ bool ft_frame_fread(struct ft_frame * this, FILE * f)
 
 	fseek(f, 0L, SEEK_END);
 	long sz = ftell(f);
+	if (sz < 0) return false;
+	size_t ssz = sz;
 	rewind(f);
 
 	struct ft_vec * vec = ft_frame_get_vec(this);
@@ -169,7 +171,7 @@ bool ft_frame_fread(struct ft_frame * this, FILE * f)
 		sz = vec->limit;
 	}
 
-	size_t rc = fread(p, sz, 1, f);
+	size_t rc = fread(p, ssz, 1, f);
 	if (rc != 1)
 	{
 		FT_ERROR_ERRNO(errno, "fread");
