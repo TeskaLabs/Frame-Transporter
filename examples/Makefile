@@ -4,7 +4,8 @@ SUBDIRS=\
 	stun \
 	sfetch \
 	sreply \
-	http_server
+	http_server \
+	socks
 
 all: subdirs
 
