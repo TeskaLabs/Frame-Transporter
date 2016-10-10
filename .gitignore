@@ -11,6 +11,7 @@
 /examples/sfetch/sfetch
 /examples/sreply/sreply
 /examples/http_server/httpserver
+/examples/socks/socks
 
 /examples/protobuf/amessage.pb-c.c
 /examples/protobuf/amessage.pb-c.h

@@ -85,7 +85,7 @@ static void sock_relay_on_socks4_request(struct sock_relay * this, struct ft_str
 		// SOCK4A
 		char portstr[16];
 		snprintf(portstr, sizeof(portstr)-1, "%u", this->DSTPORT);
-		char * hoststr = ft_vec_ptr(ft_frame_get_vec_at(frame, 3));
+		char * hoststr = ft_vec_begin_ptr(ft_frame_get_vec_at(frame, 3));
 
 		target_addr = resolve(hoststr, portstr);
 	}
@@ -262,7 +262,7 @@ static bool sock_relay_in_prologue_on_read(struct ft_stream * established_sock, 
 				// Parse HOST
 
 				vec = ft_frame_get_vec_at(frame, 3);
-				char * p = ft_vec_ptr(vec);	
+				char * p = ft_vec_ptr(vec);
 
 				if (p[-1] == '\0')
 				{
@@ -499,7 +499,7 @@ struct addrinfo * resolve(const char * host, const char * port)
 	rc = getaddrinfo(host, port, &hints, &res);
 	if (rc != 0)
 	{
-		FT_ERROR("getaddrinfo failed: %s", gai_strerror(rc));
+		FT_ERROR("getaddrinfo failed: %s (h:'%s' p:'%s')", gai_strerror(rc), host, port);
 		return NULL;
 	}
 
