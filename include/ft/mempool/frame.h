@@ -77,6 +77,18 @@ static inline struct ft_vec * ft_frame_next_vec(struct ft_frame * this)
 	return vec;
 }
 
+static inline struct ft_vec * ft_frame_prev_vec(struct ft_frame * this)
+{
+	assert(this != NULL);
+	if (this->vec_position == 0) return NULL;
+	this->vec_position -= 1;
+
+	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
+	vec -= (1 + this->vec_position);
+	return vec;
+}
+
+
 static inline struct ft_vec * ft_frame_get_vec(struct ft_frame * this)
 {
 	assert(this != NULL);
@@ -85,6 +97,17 @@ static inline struct ft_vec * ft_frame_get_vec(struct ft_frame * this)
 
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	vec -= (1 + this->vec_position);
+	return vec;
+}
+
+
+static inline struct ft_vec * ft_frame_get_vec_at(struct ft_frame * this, size_t position)
+{
+	assert(this != NULL);
+	if (position >= this->vec_limit) return NULL;
+
+	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
+	vec -= (1 + position);
 	return vec;
 }
 
@@ -102,5 +125,15 @@ static inline void * ft_vec_ptr(struct ft_vec * this)
 	assert(this->frame != NULL);
 	return this->frame->data + this->offset + this->position;
 }
+
+// Following function requires access to frame object internals
+// and for this reason it is here and not with ft_vec object
+static inline void * ft_vec_begin_ptr(struct ft_vec * this)
+{
+	assert(this != NULL);
+	assert(this->frame != NULL);
+	return this->frame->data + this->offset;
+}
+
 
 #endif // FT_MEMPOOL_FRAME_H_
