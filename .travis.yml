@@ -29,6 +29,9 @@ script:
     - (cd examples/http_server/ && ./test_httpserver_04.sh)
     - (cd examples/socks/ && ./test_socks_01.sh)
     - (cd examples/socks/ && ./test_socks_02.sh)
+    - (cd examples/socks/ && ./test_socks_03.sh)
+    - (cd examples/socks/ && ./test_socks_04.sh)
+    - (cd examples/socks/ && ./test_socks_05.sh)
 
 before_install:
     - sudo apt-get update -qq
