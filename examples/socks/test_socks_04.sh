@@ -13,12 +13,12 @@ trap finish EXIT
 echo "Testing SOCKS5 on IPv6"
 
 ./socks &
-nc -d -l ::1 12346 >/tmp/sc-test-socks-01o.bin &
+nc -d -l ::1 12347 >/tmp/sc-test-socks-01o.bin &
 NC_PID=$!
 
 dd if=/dev/urandom count=10240 bs=1024 > /tmp/sc-test-socks-01.bin
 
-cat /tmp/sc-test-socks-01.bin | pv -r | nc -X5 -x 127.0.0.1:12345 ::1 12346
+cat /tmp/sc-test-socks-01.bin | pv -r | nc -X5 -x 127.0.0.1:12345 ::1 12347
 
 wait ${NC_PID}
 
