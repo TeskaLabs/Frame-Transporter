@@ -1,6 +1,6 @@
 BIN=socks
 
-OBJS=main_socks.o proto_socks.o
+OBJS=main_socks.o
 
 LDLIBS+=-L$(ROOTDIR)/src -lft
 

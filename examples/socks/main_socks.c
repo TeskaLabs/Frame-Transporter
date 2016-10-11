@@ -2,7 +2,6 @@
 #include <stdbool.h>
 
 #include <ft.h>
-#include "proto_socks.h"
 
 struct addrinfo * resolve(const char * host, const char * port);
 

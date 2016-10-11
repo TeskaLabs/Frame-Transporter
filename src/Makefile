@@ -16,6 +16,7 @@ OBJS=\
 	mempool/zone.o \
 	context.o \
 	cols/list.o \
+	proto/socks.o \
 
 all: $(LIB)
 

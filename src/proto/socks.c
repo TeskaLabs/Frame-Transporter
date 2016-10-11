@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include <ft.h>
-#include "proto_socks.h"
+#include "../_ft_internal.h"
 
 /*
 See:

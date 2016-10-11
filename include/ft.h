@@ -60,6 +60,8 @@ struct ft_context;
 #include <ft/sock/dgram.h>
 #include <ft/sock/uni.h>
 
+#include <ft/proto/socks.h>
+
 // Global init function
 void ft_initialise(void); // Call this at very beginning
 
