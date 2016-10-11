@@ -389,7 +389,7 @@ bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, bool s
 		vec->position = 8;
 	}
 
-	if (this->VN == 5)
+	else if (this->VN == 5)
 	{
 		struct ft_vec * vec = ft_frame_get_vec(frame);
 		uint8_t * cursor = ft_vec_ptr(vec);
