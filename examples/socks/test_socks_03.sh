@@ -10,7 +10,7 @@ function finish
 }
 trap finish EXIT
 
-echo "Testing SOCKS4"
+echo "Testing SOCKS5 on IPv4"
 
 ./socks &
 nc -d -l 127.0.0.1 12346 >/tmp/sc-test-socks-01o.bin &
@@ -18,7 +18,7 @@ NC_PID=$!
 
 dd if=/dev/urandom count=10240 bs=1024 > /tmp/sc-test-socks-01.bin
 
-cat /tmp/sc-test-socks-01.bin | pv -r | socat stdin SOCKS4:127.0.0.1:localhost:12346,socksport=12345,socksuser=ABCDEFZ
+cat /tmp/sc-test-socks-01.bin | pv -r | nc -X5 -x 127.0.0.1:12345 127.0.0.1 12346
 
 wait ${NC_PID}
 

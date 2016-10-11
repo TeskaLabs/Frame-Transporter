@@ -10,7 +10,7 @@ function finish
 }
 trap finish EXIT
 
-echo "Testing SOCK4A"
+echo "Testing SOCKS4A"
 
 ./socks &
 nc -d -l localhost 12346 >/tmp/sc-test-socks-01o.bin &
