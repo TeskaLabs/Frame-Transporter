@@ -53,6 +53,8 @@ size_t ft_frame_len(struct ft_frame * this)
 struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_t capacity)
 {
 	assert(this != NULL);	
+	assert(offset >= 0);
+	assert(capacity >= 0);
 
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	vec -= this->vec_limit + 1;
@@ -60,10 +62,55 @@ struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_
 	//Test if there is enough space in the frame
 	if (((uint8_t *)vec - this->data) < (offset + capacity))
 	{
-		FT_ERROR("Cannot accomodate that vec in the current frame.");
+		FT_ERROR("Cannot accomodate that vec in the current frame");
 		return NULL;
 	}
 
+	this->vec_limit += 1;
+
+	assert((uint8_t *)vec  > this->data);
+	assert((void *)vec + this->vec_limit * sizeof(struct ft_vec) == (this->data + this->capacity));
+
+	vec->frame = this;
+	vec->offset = offset;
+	vec->position = 0;
+	vec->limit = vec->capacity = capacity;
+
+	return vec;
+}
+
+struct ft_vec * ft_frame_append_vec(struct ft_frame * this, size_t capacity)
+{
+	assert(this != NULL);	
+	assert(capacity >= 0);
+
+	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
+	vec -= this->vec_limit + 1;
+
+	size_t offset = 0;
+
+	if (this->vec_limit > 0)
+	{
+		struct ft_vec * prev_vec = (struct ft_vec *)(this->data + this->capacity);
+		prev_vec -= this->vec_limit;
+
+		if (prev_vec->frame != this)
+		{
+			FT_ERROR("Previous vector points to different frame (%p!=%p), it is not supported", prev_vec->frame, this);
+			return NULL;
+		}
+
+		offset = prev_vec->offset + prev_vec->capacity;
+	}
+	assert(offset >= 0);
+
+
+	//Test if there is enough space in the frame
+	if (((uint8_t *)vec - this->data) < (offset + capacity))
+	{
+		FT_ERROR("Cannot accomodate that vec in the current frame");
+		return NULL;
+	}
 
 	this->vec_limit += 1;
 

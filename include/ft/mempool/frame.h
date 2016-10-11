@@ -62,7 +62,9 @@ static inline void ft_frame_set_type(struct ft_frame * this, enum ft_frame_type 
 
 ///
 
+
 struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_t capacity);
+struct ft_vec * ft_frame_append_vec(struct ft_frame * this, size_t capacity);
 
 static inline struct ft_vec * ft_frame_next_vec(struct ft_frame * this)
 {
