@@ -445,6 +445,15 @@ int ft_listener_list_extend_auto(struct ft_list * list, struct ft_listener_deleg
 	char * port = NULL;
 	int ai_family = -1;
 
+	// UNIX path
+	if ((value[0] == '/') || (value[0] == '.'))
+	{
+		ai_family = PF_UNIX;
+		port = strdup(value);
+		addr = strdup("");
+		goto fin_getaddrinfo;
+	}
+
 	// Port only
 	rc = regcomp(&regex, "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", REG_EXTENDED);
 	assert(rc == 0);
@@ -529,4 +538,27 @@ fin_getaddrinfo:
 
 	return ret;
 
+}
+
+
+int ft_listener_list_extend_autov(struct ft_list * list, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values)
+{
+	assert(list != NULL);
+	assert(delegate != NULL);
+	assert(context != NULL);
+
+	int count = 0;
+	int rc;
+
+	for (int i = 0; ; i++)
+	{
+		const char * addr = values[i];
+		if (addr == NULL) break;
+
+		rc = ft_listener_list_extend_auto(list, delegate, context, ai_socktype, addr);
+		if (rc == 0) FT_WARN("Failed to open '%s' socket", addr);
+		count += rc;
+	}
+
+	return count;
 }
