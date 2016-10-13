@@ -3,8 +3,6 @@
 
 #include <ft.h>
 
-struct addrinfo * resolve(const char * host, const char * port);
-
 struct ft_list listeners;
 struct ft_list sock_relays;
 
@@ -54,15 +52,56 @@ void on_error(struct ft_stream * established_sock)
 
 //
 
-static bool sock_relay_on_sock_connect(struct ft_stream * stream, struct addrinfo * addr)
+static bool sock_relay_on_sock_connect(struct ft_stream * stream, char addrtype, char * host, unsigned int port)
 {
 	bool ok;
+	int rc;
 
 	struct sock_relay * this = (struct sock_relay *)stream->base.socket.data;
 	assert(this != NULL);
 
+	struct addrinfo hints;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = 0;
+	hints.ai_protocol = 0;
+	hints.ai_canonname = NULL;
+	hints.ai_addr = NULL;
+	hints.ai_next = NULL;
+
+	switch (addrtype)
+	{
+		case '4':
+			hints.ai_family = AF_INET;
+			break;
+
+		case '6':
+			hints.ai_family = AF_INET6;
+			break;
+
+		case 'D':
+		default:
+			hints.ai_family = AF_UNSPEC;
+			break;
+	}
+
+	struct addrinfo * addr;
+
+	char portstr[16];
+	snprintf(portstr, sizeof(portstr)-1, "%u", port);
+
+	rc = getaddrinfo(host, portstr, &hints, &addr);
+	if (rc != 0)
+	{
+		FT_ERROR("getaddrinfo failed: %s (h:'%s' p:'%u')", gai_strerror(rc), host, port);
+		return false;
+	}
+
 	// Initialize connection on the outgoing connection
 	ok = ft_stream_connect(&this->out, &sock_relay_out_delegate, stream->base.socket.context, addr);
+	freeaddrinfo(addr);
 	if (!ok)
 	{
 		return false;
