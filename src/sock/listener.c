@@ -547,6 +547,9 @@ int ft_listener_list_extend_autov(struct ft_list * list, struct ft_listener_dele
 	assert(delegate != NULL);
 	assert(context != NULL);
 
+	// Handle an empty list nicely
+	if (values == NULL) return 0;
+
 	int count = 0;
 	int rc;
 
