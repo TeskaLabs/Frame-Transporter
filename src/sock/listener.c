@@ -39,19 +39,19 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 
 	if (this->base.socket.ai_family == AF_UNIX)
 	{
-		// Remove stalled unix socket
 		struct sockaddr_un * un = (struct sockaddr_un *)&this->base.socket.addr;
 
 		struct stat statbuf;
 		rc = stat(un->sun_path, &statbuf);
 		if ((rc == 0) && (S_ISSOCK(statbuf.st_mode)))
 		{
+			// Remove stalled unix socket
 			rc = unlink(un->sun_path);
 			if (rc != 0) FT_WARN_ERRNO(errno, "unlink(%s)", un->sun_path);
 			else FT_WARN("Stalled listening unix socket '%s', deleting", un->sun_path);
 		}
 
-		strcpy(addrstr, un->sun_path);
+		snprintf(addrstr, sizeof(addrstr)-1, "%.*s", (int)sizeof(un->sun_path), un->sun_path);
 	}
 
 	else
@@ -129,7 +129,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	rc = bind(fd, (const struct sockaddr *)&this->base.socket.addr, this->base.socket.addrlen);
 	if (rc != 0)
 	{
-		FT_ERROR_ERRNO(errno, "bind to %s ", addrstr);
+		FT_ERROR_ERRNO_P(errno, "bind to %s ", addrstr);
 		goto error_exit;
 	}
 
