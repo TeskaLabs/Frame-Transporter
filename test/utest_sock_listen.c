@@ -102,6 +102,78 @@ END_TEST
 
 ///
 
+START_TEST(sock_listen_list_utest)
+{
+	struct ft_list listeners;
+	int rc;
+
+	bool ok;
+
+	struct ft_context context;
+	ok = ft_context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	ft_listener_list_init(&listeners);
+
+	const char * listen_sockets_charv[] = {
+		"./sock_listen_list_utest.sock",
+		"/tmp/sock_listen_list_utest.sock",
+		"127.0.0.1:12345",
+		"localhost:12346",
+		NULL
+	};
+
+	ft_listener_list_extend_autov(&listeners, &listener_delegate, &context, SOCK_STREAM, listen_sockets_charv);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_START);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_START);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_START);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_START);
+	ck_assert_int_eq(ok, true);
+
+	FILE * p = popen("nc localhost 12345", "w");
+	ck_assert_ptr_ne(p, NULL);
+
+	fprintf(p, "1234\n");
+	fflush(p);
+
+	ev_run(context.ev_loop, 0);
+
+	rc = pclose(p);
+	ck_assert_int_eq(rc, 0);
+
+	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_STOP);
+	ck_assert_int_eq(ok, true);
+
+//	ck_assert_int_eq(sock.stats.accept_events, 1);
+
+	ft_list_fini(&listeners);
+
+	ft_context_fini(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
+}
+END_TEST
+
+///
+
 Suite * sock_listen_tsuite(void)
 {
 	TCase *tc;
@@ -110,6 +182,7 @@ Suite * sock_listen_tsuite(void)
 	tc = tcase_create("sock_listen-core");
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, sock_listen_single_utest);
+	tcase_add_test(tc, sock_listen_list_utest);
 
 	return s;
 }

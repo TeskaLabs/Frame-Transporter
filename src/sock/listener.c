@@ -449,8 +449,8 @@ int ft_listener_list_extend_auto(struct ft_list * list, struct ft_listener_deleg
 	if ((value[0] == '/') || (value[0] == '.'))
 	{
 		ai_family = PF_UNIX;
-		port = strdup(value);
-		addr = strdup("");
+		port = strdup("");
+		addr = strdup(value);
 		goto fin_getaddrinfo;
 	}
 
