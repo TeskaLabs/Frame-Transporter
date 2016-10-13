@@ -5,7 +5,17 @@ extern struct ft_stream_delegate ft_stream_proto_socks_delegate;
 
 struct ft_proto_socks_delegate
 {
-	bool (*connect)(struct ft_stream * stream, struct addrinfo * addr); // True = connection has been processed, False = connection failed (it is asynchronous operation, call 'xxx' when connection is really established)
+	/*
+	*  addrtype:
+	*           - '4' - IPv4
+	*           - '6' - IPv6
+	*           - 'D' - Domain name (DNS name)
+	*
+	*  Returns:
+	*           - True = connection has been processed, it is asynchronous operation, call 'ft_proto_socks_stream_send_final_response' when connection is really established)
+	*           - False = connection failed (error responses will be sent and socket will be closed)
+	*/
+	bool (*connect)(struct ft_stream * stream, char addrtype, char * host, unsigned int port);
 
 	void (*error)(struct ft_stream * stream); // Don't use this for close() or shutdown, it will be done automatically and it can lead to wierd results
 };

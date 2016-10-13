@@ -10,7 +10,6 @@ https://tools.ietf.org/html/rfc1928
 
 */
 
-static struct addrinfo * ft_proto_socks_getaddrinfo(const char * host, const char * port);
 static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_stream * stream, struct ft_frame * frame, bool * ok);
 
 ///
@@ -58,9 +57,14 @@ static struct ft_frame * ft_proto_socks_stream_delegate_get_read_frame(struct ft
 static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_stream * stream, struct ft_frame * frame)
 {
 	bool ok;
-	struct addrinfo * target_addr = NULL;
+	
+
+	char type;
+	uint16_t port;
+	static char host[256];
 
 	assert(this != NULL);
+	host[0] = '\0';
 
 	if (this->CD != 1)
 	{
@@ -71,40 +75,31 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 	if ((this->VN == 4) && (this->DSTIP > 0) && (this->DSTIP <= 255))
 	{
 		// SOCKS4A
-		char portstr[16];
-		snprintf(portstr, sizeof(portstr)-1, "%u", this->DSTPORT);
-		char * hoststr = ft_vec_begin_ptr(ft_frame_get_vec_at(frame, 3));
-
-		target_addr = ft_proto_socks_getaddrinfo(hoststr, portstr);
+		port = this->DSTPORT;
+		strncpy(host, ft_vec_begin_ptr(ft_frame_get_vec_at(frame, 3)), sizeof(host)-1);
+		host[sizeof(host)-1] = '\0';
+		type = 'D';
 	}
 
 	else if (this->VN == 4)
 	{
 		// SOCKS4
-		char portstr[16];
-		snprintf(portstr, sizeof(portstr)-1, "%u", this->DSTPORT);
-
-		char addrstr[32];
-		snprintf(addrstr, sizeof(addrstr), "%u.%u.%u.%u", this->DSTIP >> 24 & 0xFF, this->DSTIP >> 16 & 0xFF, this->DSTIP >> 8 & 0xFF, this->DSTIP & 0xFF);
-
-		target_addr = ft_proto_socks_getaddrinfo(addrstr, portstr);
+		port = this->DSTPORT;
+		snprintf(host, sizeof(host), "%u.%u.%u.%u", this->DSTIP >> 24 & 0xFF, this->DSTIP >> 16 & 0xFF, this->DSTIP >> 8 & 0xFF, this->DSTIP & 0xFF);
+		type = '4';
 	}
 
 	else if (this->VN == 5)
 	{
+		port = this->DSTPORT;
+
 		// SOCKS5
 		if (this->ATYP == 1)
 		{
 			uint8_t * cursor = ft_vec_begin_ptr(ft_frame_get_vec_at(frame, 2));
 			cursor = ft_load_u32(cursor, &this->DSTIP);
-
-			char portstr[16];
-			snprintf(portstr, sizeof(portstr)-1, "%u", this->DSTPORT);
-
-			char addrstr[32];
-			snprintf(addrstr, sizeof(addrstr), "%u.%u.%u.%u", this->DSTIP >> 24 & 0xFF, this->DSTIP >> 16 & 0xFF, this->DSTIP >> 8 & 0xFF, this->DSTIP & 0xFF);
-
-			target_addr = ft_proto_socks_getaddrinfo(addrstr, portstr);
+			snprintf(host, sizeof(host), "%u.%u.%u.%u", this->DSTIP >> 24 & 0xFF, this->DSTIP >> 16 & 0xFF, this->DSTIP >> 8 & 0xFF, this->DSTIP & 0xFF);
+			type = '4';
 		}
 
 		else if (this->ATYP == 3)
@@ -112,14 +107,7 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 			uint8_t len;
 			uint8_t * cursor = ft_vec_begin_ptr(ft_frame_get_vec_at(frame, 2));
 			cursor = ft_load_u8(cursor, &len);
-
-			char portstr[16];
-			snprintf(portstr, sizeof(portstr)-1, "%u", this->DSTPORT);
-
-			char addrstr[len+1];
-			snprintf(addrstr, sizeof(addrstr), "%.*s", len, cursor);
-
-			target_addr = ft_proto_socks_getaddrinfo(addrstr, portstr);
+			snprintf(host, sizeof(host)-1, "%.*s", len, cursor);
 		}
 
 		else if (this->ATYP == 4)
@@ -129,11 +117,7 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 			for (int i=0; i<16; i++)
 				cursor = ft_load_u8(cursor, &ipv6[i]);
 
-			char portstr[16];
-			snprintf(portstr, sizeof(portstr)-1, "%u", this->DSTPORT);
-
-			char addrstr[128];
-			snprintf(addrstr, sizeof(addrstr), "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+			snprintf(host, sizeof(host)-1, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
 				ipv6[0], ipv6[1],
 				ipv6[2], ipv6[3],
 				ipv6[4], ipv6[5],
@@ -143,8 +127,6 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 				ipv6[12], ipv6[13],
 				ipv6[14], ipv6[15]
 			);
-
-			target_addr = ft_proto_socks_getaddrinfo(addrstr, portstr);
 		}
 
 		else
@@ -160,15 +142,14 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 		goto exit_send_error_response;
 	}
 
-	if (target_addr == NULL)
+	if (host[0] == '\0')
 	{
 		FT_ERROR("Cannot resolve target host");
 		goto exit_send_error_response;
 	}
 
 	//Call delegate method
-	ok = this->delegate->connect(stream, target_addr);
-	freeaddrinfo(target_addr);
+	ok = this->delegate->connect(stream, type, host, port);
 	if (!ok) goto exit_send_error_response;
 
 	ft_frame_return(frame);
@@ -411,35 +392,6 @@ bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, bool s
 	ft_frame_flip(frame);
 
 	return ft_stream_write(stream, frame);
-}
-
-
-static struct addrinfo * ft_proto_socks_getaddrinfo(const char * host, const char * port)
-{
-	// WARNING!!! - this is synchronous function because of DNS query !!!
-
-	int rc;
-	struct addrinfo hints;
-
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = 0;
-	hints.ai_protocol = 0;
-	hints.ai_canonname = NULL;
-	hints.ai_addr = NULL;
-	hints.ai_next = NULL;
-
-	struct addrinfo * res;
-
-	rc = getaddrinfo(host, port, &hints, &res);
-	if (rc != 0)
-	{
-		FT_ERROR("getaddrinfo failed: %s (h:'%s' p:'%s')", gai_strerror(rc), host, port);
-		return NULL;
-	}
-
-	return res;
 }
 
 // SOCKS5
