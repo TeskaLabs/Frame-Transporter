@@ -84,4 +84,10 @@ static inline uint8_t * ft_store_u32(uint8_t * cursor, uint32_t value)
 	return ft_skip_u32(cursor);
 }
 
+static inline uint8_t * ft_store_bytes(uint8_t * cursor, const void * src, size_t n)
+{
+	memcpy(cursor, src, n);
+	return cursor + n;
+}
+
 #endif // FT_LOADSTORE_H_
