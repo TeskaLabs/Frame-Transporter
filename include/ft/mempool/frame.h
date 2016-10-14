@@ -128,13 +128,18 @@ static inline void * ft_vec_ptr(struct ft_vec * this)
 	return this->frame->data + this->offset + this->position;
 }
 
-// Following function requires access to frame object internals
-// and for this reason it is here and not with ft_vec object
 static inline void * ft_vec_begin_ptr(struct ft_vec * this)
 {
 	assert(this != NULL);
 	assert(this->frame != NULL);
 	return this->frame->data + this->offset;
+}
+
+static inline void * ft_vec_end_ptr(struct ft_vec * this)
+{
+	assert(this != NULL);
+	assert(this->frame != NULL);
+	return this->frame->data + this->offset + this->limit;
 }
 
 
