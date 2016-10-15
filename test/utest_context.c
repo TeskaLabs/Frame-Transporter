@@ -1,5 +1,10 @@
 #include "testutils.h"
 
+//TODO: unit test of flag.running
+//TODO: unit test of started_at
+//TODO: unit test of shutdown_at
+//TODO: unit test of forceful shutdown
+
 ///
 
 START_TEST(ft_context_empty_utest)

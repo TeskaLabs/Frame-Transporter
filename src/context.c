@@ -5,6 +5,7 @@
 static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents);
+static void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents);
 
 struct _ft_context_callback_entry
 {
@@ -20,6 +21,9 @@ bool ft_context_init(struct ft_context * this)
 
 	this->ev_loop = ev_default_loop(ft_config.libev_loop_flags);
 	if (this->ev_loop == NULL) return false;
+
+	this->flags.running = true;
+	this->shutdown_counter = 0;
 
 	// Set a logging context
 	ft_log_context(this);
@@ -47,6 +51,9 @@ bool ft_context_init(struct ft_context * this)
 	ev_unref(this->ev_loop);
 	this->heartbeat_w.data = this;
 	this->heartbeat_at = 0.0;
+
+	this->started_at = ev_now(this->ev_loop);
+	this->shutdown_at = NAN;
 
 	ok = ft_list_init(&this->on_termination_list, NULL);
 	if (!ok) return false;
@@ -135,6 +142,43 @@ bool ft_context_at_termination(struct ft_context * this, ft_context_callback cal
 // It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
 static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loop)
 {
+	if (this->flags.running)
+	{
+		this->flags.running = false;
+		this->shutdown_at = ev_now(loop);
+
+		FT_LIST_FOR(&this->on_termination_list, node)
+		{
+			struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
+			e->callback(this, e->data);
+		}
+
+		ev_timer_init(&this->shutdown_w, _ft_context_on_shutdown_timer, 0.0, 2.0);
+		ev_timer_start(this->ev_loop, &this->shutdown_w);
+		ev_unref(this->ev_loop);
+		this->shutdown_w.data = this;
+
+	}
+}
+
+static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
+{
+	struct ft_context * this = w->data;
+	assert(this != NULL);
+
+	if (w->signum == SIGINT) putchar('\n');
+
+	_ft_context_terminate(this, loop);
+}
+
+void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents)
+{
+	struct ft_context * this = w->data;
+	assert(this != NULL);
+
+	this->shutdown_counter += 1;
+
+	// Disable term. signal handlers - it allows the secondary signaling that has a bigger (unpolite) effect on the app
 	if (ev_is_active(&this->sigint_w))
 	{
 		ev_ref(this->ev_loop);
@@ -147,21 +191,7 @@ static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loo
 		ev_signal_stop(this->ev_loop, &this->sigterm_w);
 	}
 
-	FT_LIST_FOR(&this->on_termination_list, node)
-	{
-		struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
-		e->callback(this, e->data);
-	}
-}
-
-static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
-{
-	struct ft_context * this = w->data;
-	assert(this != NULL);
-
-	if (w->signum == SIGINT) putchar('\n');
-
-	_ft_context_terminate(this, loop);
+	//TODO: Propagate this event -> it can be used for forceful shutdown
 }
 
 ///

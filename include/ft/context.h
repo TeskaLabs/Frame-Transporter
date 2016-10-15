@@ -9,9 +9,19 @@ struct ft_context
 	ev_signal sigint_w;
 	ev_signal sigterm_w;
 
-	// Heartbeating ...
 	ev_timer heartbeat_w;
 	ev_tstamp heartbeat_at;
+
+	ev_tstamp started_at;
+	ev_tstamp shutdown_at;
+	ev_timer shutdown_w;
+
+	unsigned int shutdown_counter;
+
+	struct
+	{
+		bool running:1;
+	} flags;
 
 	struct ft_pool frame_pool;
 
