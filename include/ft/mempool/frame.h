@@ -103,9 +103,17 @@ static inline struct ft_vec * ft_frame_get_vec(struct ft_frame * this)
 }
 
 
-static inline struct ft_vec * ft_frame_get_vec_at(struct ft_frame * this, size_t position)
+// position argument can be negative, in that case, it will deliver vector at position counted from the end of vector list.
+static inline struct ft_vec * ft_frame_get_vec_at(struct ft_frame * this, ssize_t position)
 {
 	assert(this != NULL);
+
+	if (position < 0)
+	{
+		position = this->vec_limit + position;
+		if (position < 0) return NULL;
+	}
+
 	if (position >= this->vec_limit) return NULL;
 
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
