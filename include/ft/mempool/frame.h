@@ -18,6 +18,11 @@ struct ft_frame
 	unsigned int vec_position;
 	unsigned int vec_limit;
 
+	struct
+	{
+		bool msg_control:1; // The last vector is a struct cmsghdr (see http://man7.org/linux/man-pages/man3/cmsg.3.html)
+	} flags;
+
 	// Used to store address of inbound/outbound socket
 	struct sockaddr_storage addr;
 	socklen_t addrlen;

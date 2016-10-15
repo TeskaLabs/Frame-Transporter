@@ -626,6 +626,24 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 			.msg_flags = 0
 		};
 
+		// If requested, prepare a message control block from a last vector in the frame
+		if (this->write_frames->flags.msg_control == true)
+		{
+			struct ft_vec * vec = ft_frame_get_vec_at(this->write_frames, -1);
+			if (vec == NULL)
+			{
+				FT_WARN("Frame has msg_control flag set but no vector with msg_control");
+			}
+			else
+			{
+				// Remove the last vector
+				this->write_frames->vec_limit -= 1;
+
+				msghdr.msg_control = ft_vec_ptr(vec);
+				msghdr.msg_controllen = vec->limit;
+			}
+		}
+
 		// If socket is connected, then a frame address will be ignored
 		if (this->flags.connect)
 		{

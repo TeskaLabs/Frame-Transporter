@@ -121,6 +121,8 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 	frame->vec_position = 0;
 	frame->vec_limit = 0;
 
+	frame->flags.msg_control = false;
+
 	// Lock the frame the memory
 	if (frame->zone->flags.mlock_when_used)
 	{

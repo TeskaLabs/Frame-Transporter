@@ -19,6 +19,8 @@ void _ft_frame_init(struct ft_frame * this, uint8_t * data, size_t capacity, str
 	this->vec_position = 0;
 	this->vec_limit = 0;
 
+	this->flags.msg_control = false;
+
 	bzero(this->data, FRAME_SIZE);
 }
 
