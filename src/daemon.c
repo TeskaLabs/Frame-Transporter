@@ -121,7 +121,7 @@ static void sigchld(int s)
 
 ///
 
-pid_t ft_deamonise(struct ft_context * context)
+pid_t ft_daemonise(struct ft_context * context)
 {
 	pid_t pid;
 	int pipe_fds[2] = {-1, -1};
@@ -240,16 +240,6 @@ pid_t ft_deamonise(struct ft_context * context)
 			goto fail;
 		}
 
-/*
-		umask(0077);
-
-		if (chdir("/") < 0)
-		{
-			FT_ERROR_ERRNO(errno, "chdir() failed");
-			goto fail;
-		}
-*/
-
 		if ((pid = fork()) < 0)
 		{ /* Second fork */
 			FT_ERROR_ERRNO(errno, "Second fork() failed");
@@ -364,7 +354,7 @@ pid_t ft_deamonise(struct ft_context * context)
 		close(pipe_fds[0]);
 		errno = saved_errno;
 
-		FT_DEBUG("ft_deamonised");
+		FT_DEBUG("ft_daemonised");
 		ft_pidfile_filename(NULL); // Prevent removal od the PID file
 
 		if ((context !=  NULL) && (context->ev_loop != NULL))

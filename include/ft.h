@@ -65,7 +65,7 @@ struct ft_context;
 // Global init function
 void ft_initialise(void); // Call this at very beginning
 
-pid_t ft_deamonise(struct ft_context * context); // context can be NULL
+pid_t ft_daemonise(struct ft_context * context); // context can be NULL
 
 void ft_pidfile_filename(const char * fname);
 bool ft_pidfile_create(void);
