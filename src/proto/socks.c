@@ -344,7 +344,7 @@ struct ft_stream_delegate ft_stream_proto_socks_delegate = {
 };
 
 
-bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, bool success)
+bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, int reply)
 {
 	struct ft_proto_socks * this = (struct ft_proto_socks *)stream->base.socket.protocol;
 	assert(this != NULL);
@@ -358,7 +358,7 @@ bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, bool s
 		struct ft_vec * vec = ft_frame_get_vec(frame);
 		uint8_t * cursor = ft_vec_ptr(vec);
 		cursor = ft_store_u8(cursor, 0);  // VN
-		cursor = ft_store_u8(cursor, success ? 90: 91); // CD
+		cursor = ft_store_u8(cursor, (reply == 0) ? 90: 91); // CD
 		cursor = ft_store_u16(cursor, 0); // DSTPORT (value is ignored based on protocol specs)
 		cursor = ft_store_u32(cursor, 0); // DSTIP (value is ignored based on protocol specs)
 
@@ -372,7 +372,7 @@ bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, bool s
 		uint8_t * cursor = ft_vec_ptr(vec);
 		uint8_t * initial = cursor;
 		cursor = ft_store_u8(cursor, 5);  // VER protocol version: X'05'
-		cursor = ft_store_u8(cursor, success ? 0: 1); //  REP Reply field
+		cursor = ft_store_u8(cursor, reply); //  REP Reply field
 		cursor = ft_store_u8(cursor, 0); // RSV RESERVED
 		cursor = ft_store_u8(cursor, 1); // ATYP
 		cursor = ft_store_u32(cursor, 0); // BND.ADDR

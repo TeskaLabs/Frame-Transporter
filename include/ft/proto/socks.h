@@ -42,6 +42,8 @@ struct ft_proto_socks
 bool ft_proto_socks_init(struct ft_proto_socks *, struct ft_proto_socks_delegate * delegate, struct ft_stream * stream);
 void ft_proto_socks_fini(struct ft_proto_socks *);
 
-bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, bool success); // It is advised to switch to new protocol delegate on the stream after this one is called
+// It is advised to switch to new protocol delegate on the stream after this one is called
+// reply is from SOCKS5, 0 means success, anything else failure - it is handled properly for SOCKS4 too
+bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, int reply);
 
 #endif //FT_PROTO_SOCKS_H_
