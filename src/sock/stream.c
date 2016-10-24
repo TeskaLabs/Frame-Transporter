@@ -872,9 +872,6 @@ static void _ft_stream_write_real(struct ft_stream * this)
 			if (this->write_frames != NULL) FT_ERROR("There are data frames in the write queue after end-of-stream.");
 
 			assert(this->flags.write_open == false);
-			this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
-			this->flags.write_shutdown = true;
-
 			_ft_stream_write_unset_event(this, WRITE_WANT_WRITE);
 
 			if (this->ssl)
@@ -885,6 +882,9 @@ static void _ft_stream_write_real(struct ft_stream * this)
 
 			else
 			{
+				this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+				this->flags.write_shutdown = true;
+
 				int rc = shutdown(this->write_watcher.fd, SHUT_WR);
 				if (rc != 0)
 				{
@@ -1294,6 +1294,11 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 	int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 	if ((ssl_shutdown_status & SSL_SENT_SHUTDOWN) == SSL_SENT_SHUTDOWN)
 	{
+		if (this->flags.write_shutdown == false)
+		{
+			this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+			this->flags.write_shutdown = true;
+		}
 		FT_WARN("SSL shutdown has been already sent");
 		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " already sent", TRACE_ARGS);
 		return;
@@ -1305,6 +1310,10 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 	{
 		//SSL_SENT_SHUTDOWN has been sent
 		FT_DEBUG("SSL shutdown sent");
+
+		this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+		this->flags.write_shutdown = true;
+
 		_ft_stream_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
 		_ft_stream_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
 		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " sent", TRACE_ARGS);
@@ -1319,6 +1328,9 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 		_ft_stream_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
 
 		FT_DEBUG("SSL connection has been shutdown");
+
+		this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+		this->flags.write_shutdown = true;
 
 		int rc = shutdown(this->write_watcher.fd, SHUT_RDWR);
 		if ((rc != 0) && ( errno != ENOTCONN)) FT_WARN_ERRNO_P(errno, "shutdown()");
