@@ -48,7 +48,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 			// Remove stalled unix socket
 			rc = unlink(un->sun_path);
 			if (rc != 0) FT_WARN_ERRNO(errno, "unlink(%s)", un->sun_path);
-			else FT_WARN("Stalled listening unix socket '%s', deleting", un->sun_path);
+			else FT_WARN("Stalled listen unix socket '%s', deleting", un->sun_path);
 		}
 
 		snprintf(addrstr, sizeof(addrstr)-1, "%.*s", (int)sizeof(un->sun_path), un->sun_path);
