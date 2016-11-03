@@ -48,6 +48,9 @@ int ini_parse_file(FILE* file, ini_handler handler, void* user);
 int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
                      void* user);
 
+
+#define FT_INI_MATCH(s, n) ((strcmp(section, s) == 0) && (strcmp(name, n) == 0))
+
 /* Nonzero to allow multi-line value parsing, in the style of Python's
    configparser. If allowed, ini_parse() will call the handler with the same
    name for each subsequent line parsed. */
