@@ -119,7 +119,7 @@ void sock_relay_on_out_connected(struct ft_stream * stream)
 
 	FT_INFO("SOCK relay connected to target");
 
-	ft_proto_socks_stream_send_final_response(&this->in, true); // Inform SOCKS about success
+	ft_proto_socks_stream_send_final_response(&this->in, 0); // Inform SOCKS about success
 
 	this->in.delegate = &sock_relay_in_delegate;
 	ft_stream_set_partial(&this->in, true);
