@@ -125,7 +125,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 	// Daemonise
-	pid_t pid = ft_deamonise(&app.context);
+	pid_t pid = ft_daemonise(&app.context);
 	if (pid == -1) return EXIT_FAILURE;
 	if (pid > 0) return EXIT_SUCCESS; // Exit parent process
 
