@@ -340,7 +340,7 @@ static void _ft_dgram_error(struct ft_dgram * this, int sys_errno, const char * 
 	assert(sys_errno != 0);
 
 	FT_TRACE(FT_TRACE_ID_DGRAM, "BEGIN " TRACE_FMT " %s", TRACE_ARGS, when);
-	FT_WARN_ERRNO(sys_errno, "System error on datagram socket when %s", when);
+	FT_ERROR_ERRNO(sys_errno, "System error on datagram socket when %s", when);
 
 	this->error.sys_errno = sys_errno;
 
@@ -566,6 +566,20 @@ bool _ft_dgram_cntl_write_stop(struct ft_dgram * this)
 }
 
 
+static void _ft_dgram_return_write_frame(struct ft_dgram * this)
+{
+	struct ft_frame * frame = this->write_frames;
+
+	this->write_frames = frame->next;
+	if (this->write_frames == NULL)
+	{
+		// There are no more frames to write
+		this->write_frame_last = &this->write_frames;
+	}
+
+	ft_frame_return(frame);
+}
+
 static void _ft_dgram_write_real(struct ft_dgram * this)
 {
 	ssize_t rc;
@@ -661,7 +675,8 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		rc = sendmsg(this->write_watcher.fd, &msghdr, 0);
 		if (rc < 0) // Handle error situation
 		{
-			if (errno == EAGAIN)
+			int lerrno = errno;
+			if (lerrno == EAGAIN)
 			{
 				// OS buffer is full, wait for next write event
 				this->flags.write_ready = false;
@@ -670,9 +685,18 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 				return;
 			}
 
-			_ft_dgram_error(this, errno, "writing");
+			// If socket is not connected, don't close that when the system error is observed
+			if (this->flags.connect)
+			{
+				_ft_dgram_error(this, lerrno, "writing");
+			}
+			else
+			{
+				FT_WARN_ERRNO(lerrno, "System error on datagram socket when writting, the is frame lost");
+				_ft_dgram_return_write_frame(this);
+			}
 
-			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " write error", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " write errno:%d", TRACE_ARGS, lerrno);
 			return;
 		}
 		else if (rc == 0)
@@ -705,16 +729,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		if (!ok)
 		{
 			// All dvecs in the frame have been written
-			struct ft_frame * frame = this->write_frames;
-
-			this->write_frames = frame->next;
-			if (this->write_frames == NULL)
-			{
-				// There are no more frames to write
-				this->write_frame_last = &this->write_frames;
-			}
-
-			ft_frame_return(frame);
+			_ft_dgram_return_write_frame(this);
 		}
 	}
 
