@@ -57,11 +57,12 @@ static struct ft_frame * ft_proto_socks_stream_delegate_get_read_frame(struct ft
 static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_stream * stream, struct ft_frame * frame)
 {
 	bool ok;
-	
 
 	char type;
 	uint16_t port;
 	static char host[256];
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "BEGIN");
 
 	assert(this != NULL);
 	host[0] = '\0';
@@ -153,6 +154,9 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 	if (!ok) goto exit_send_error_response;
 
 	ft_frame_return(frame);
+
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END OK");
 	return;
 
 exit_send_error_response:
@@ -174,6 +178,7 @@ exit_send_error_response:
 	ft_stream_write(stream, frame);
 	ft_stream_cntl(stream, FT_STREAM_WRITE_SHUTDOWN);
 
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END ERROR");
 	return;
 }
 
@@ -182,6 +187,8 @@ static bool ft_proto_socks_4_on_read(struct ft_proto_socks * this, struct ft_str
 {
 	uint8_t * cursor;
 	struct ft_vec * vec;
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "BEGIN");
 
 	switch (frame->vec_limit)
 	{
@@ -195,6 +202,7 @@ static bool ft_proto_socks_4_on_read(struct ft_proto_socks * this, struct ft_str
 				cursor = ft_load_u32(cursor, &this->DSTIP);
 
 				ft_frame_append_vec(frame, 1);
+				FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont 2");
 				return false; //Continue reading
 			}
 
@@ -214,12 +222,14 @@ static bool ft_proto_socks_4_on_read(struct ft_proto_socks * this, struct ft_str
 					if ((this->DSTIP > 0) && (this->DSTIP <= 255)) // SOCK4A
 					{
 						ft_frame_append_vec(frame, 1);
+						FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont 3");
 						return false; //Continue reading
 					}
 
 					else
 					{
 						ft_proto_socks_on_request(this, stream, frame);
+						FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END req4");
 						return true;
 					}
 				}
@@ -229,6 +239,7 @@ static bool ft_proto_socks_4_on_read(struct ft_proto_socks * this, struct ft_str
 				ft_frame_prev_vec(frame);
 				vec->capacity += 1;
 				vec->limit = vec->capacity;
+				FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont");
 				return false;
 			}
 
@@ -247,6 +258,7 @@ static bool ft_proto_socks_4_on_read(struct ft_proto_socks * this, struct ft_str
 				if (p[-1] == '\0')
 				{
 					ft_proto_socks_on_request(this, stream, frame);
+					FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont req4A");
 					return true;
 				}
 
@@ -263,6 +275,7 @@ static bool ft_proto_socks_4_on_read(struct ft_proto_socks * this, struct ft_str
 	}
 
 	*ok = false;
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END err");
 	return false;
 }
 
@@ -271,6 +284,8 @@ static bool ft_proto_socks_stream_delegate_read(struct ft_stream * stream, struc
 {
 	bool ok;
 	assert(stream != NULL);
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "BEGIN");
 
 	struct ft_proto_socks * this = (struct ft_proto_socks *)stream->base.socket.protocol;
 	assert(this != NULL);
@@ -281,6 +296,7 @@ static bool ft_proto_socks_stream_delegate_read(struct ft_stream * stream, struc
 			ft_frame_return(frame);
 		else
 			ft_stream_write(stream, frame); // Close write end as well
+		FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END eos");
 		return true;
 	}
 
@@ -293,12 +309,14 @@ static bool ft_proto_socks_stream_delegate_read(struct ft_stream * stream, struc
 		if (this->VN == 4) // SOCKS4
 		{
 			ft_frame_append_vec(frame, 7); // Read additional 7 bytes to the next vec
+			FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont 1");
 			return false; //Continue reading
 		}
 
 		else if (this->VN == 5) // SOCKS5
 		{
 			ft_frame_append_vec(frame, 1); // Read additional 1 byte to the next vec
+			FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont 2");
 			return false; //Continue reading	
 		}
 
@@ -309,20 +327,31 @@ static bool ft_proto_socks_stream_delegate_read(struct ft_stream * stream, struc
 	{
 		ok = true;
 		bool ret = ft_proto_socks_4_on_read(this, stream, frame, &ok);
-		if (ok) return ret;
+		if (ok)
+		{
+			FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END ok4");
+			return ret;
+		}
 	}
 
 	else if (this->VN == 5)
 	{
 		ok = true;
 		bool ret = ft_proto_socks_5_on_read(this, stream, frame, &ok);
-		if (ok) return ret;
+		if (ok)
+		{
+			FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END ok5");
+			return ret;
+		}
+
 	}
 
 	FT_WARN("Failure to parse SOCKS request, closing the connection");
 
 	ft_frame_return(frame);
 	ft_stream_cntl(stream, FT_STREAM_WRITE_SHUTDOWN | FT_STREAM_READ_STOP);
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END err");
 	return true;
 }
 
@@ -346,11 +375,18 @@ struct ft_stream_delegate ft_stream_proto_socks_delegate = {
 
 bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, int reply)
 {
+	bool ok;
 	struct ft_proto_socks * this = (struct ft_proto_socks *)stream->base.socket.protocol;
 	assert(this != NULL);
 
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "BEGIN reply:%d", reply);
+
 	struct ft_frame * frame = ft_pool_borrow(&stream->base.socket.context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
-	if (frame == NULL) return false;
+	if (frame == NULL)
+	{
+		FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END no-frame");
+		return false;
+	}
 	ft_frame_format_simple(frame);
 
 	if (this->VN == 4)
@@ -386,12 +422,16 @@ bool ft_proto_socks_stream_send_final_response(struct ft_stream * stream, int re
 	{
 		FT_ERROR_P("Unimplemented protocol version: %u", this->VN);
 		ft_frame_return(frame);
+		FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END err-proto");
 		return false;
 	}
 
 	ft_frame_flip(frame);
 
-	return ft_stream_write(stream, frame);
+	ok = ft_stream_write(stream, frame);
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END ok:%c", ok ? 'y' : 'N');
+	return ok;
 }
 
 // SOCKS5
@@ -400,6 +440,8 @@ static bool sock_relay_on_socks5_method_selection_request(struct ft_proto_socks 
 {
 	struct ft_vec * vec = ft_frame_get_vec_at(frame, 2);
 	uint8_t * p = ft_vec_begin_ptr(vec);
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "BEGIN");
 
 	assert(this->SELMETHOD == 0xFF);
 
@@ -426,6 +468,8 @@ static bool sock_relay_on_socks5_method_selection_request(struct ft_proto_socks 
 
 	if (this->SELMETHOD == 0) this->authorized = true;
 
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END");
+
 	return true;
 }
 
@@ -438,6 +482,8 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 
 	uint8_t * cursor;
 	uint8_t b;
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "BEGIN");
 
 	if (!this->authorized)
 	{
@@ -452,10 +498,12 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 					if (b == 0) break;
 
 					ft_frame_append_vec(frame, b);
+					FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont 2");
 					return false; //Continue reading
 
 				case 3:
 					sock_relay_on_socks5_method_selection_request(this, stream, frame);
+					FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont 3");
 					return true;
 			}
 		}
@@ -467,6 +515,7 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 		{
 			case 1:
 				ft_frame_append_vec(frame, 3);
+				FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont n1");
 				return false; //Continue reading
 
 			case 2:
@@ -480,14 +529,17 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 					{
 						case 1:
 							ft_frame_append_vec(frame, 4); // Read 4 bytes of IPv4 into vector #2
+							FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont n21");
 							return false; //Continue reading
 
 						case 3:
 							ft_frame_append_vec(frame, 1); // Read Hostname into vector #2
+							FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont n23");
 							return false; //Continue reading
 
 						case 4:
 							ft_frame_append_vec(frame, 16);  // Read 16 bytes of IPv6 into vector #2
+							FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont n24");
 							return false; //Continue reading
 
 						default:
@@ -506,12 +558,14 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 						ft_frame_prev_vec(frame);
 						vec->capacity += len[-1];
 						vec->limit = vec->capacity;
+						FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont n3");
 						return false; //Continue reading
 					}
 
 				}
 				
 				ft_frame_append_vec(frame, 2); // Read DST.PORT into vector #3
+				FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END cont n31");
 				return false; //Continue reading
 
 			case 4:
@@ -519,6 +573,7 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 				cursor = ft_load_u16(cursor, &this->DSTPORT);
 
 				ft_proto_socks_on_request(this, stream, frame);
+				FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END ok");
 				return true;
 		}
 	}
@@ -527,5 +582,7 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 
 	ft_frame_return(frame);
 	ft_stream_cntl(stream, FT_STREAM_WRITE_SHUTDOWN | FT_STREAM_READ_STOP);
+
+	FT_TRACE(FT_TRACE_ID_PROTO_SOCK, "END error");
 	return true;
 }

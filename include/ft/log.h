@@ -20,6 +20,8 @@ enum ft_log_trace_ids
 
 	FT_TRACE_ID_STREAM = 0x00010,
 	FT_TRACE_ID_DGRAM = 0x0020,
+
+	FT_TRACE_ID_PROTO_SOCK = 0x0100,
 };
 
 
