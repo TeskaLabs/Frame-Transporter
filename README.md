@@ -6,7 +6,7 @@ Features include:
 
 * High-speed event loop ([libev](http://software.schmorp.de/pkg/libev.html))
 * Fixed-size block memory pool
-* TCP socket abstraction
+* Network socket abstraction
 * SSL/TLS encryption ([OpenSSL](https://www.openssl.org))
 * Logging
 
@@ -16,6 +16,6 @@ Copyright (c) 2016, TeskaLabs Ltd, Ales Teska
 The project is released under the BSD license.
 
 ---
-[![Build Status](https://travis-ci.org/TeskaLabs/Frame_Transporter.svg?branch=master)](https://travis-ci.org/TeskaLabs/Frame_Transporter)
+[![Build Status](https://travis-ci.org/TeskaLabs/Frame-Transporter.svg?branch=master)](https://travis-ci.org/TeskaLabs/Frame-Transporter)
 [![codecov](https://codecov.io/gh/TeskaLabs/Frame_Transporter/branch/master/graph/badge.svg)](https://codecov.io/gh/TeskaLabs/Frame_Transporter)
 [![Coverity](https://scan.coverity.com/projects/9946/badge.svg)](https://scan.coverity.com/projects/teskalabs-frame_transporter)
