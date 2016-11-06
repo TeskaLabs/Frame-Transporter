@@ -2,8 +2,8 @@
 
 /* Use:
 
-CK_RUN_CASE="base32-core" make test
-CK_RUN_SUITE="base32" make test
+CK_RUN_CASE="base32-core" make
+CK_RUN_SUITE="base32" make
 
 */
 
@@ -21,7 +21,7 @@ Suite * fpool_tsuite(void);
 Suite * frame_tsuite(void);
 Suite * ft_context_tsuite(void);
 Suite * ft_loadstore_tsuite(void);
-
+Suite * proto_socks_tsuite(void);
 
 ///
 
@@ -52,6 +52,7 @@ int main()
 	srunner_add_suite(sr, frame_tsuite());
 	srunner_add_suite(sr, ft_context_tsuite());
 	srunner_add_suite(sr, ft_loadstore_tsuite());
+	srunner_add_suite(sr, proto_socks_tsuite());
 
 	srunner_run_all(sr, CK_VERBOSE /*CK_NORMAL*/);
 	number_failed = srunner_ntests_failed(sr);
