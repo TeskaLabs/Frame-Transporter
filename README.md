@@ -6,9 +6,9 @@ Features include:
 
 * High-speed event loop ([libev](http://software.schmorp.de/pkg/libev.html))
 * Fixed-size block memory pool
-* Network socket abstraction
+* ([Network socket](https://en.wikipedia.org/wiki/Network_socket)] abstraction
 * SSL/TLS encryption ([OpenSSL](https://www.openssl.org))
-* Logging
+* Tracing, logging and auditing
 
 ## Copyright and License
 
