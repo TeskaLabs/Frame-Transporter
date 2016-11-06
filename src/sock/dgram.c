@@ -319,9 +319,7 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 
 		if (frame == NULL)
 		{
-			FT_WARN("Failed to submit end-of-stream frame, throttling");
-			ft_dgram_cntl(this, FT_DGRAM_READ_PAUSE);
-			//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+			//TODO: call this->delegate->error() to indicate out-of-frames situation
 			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 			return;
 		}
@@ -706,7 +704,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 			this->flags.write_ready = false;
 			_ft_dgram_write_set_event(this, WRITE_WANT_WRITE);
 
-			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " zero write", TRACE_ARGS);
+			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " zero-write", TRACE_ARGS);
 			return;
 		}
 
