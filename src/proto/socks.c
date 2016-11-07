@@ -109,6 +109,7 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 			uint8_t * cursor = ft_vec_begin_ptr(ft_frame_get_vec_at(frame, 2));
 			cursor = ft_load_u8(cursor, &len);
 			snprintf(host, sizeof(host)-1, "%.*s", len, cursor);
+			type = 'D';
 		}
 
 		else if (this->ATYP == 4)
@@ -128,6 +129,8 @@ static void ft_proto_socks_on_request(struct ft_proto_socks * this, struct ft_st
 				ipv6[12], ipv6[13],
 				ipv6[14], ipv6[15]
 			);
+
+			type = '6';
 		}
 
 		else
