@@ -354,7 +354,7 @@ pid_t ft_daemonise(struct ft_context * context)
 		close(pipe_fds[0]);
 		errno = saved_errno;
 
-		FT_DEBUG("ft_daemonised");
+		FT_DEBUG("Daemonised");
 		ft_pidfile_filename(NULL); // Prevent removal od the PID file
 
 		if ((context !=  NULL) && (context->ev_loop != NULL))
