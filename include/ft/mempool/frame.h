@@ -155,5 +155,10 @@ static inline void * ft_vec_end_ptr(struct ft_vec * this)
 	return this->frame->data + this->offset + this->limit;
 }
 
+static inline void ft_vec_advance_ptr(struct ft_vec * this, void * ptr)
+{
+	size_t position_delta = (uint8_t *)ptr - (this->frame->data + this->offset + this->position);
+	ft_vec_advance(this, position_delta);
+}
 
 #endif // FT_MEMPOOL_FRAME_H_
