@@ -55,14 +55,12 @@ void ft_initialise(void)
 	}
 
 	// Print and check versions
-	FT_DEBUG("Using libev %d.%d", ev_version_major(), ev_version_minor());
 	if ((ev_version_major() != EV_VERSION_MAJOR) || (ev_version_minor() < EV_VERSION_MINOR))
 	{
 		FT_ERROR("Incompatible version of libev used (%d.%d != %d.%d)", ev_version_major(), ev_version_minor(), EV_VERSION_MAJOR, EV_VERSION_MINOR);
 		exit(EXIT_FAILURE);
 	}
 
-	FT_DEBUG("Using %s", SSLeay_version(SSLEAY_VERSION));
 	if ((SSLeay() ^ OPENSSL_VERSION_NUMBER) & ~0xff0L)
 	{
 		FT_ERROR("Incompatible version of OpenSSL used (%lX [present] != %lX [expected])", SSLeay(), SSLEAY_VERSION_NUMBER);
