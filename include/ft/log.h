@@ -77,7 +77,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #endif
 
 #ifdef RELEASE
-#define FT_DEBUG(fmt, args...) do { _ft_log('D', fmt, ## args); } while (0)
+#define FT_DEBUG(fmt, args...) do { if (0) _ft_log('D', fmt, ## args); } while (0)
 #else
 #define FT_DEBUG(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log('D', fmt, ## args); } while (0)
 #endif
@@ -88,7 +88,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_AUDIT(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_P(fmt, args...) do { _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_P(fmt, args...) do { if (0) _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
 #define FT_DEBUG_P(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1;  _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
@@ -99,7 +99,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_AUDIT_P(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_ERRNO(errnum, fmt, args...) do { _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
+#define FT_DEBUG_ERRNO(errnum, fmt, args...) do { if (0) _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
 #else
 #define FT_DEBUG_ERRNO(errnum, fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
 #endif
@@ -110,7 +110,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_AUDIT_ERRNO(errnum, fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_errno(errnum, 'A', fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_ERRNO_P(errnum, fmt, args...) do { _ft_log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_ERRNO_P(errnum, fmt, args...) do { if (0) _ft_log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
 #define FT_DEBUG_ERRNO_P(errnum, fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_errno(errnum, 'D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
@@ -121,7 +121,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_AUDIT_ERRNO_P(errnum, fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_errno(errnum, 'A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_OPENSSL(fmt, args...) do { _ft_log_openssl_err('D', fmt, ## args); } while (0)
+#define FT_DEBUG_OPENSSL(fmt, args...) do { if (0) _ft_log_openssl_err('D', fmt, ## args); } while (0)
 #else
 #define FT_DEBUG_OPENSSL(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_openssl_err('D', fmt, ## args); } while (0)
 #endif
@@ -132,7 +132,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_AUDIT_OPENSSL(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_openssl_err('A', fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_OPENSSL_P(fmt, args...) do { _ft_log_openssl_err('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0) }
+#define FT_DEBUG_OPENSSL_P(fmt, args...) do { if (0) _ft_log_openssl_err('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0) }
 #else
 #define FT_DEBUG_OPENSSL_P(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log_openssl_err('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
