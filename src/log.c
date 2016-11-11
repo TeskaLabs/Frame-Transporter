@@ -61,7 +61,7 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
 
 	fprintf(ft_config.log_f != NULL ? ft_config.log_f : stderr, 
-		"%s %02d %04d %02d:%02d:%02d.%03d %s %7d %s: %.*s\n",
+		"%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n",
 		_ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 		tmp.tm_zone,
