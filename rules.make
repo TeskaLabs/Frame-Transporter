@@ -11,7 +11,7 @@ VERSION=$(shell git describe --abbrev=7 --tags --dirty --always)
 ifndef RELEASE
 CFLAGS+=-O0 -ggdb -DDEBUG=1
 else
-CFLAGS+=-O3 -march=native -fno-strict-aliasing -DRELEASE=1 -DNDEBUG=1
+CFLAGS+=-O3 -march=native -fno-strict-aliasing -DRELEASE=1
 endif
 
 CFLAGS+=-Wall -std=gnu99 -static
