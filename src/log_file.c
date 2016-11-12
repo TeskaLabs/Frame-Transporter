@@ -66,10 +66,14 @@ static void ft_log_file_logrecord_process(struct ft_logrecord * le, int le_messa
 	ft_config.log_file.flush_counter += 1;
 }
 
+static void ft_log_file_on_heartbeat(struct ft_context * context, ev_tstamp now)
+{
+	ft_log_file_flush(now);
+}
 
 struct ft_log_backend ft_log_file_backend = {
 	.fini = ft_log_file_fini,
-	.heartbeat = NULL,
+	.heartbeat = ft_log_file_on_heartbeat,
 	.process = ft_log_file_logrecord_process,
 };
 

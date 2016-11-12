@@ -173,7 +173,7 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length);
 struct ft_log_backend
 {
 	void (*fini)(void);
-	void (*heartbeat)(void);
+	void (*heartbeat)(struct ft_context * context, ev_tstamp now);
 	void (*process)(struct ft_logrecord * le, int le_message_length);
 };
 

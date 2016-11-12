@@ -214,6 +214,12 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 		e->callback(this, e->data);
 	}
 
+	// Log heartbeat
+	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->heartbeat != NULL))
+	{
+		ft_config.log_backend->heartbeat(this, now);
+	}
+
 	//Lag detector
 	if (this->heartbeat_at > 0.0)
 	{
