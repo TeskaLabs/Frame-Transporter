@@ -2,7 +2,7 @@
 
 ///
 
-static void _ft_pool_heartbeat_callback(struct ft_context * context, void * data);
+static void ft_pool_on_heartbeat(struct ft_context * context, void * data);
 
 //
 
@@ -17,7 +17,7 @@ bool ft_pool_init(struct ft_pool * this, struct ft_context * context)
 
 	if (context != NULL)
 	{
-		ft_context_at_heartbeat(context, _ft_pool_heartbeat_callback, this);
+		ft_context_at_heartbeat(context, ft_pool_on_heartbeat, this);
 	}
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
@@ -95,7 +95,7 @@ void ft_pool_set_alloc(struct ft_pool * this, ft_pool_alloc_fnct alloc_fnct)
 }
 
 
-static void _ft_pool_heartbeat_callback(struct ft_context * context, void * data)
+static void ft_pool_on_heartbeat(struct ft_context * context, void * data)
 {
 	struct ft_pool * this = (struct ft_pool *)data;
 	assert(this != NULL);
