@@ -7,6 +7,7 @@ OBJS=\
 	ini.o \
 	config.o \
 	log.o \
+	log_file.o \
 	daemon.o \
 	sock/listener.o \
 	sock/stream.o \

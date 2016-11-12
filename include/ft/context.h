@@ -5,7 +5,6 @@ struct ft_context
 {
 	struct ev_loop * ev_loop;
 
-	ev_signal sighup_w;
 	ev_signal sigint_w;
 	ev_signal sigterm_w;
 

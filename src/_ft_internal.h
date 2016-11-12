@@ -7,7 +7,7 @@
 #define FRAME_SIZE (5*4096)
 #define MEMPAGE_SIZE (4096)
 
-void _ft_log_initialise(void);
+void ft_log_initialise_(void);
 
 void _ft_frame_init(struct ft_frame * , uint8_t * data, size_t capacity, struct ft_poolzone * zone);
 

@@ -142,22 +142,9 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_FATAL_OPENSSL_P(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log_openssl_err('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #define FT_AUDIT_OPENSSL_P(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log_openssl_err('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
-/*
- * Call this to open or reopen log file.
- * Used during initial switch from stderr a log file and eventually to rotate a log file
- */
-bool ft_log_reopen(void);
-void ft_log_finalise(void);
-void ft_log_flush(void);
+///
 
 void ft_log_context(struct ft_context * context);
-
-/*
- * Specify location of the log file.
- * Implicitly manages ft_log_reopen().
- * Can be called also with fname set to NULL to remove filename and switch back to stderr 
- */
-bool ft_log_filename(const char * fname);
 
 static inline bool ft_log_is_verbose(void)
 {
@@ -182,5 +169,25 @@ struct ft_logrecord
 void ft_logrecord_process(struct ft_logrecord * le, int le_message_length);
 
 ///
+
+struct ft_log_backend
+{
+	void (*fini)(void);
+	void (*heartbeat)(void);
+	void (*process)(struct ft_logrecord * le, int le_message_length);
+};
+
+void ft_log_finalise(void);
+
+///
+
+extern struct ft_log_backend ft_log_file_backend;
+
+/*
+ * Specify location of the log file.
+ * Implicitly manages ft_log_reopen().
+ * Can be called also with fname set to NULL to remove filename and switch back to stderr 
+ */
+bool ft_log_file_set(const char * fname);
 
 #endif // FT_LOG_H_

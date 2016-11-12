@@ -82,7 +82,6 @@ bool ft_fd_cloexec(int fd);
 // Boolean parser
 bool ft_parse_bool(const char * value);
 
-
 /*
  * Fills *buf with max. *buflen characters, encoding size bytes of *data.
  *

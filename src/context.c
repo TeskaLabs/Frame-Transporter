@@ -2,7 +2,6 @@
 
 ///
 
-static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents);
 static void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents);
@@ -27,12 +26,6 @@ bool ft_context_init(struct ft_context * this)
 
 	// Set a logging context
 	ft_log_context(this);
-
-	// Install signal handlers
-	ev_signal_init(&this->sighup_w, _ft_context_on_sighup, SIGHUP);
-	ev_signal_start(this->ev_loop, &this->sighup_w);
-	ev_unref(this->ev_loop);
-	this->sighup_w.data = this;
 
 	ev_signal_init(&this->sigint_w, _ft_context_on_sigexit, SIGINT);
 	ev_signal_start(this->ev_loop, &this->sigint_w);
@@ -90,12 +83,6 @@ void ft_context_fini(struct ft_context * this)
 
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;
-}
-
-
-static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
-{
-	ft_log_reopen();
 }
 
 
@@ -225,9 +212,6 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 		struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
 		e->callback(this, e->data);
 	}
-
-	// Flush logs
-	ft_log_flush();
 
 	//Lag detector
 	if (this->heartbeat_at > 0.0)

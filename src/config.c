@@ -5,14 +5,18 @@ struct ft_config ft_config =
 	.initialized = false, // Will be changed to true when initialized
 
 	.log_verbose = false,
+	.log_backend = &ft_log_file_backend,
 	.log_trace_mask = 0,
-	.log_filename = NULL,
-	.log_f = NULL,
-	.log_flush_counter = 0,
-	.log_flush_counter_max = 100,
-	.log_flush_last = 0.0,
-	.log_flush_interval = 5.0, //Seconds
-	.log_use_utc = true,
+
+	.log_file = {
+		.filename = NULL,
+		.file = NULL,
+		.flush_counter = 0,
+		.flush_counter_max = 100,
+		.flush_last = 0.0,
+		.flush_interval = 5.0, //Seconds
+		.datetime_style = 'U',
+	},
 
 	.lag_detector_sensitivity = 1.0,
 
@@ -28,7 +32,7 @@ struct ft_config ft_config =
 
 	.sock_est_max_read_loops = 10,
 	.sock_est_max_write_loops = 10,
-	.stream_ssl_ex_data_index = -2
+	.stream_ssl_ex_data_index = -2,
 };
 
 
@@ -37,7 +41,7 @@ void ft_initialise(void)
 	assert(ft_config.initialized == false);
 
 	// Initialize logging
-	_ft_log_initialise();
+	ft_log_initialise_();
 
 	// Initialize OpenSSL
 	SSL_library_init();
