@@ -227,7 +227,7 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 }
 
 
-ev_tstamp ft_get_tstamp(struct ft_context * this)
+ev_tstamp ft_safe_now(struct ft_context * this)
 {
 	return ((this != NULL) && (this->ev_loop != NULL)) ? ev_now(this->ev_loop) : ev_time();
 }

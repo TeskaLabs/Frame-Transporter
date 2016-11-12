@@ -20,7 +20,7 @@ static struct ft_context * _ft_log_context = NULL;
 
 static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const char * format, va_list args)
 {
-	le->timestamp = ft_get_tstamp(_ft_log_context);
+	le->timestamp = ft_safe_now(_ft_log_context);
 	le->pid = getpid();
 	le->level = level;
 
