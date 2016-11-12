@@ -28,6 +28,11 @@ static inline uint8_t * ft_skip_u32(uint8_t * cursor)
 	return cursor+4;
 }
 
+static inline uint8_t * ft_skip_u64(uint8_t * cursor)
+{
+	return cursor+8;
+}
+
 
 static inline uint8_t * ft_load_u8(uint8_t * cursor, uint8_t * value)
 {
@@ -51,6 +56,12 @@ static inline uint8_t * ft_load_u32(uint8_t * cursor, uint32_t * value)
 {
 	*value = cursor[3] | (cursor[2] << 8) | (cursor[1] << 16) | (cursor[0] << 24);
 	return ft_skip_u32(cursor);
+}
+
+static inline uint8_t * ft_load_bytes(uint8_t * cursor, void * trg, size_t n)
+{
+	memcpy(trg, cursor, n);
+	return cursor + n;
 }
 
 

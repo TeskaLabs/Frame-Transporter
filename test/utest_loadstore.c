@@ -1,6 +1,8 @@
 #include "testutils.h"
 
+//TODO: ft_store_bytes()
 //TODO: ft_load_bytes()
+//TODO: ft_skip_u64()
 
 ////
 
