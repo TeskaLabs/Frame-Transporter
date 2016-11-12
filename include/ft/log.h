@@ -181,6 +181,8 @@ void ft_log_finalise(void);
 
 ///
 
+void ft_log_backend_switch(struct ft_log_backend * backend);
+
 extern struct ft_log_backend ft_log_file_backend;
 
 /*

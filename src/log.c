@@ -12,8 +12,6 @@ struct ft_log_stats ft_log_stats = {
 	.audit_count = 0,
 };
 
-///
-
 static struct ft_context * _ft_log_context = NULL;
 
 ///
@@ -131,6 +129,16 @@ void ft_log_context(struct ft_context * context)
 	assert(_ft_log_context == NULL);
 	_ft_log_context = context;
 }
+
+
+void ft_log_backend_switch(struct ft_log_backend * backend)
+{
+	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->fini != NULL))
+		ft_config.log_backend->fini();
+
+	ft_config.log_backend = backend;
+}
+
 
 void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
