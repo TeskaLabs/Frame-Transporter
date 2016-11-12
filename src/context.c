@@ -27,6 +27,7 @@ bool ft_context_init(struct ft_context * this)
 	// Set a logging context
 	ft_log_context(this);
 
+	// Install signal handlers
 	ev_signal_init(&this->sigint_w, _ft_context_on_sigexit, SIGINT);
 	ev_signal_start(this->ev_loop, &this->sigint_w);
 	ev_unref(this->ev_loop);
