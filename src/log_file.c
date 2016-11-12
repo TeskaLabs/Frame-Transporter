@@ -53,15 +53,28 @@ static void ft_log_file_logrecord_process(struct ft_logrecord * le, int le_messa
 	}
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
 
-	fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-		"%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n",
-		_ft_log_file_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
-		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-		tmp.tm_zone,
-		le->pid,
-		_ft_log_file_levelname(le->level),
-		le_message_length, le->message
-	);
+	if (ft_config.log_file.datetime_style == 'I')
+	{
+		// ISO 8601
+		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ%6d %s: %.*s\n",
+			1900+tmp.tm_year, tmp.tm_mon, tmp.tm_mday,
+			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+			le->pid,
+			_ft_log_file_levelname(le->level),
+			le_message_length, le->message
+		);
+	} else {
+		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
+			"%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n",
+			_ft_log_file_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
+			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+			tmp.tm_zone,
+			le->pid,
+			_ft_log_file_levelname(le->level),
+			le_message_length, le->message
+		);
+	}
 
 	ft_config.log_file.flush_counter += 1;
 }
