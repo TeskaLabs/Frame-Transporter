@@ -160,7 +160,7 @@ static inline void ft_log_verbose(bool v)
 
 struct ft_logrecord
 {
-	double timestamp;
+	ev_tstamp timestamp;
 	pid_t pid;
 	char level;
 	char message[4096];
