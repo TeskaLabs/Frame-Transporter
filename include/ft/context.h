@@ -40,4 +40,7 @@ typedef void (* ft_context_callback)(struct ft_context * context, void * data);
 bool ft_context_at_termination(struct ft_context * , ft_context_callback callback, void * data);
 bool ft_context_at_heartbeat(struct ft_context * , ft_context_callback callback, void * data);
 
+// Can be safely called with NULL in the context
+ev_tstamp ft_get_tstamp(struct ft_context *);
+
 #endif // FT_CONTEXT_H_
