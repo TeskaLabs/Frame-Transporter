@@ -34,14 +34,14 @@ static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const
 
 void _ft_log_v(const char level, const char * format, va_list args)
 {
-	static struct ft_logrecord le;
+	static __thread struct ft_logrecord le;
 	int le_message_length = _ft_logrecord_build(&le, level, format, args);
 	ft_logrecord_process(&le, le_message_length);
 }
 
 void _ft_log_errno_v(int errnum, const char level, const char * format, va_list args)
 {
-	static struct ft_logrecord le;
+	static __thread struct ft_logrecord le;
 	int le_message_length = _ft_logrecord_build(&le, level, format, args);
 
 	if (le_message_length > 0)
@@ -70,7 +70,7 @@ void _ft_log_errno_v(int errnum, const char level, const char * format, va_list 
 
 void _ft_log_openssl_err_v(const char level, const char * format, va_list args)
 {
-	static struct ft_logrecord le;
+	static __thread struct ft_logrecord le;
 	int le_message_length = _ft_logrecord_build(&le, level, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
