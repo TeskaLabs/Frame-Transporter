@@ -84,7 +84,6 @@ void ft_log_file_flush(ev_tstamp now)
 	}
 	else if ((ft_config.log_file.flush_last + ft_config.log_file.flush_interval) < now)
 	{
-		// Log entries are not that old to initiale the flush
 		do_flush = true;
 	}	
 
@@ -96,11 +95,7 @@ void ft_log_file_flush(ev_tstamp now)
 }
 
 
-/*
- * Call this to open or reopen log file.
- * Used during initial switch from stderr a log file and eventually to rotate a log file
- */
-static bool ft_log_file_reopen()
+bool ft_log_file_reopen()
 {
 	if ((ft_config.log_file.filename == NULL) && (ft_config.log_file.file == NULL))
 	{
@@ -134,6 +129,11 @@ static bool ft_log_file_reopen()
 	return true;
 }
 
+static void ft_log_file_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
+{
+	ft_log_file_reopen();
+}
+
 
 bool ft_log_file_set(const char * fname)
 {
@@ -146,4 +146,20 @@ bool ft_log_file_set(const char * fname)
 
 	ft_config.log_file.filename = (fname != NULL) ? strdup(fname) : NULL;
 	return ft_log_file_reopen();
+}
+
+
+void ft_log_handle_sighup(struct ft_context * context)
+{
+	assert(context != NULL);
+
+	if (ft_config.log_file.sighup_w.signum != 0)
+	{
+		FT_WARN("SIGHUP handler seems to be already installed");
+		return;
+	}
+
+	ev_signal_init(&ft_config.log_file.sighup_w, ft_log_file_on_sighup, SIGHUP);
+	ev_signal_start(context->ev_loop, &ft_config.log_file.sighup_w);
+	ev_unref(context->ev_loop);
 }

@@ -190,4 +190,15 @@ extern struct ft_log_backend ft_log_file_backend;
  */
 bool ft_log_file_set(const char * fname);
 
+// Install log rotate handler on SIGHUP
+void ft_log_handle_sighup(struct ft_context * context);
+
+void ft_log_file_flush(ev_tstamp now);
+
+/*
+ * Call this to open or reopen log file.
+ * Used during initial switch from stderr a log file and eventually to rotate a log file
+ */
+bool ft_log_file_reopen(void);
+
 #endif // FT_LOG_H_

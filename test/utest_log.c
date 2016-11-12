@@ -4,28 +4,29 @@
 
 START_TEST(log_normal_debug_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_DEBUG("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	FT_DEBUG_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 2);
 
 	ft_log_verbose(false);
 	FT_DEBUG("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	FT_DEBUG_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 2);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -36,23 +37,22 @@ START_TEST(log_normal_debug_utest)
 }
 END_TEST
 
-
 START_TEST(log_normal_info_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_INFO("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_INFO_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 2);
@@ -65,20 +65,20 @@ END_TEST
 
 START_TEST(log_normal_warn_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_WARN("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_WARN_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -92,20 +92,20 @@ END_TEST
 
 START_TEST(log_normal_error_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_ERROR("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_ERROR_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -118,20 +118,20 @@ END_TEST
 
 START_TEST(log_normal_fatal_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_FATAL("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_FATAL_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -144,20 +144,20 @@ END_TEST
 
 START_TEST(log_normal_audit_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_AUDIT("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_AUDIT_P("Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -172,20 +172,20 @@ END_TEST
 
 START_TEST(log_errno_info_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_INFO_ERRNO(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_INFO_ERRNO_P(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 2);
@@ -198,20 +198,20 @@ END_TEST
 
 START_TEST(log_errno_warn_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_WARN_ERRNO(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_WARN_ERRNO_P(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -224,20 +224,20 @@ END_TEST
 
 START_TEST(log_errno_error_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_ERROR_ERRNO(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_ERROR_ERRNO_P(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -250,20 +250,20 @@ END_TEST
 
 START_TEST(log_errno_fatal_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_FATAL_ERRNO(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_FATAL_ERRNO_P(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -277,20 +277,20 @@ END_TEST
 
 START_TEST(log_errno_audit_utest)
 {
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ft_log_verbose(true);
 	FT_AUDIT_ERRNO(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	ft_log_verbose(false);
 	FT_AUDIT_ERRNO_P(EAGAIN, "Log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -305,14 +305,14 @@ END_TEST
 
 START_TEST(log_reopen_nofile_utest)
 {
-	ck_assert_ptr_eq(ft_config.log_f, NULL);
-	ck_assert_ptr_eq(ft_config.log_filename, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
-	bool ok = ft_log_reopen();
+	bool ok = ft_log_file_reopen();
 	ck_assert_int_eq(ok, true);
 
-	ck_assert_ptr_eq(ft_config.log_f, NULL);
-	ck_assert_ptr_eq(ft_config.log_filename, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
 	ck_assert_int_eq(ft_log_stats.warn_count, 0);
 	ck_assert_int_eq(ft_log_stats.error_count, 0);
@@ -323,23 +323,23 @@ END_TEST
 
 START_TEST(log_reopen_wfile_utest)
 {
-	ck_assert_ptr_eq(ft_config.log_f, NULL);
-	ck_assert_ptr_eq(ft_config.log_filename, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
-	bool ok = ft_log_filename("./log.txt");
+	bool ok = ft_log_file_set("./log.txt");
 	ck_assert_int_eq(ok, true);
-	ck_assert_ptr_ne(ft_config.log_f, NULL);
-	ck_assert_ptr_ne(ft_config.log_filename, NULL);
+	ck_assert_ptr_ne(ft_config.log_file.file, NULL);
+	ck_assert_ptr_ne(ft_config.log_file.filename, NULL);
 
 	FT_INFO_ERRNO(EAGAIN, "Log message test!");
 
-	ok = ft_log_reopen();
+	ok = ft_log_file_reopen();
 	ck_assert_int_eq(ok, true);
 
-	ok = ft_log_filename(NULL);
+	ok = ft_log_file_set(NULL);
 	ck_assert_int_eq(ok, true);
-	ck_assert_ptr_eq(ft_config.log_f, NULL);
-	ck_assert_ptr_eq(ft_config.log_filename, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
 	int rc = unlink("./log.txt");
 	ck_assert_int_eq(rc, 0);
@@ -353,19 +353,21 @@ END_TEST
 
 START_TEST(log_reopen_sighup_utest)
 {
-	ck_assert_ptr_eq(ft_config.log_f, NULL);
-	ck_assert_ptr_eq(ft_config.log_filename, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
+	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
-	bool ok = ft_log_filename("./log.txt");
+	bool ok = ft_log_file_set("./log.txt");
 	ck_assert_int_eq(ok, true);
-	ck_assert_ptr_ne(ft_config.log_f, NULL);
-	ck_assert_str_eq(ft_config.log_filename, "./log.txt");
+	ck_assert_ptr_ne(ft_config.log_file.file, NULL);
+	ck_assert_str_eq(ft_config.log_file.filename, "./log.txt");
 
 	FT_INFO("Log message test!");
 
 	struct ft_context context;
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
+
+	ft_log_handle_sighup(&context);
 
 	ev_feed_signal(SIGHUP);
 	ev_run(context.ev_loop, EVBREAK_ONE);
@@ -384,6 +386,12 @@ START_TEST(log_reopen_sighup_utest)
 	ck_assert_int_eq(ft_log_stats.warn_count, 0);
 	ck_assert_int_eq(ft_log_stats.error_count, 0);
 	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
+
+	ft_log_handle_sighup(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 1);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
 END_TEST
 
@@ -393,9 +401,9 @@ START_TEST(log_openssl_info_utest)
 {
 	unsigned long code;
 
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -409,7 +417,7 @@ START_TEST(log_openssl_info_utest)
 
 	ft_log_verbose(true);
 	FT_INFO_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -422,16 +430,16 @@ START_TEST(log_openssl_info_utest)
 
 	ft_log_verbose(false);
 	FT_INFO_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	FT_INFO_OPENSSL_P("OpenSSL log message test (no SSL error)!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 3);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 3);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 3);
@@ -446,9 +454,9 @@ START_TEST(log_openssl_warn_utest)
 {
 	unsigned long code;
 
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -462,7 +470,7 @@ START_TEST(log_openssl_warn_utest)
 
 	ft_log_verbose(true);
 	FT_WARN_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -475,16 +483,16 @@ START_TEST(log_openssl_warn_utest)
 
 	ft_log_verbose(false);
 	FT_WARN_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	FT_WARN_OPENSSL_P("OpenSSL log message test (no SSL error)!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 3);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 3);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -499,9 +507,9 @@ START_TEST(log_openssl_error_utest)
 {
 	unsigned long code;
 
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -515,7 +523,7 @@ START_TEST(log_openssl_error_utest)
 
 	ft_log_verbose(true);
 	FT_ERROR_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -528,16 +536,16 @@ START_TEST(log_openssl_error_utest)
 
 	ft_log_verbose(false);
 	FT_ERROR_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	FT_ERROR_OPENSSL_P("OpenSSL log message test (no SSL error)!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 3);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 3);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -552,9 +560,9 @@ START_TEST(log_openssl_fatal_utest)
 {
 	unsigned long code;
 
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -568,7 +576,7 @@ START_TEST(log_openssl_fatal_utest)
 
 	ft_log_verbose(true);
 	FT_FATAL_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -581,16 +589,16 @@ START_TEST(log_openssl_fatal_utest)
 
 	ft_log_verbose(false);
 	FT_FATAL_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	FT_FATAL_OPENSSL_P("OpenSSL log message test (no SSL error)!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 3);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 3);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -605,9 +613,9 @@ START_TEST(log_openssl_audit_utest)
 {
 	unsigned long code;
 
-	ft_config.log_flush_counter_max = 1;
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_config.log_file.flush_counter_max = 1;
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -621,7 +629,7 @@ START_TEST(log_openssl_audit_utest)
 
 	ft_log_verbose(true);
 	FT_AUDIT_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 1);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 1);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
@@ -634,16 +642,16 @@ START_TEST(log_openssl_audit_utest)
 
 	ft_log_verbose(false);
 	FT_AUDIT_OPENSSL("OpenSSL log message test!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 2);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 2);
 
 	FT_AUDIT_OPENSSL_P("OpenSSL log message test (no SSL error)!");
-	ck_assert_int_eq(ft_config.log_flush_counter, 3);
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 3);
 
 	code = ERR_peek_error();
 	ck_assert_int_eq(code, 0);
 
-	ft_log_flush();
-	ck_assert_int_eq(ft_config.log_flush_counter, 0);
+	ft_log_file_flush(ft_safe_now(NULL));
+	ck_assert_int_eq(ft_config.log_file.flush_counter, 0);
 
 	ck_assert_int_eq(ft_log_stats.debug_count, 0);
 	ck_assert_int_eq(ft_log_stats.info_count, 0);
@@ -821,7 +829,6 @@ START_TEST(log_if_else_block_utest)
 	ck_assert_int_eq(ft_log_stats.audit_count, 6);
 }
 END_TEST
-
 
 ///
 

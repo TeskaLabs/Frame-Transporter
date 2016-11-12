@@ -11,6 +11,7 @@ struct ft_config ft_config =
 	.log_file = {
 		.filename = NULL,
 		.file = NULL,
+		.sighup_w.signum = 0,
 		.flush_counter = 0,
 		.flush_counter_max = 100,
 		.flush_last = 0.0,
