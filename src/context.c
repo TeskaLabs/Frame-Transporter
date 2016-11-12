@@ -75,6 +75,11 @@ bool ft_context_init(struct ft_context * this)
 
 void ft_context_fini(struct ft_context * this)
 {
+	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->fini != NULL))
+	{
+		ft_config.log_backend->fini();
+	}
+
 	ft_log_context(NULL);
 
 	//TODO: Destroy frame pool

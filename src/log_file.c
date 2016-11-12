@@ -33,6 +33,7 @@ static void ft_log_file_fini()
 {
 	if (ft_config.log_file.file != NULL)
 	{
+		FT_INFO("Log file is closed");
 		fclose(ft_config.log_file.file);
 		ft_config.log_file.file = NULL;
 	}
