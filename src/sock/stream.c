@@ -248,6 +248,8 @@ bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegat
 	int rc;
 	bool ok;
 
+	assert(fd > 0);
+
     int sock_type;
     socklen_t sock_type_length = sizeof(sock_type);
     rc = getsockopt(fd, SOL_SOCKET, SO_TYPE, &sock_type, &sock_type_length);
