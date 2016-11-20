@@ -161,4 +161,12 @@ static inline void ft_vec_advance_ptr(struct ft_vec * this, void * ptr)
 	ft_vec_advance(this, position_delta);
 }
 
+///
+
+static inline void ft_frame_memset(struct ft_frame * this, uint8_t byte)
+{
+	memset(this->data, byte, this->capacity);
+}
+
+
 #endif // FT_MEMPOOL_FRAME_H_
