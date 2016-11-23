@@ -93,4 +93,29 @@ bool ft_parse_bool(const char * value);
  */
 int ft_base32_encode(char * buf, size_t * buflen, const void * data, size_t size);
 
+
+/* Helper macro that declares and initialize a struct addrinfo from UNIX address (file system path)
+ * Usage:
+ *
+ * FT_ADDR_UNIX(addr, "/tmp/unix.socket", SOCK_STREAM);
+ * ft_stream_connect(&stream, &stream_delegate, context, &addr);
+ *
+ */
+
+#define FT_ADDR_UNIX(NAME, PATH, SOCKTYPE) \
+	struct sockaddr_un NAME_saddr_ = { .sun_family = AF_UNIX }; \
+	struct addrinfo NAME; \
+	{ \
+		strcpy(NAME_saddr_.sun_path, PATH); \
+		memset(&addr, 0, sizeof(struct addrinfo)); \
+		addr.ai_family = AF_UNIX; \
+		addr.ai_socktype = SOCKTYPE; \
+		addr.ai_flags = 0; \
+		addr.ai_protocol = 0; \
+		addr.ai_canonname = NULL; \
+		addr.ai_addrlen = SUN_LEN(&NAME_saddr_); \
+		addr.ai_addr = (struct sockaddr *)&NAME_saddr_; \
+		addr.ai_next = NULL; \
+	}
+
 #endif // FT_H_
