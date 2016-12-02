@@ -58,6 +58,24 @@ static inline uint8_t * ft_load_u32(uint8_t * cursor, uint32_t * value)
 	return ft_skip_u32(cursor);
 }
 
+static inline uint8_t * ft_load_f64(uint8_t * cursor, double * value)
+{
+	assert(sizeof(*value) == 8);
+
+	uint8_t bval[8];
+	bval[7] = cursor[0];
+	bval[6] = cursor[1];
+	bval[5] = cursor[2];
+	bval[4] = cursor[3];
+	bval[3] = cursor[4];
+	bval[2] = cursor[5];
+	bval[1] = cursor[6];
+	bval[0] = cursor[7];
+
+	memcpy(value, bval, 8);
+	return ft_skip_u64(cursor);
+}
+
 static inline uint8_t * ft_load_bytes(uint8_t * cursor, void * trg, size_t n)
 {
 	memcpy(trg, cursor, n);
@@ -93,6 +111,25 @@ static inline uint8_t * ft_store_u32(uint8_t * cursor, uint32_t value)
 	cursor[2] = 0xFF & (value >> 8);
 	cursor[3] = 0xFF & value;
 	return ft_skip_u32(cursor);
+}
+
+static inline uint8_t * ft_store_f64(uint8_t * cursor, double value)
+{
+	assert(sizeof(value) == 8);
+
+	uint8_t bval[8];
+	memcpy(bval, &value, sizeof(value));
+
+	cursor[0] = bval[7];
+	cursor[1] = bval[6];
+	cursor[2] = bval[5];
+	cursor[3] = bval[4];
+	cursor[4] = bval[3];
+	cursor[5] = bval[2];
+	cursor[6] = bval[1];
+	cursor[7] = bval[0];
+
+	return ft_skip_u64(cursor);
 }
 
 static inline uint8_t * ft_store_bytes(uint8_t * cursor, const void * src, size_t n)
