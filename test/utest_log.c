@@ -873,7 +873,6 @@ START_TEST(log_file_iso_8601)
 	fclose(f);
 
 	string[fsize] = '\0';
-	fclose(f);
 
 	char * c = strstr(string, "\n2016-12-03T10:04:38.123Z 12345  INFO: >>abcdefge %S %% %d {} <<\n");
 	ck_assert_ptr_ne(c, NULL);
