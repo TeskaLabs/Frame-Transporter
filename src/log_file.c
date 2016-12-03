@@ -59,7 +59,7 @@ static void ft_log_file_logrecord_process(struct ft_logrecord * le, int le_messa
 		// ISO 8601
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
 			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ%6d %s: %.*s\n",
-			1900+tmp.tm_year, tmp.tm_mon, tmp.tm_mday,
+			1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 			le->pid,
 			_ft_log_file_levelname(le->level),
