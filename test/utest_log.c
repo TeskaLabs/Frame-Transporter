@@ -832,6 +832,58 @@ END_TEST
 
 ///
 
+START_TEST(log_file_iso_8601)
+{
+	bool ok;
+
+	unlink("./test.log");
+
+	ok = ft_log_file_set("./test.log");
+	ck_assert_int_eq(ok, true);
+
+	struct ft_logrecord le = {
+		.timestamp = 1480759478.123,
+		.pid = 12345,
+		.level = 'I',
+		.message = "",
+	};
+	int le_message_length = snprintf(le.message, sizeof(le.message), "%s", ">>abcdefge %S %% %d {} <<");
+
+	ft_logrecord_process(&le, le_message_length);
+
+	// Close the log file
+	ok = ft_log_file_set(NULL);
+	ck_assert_int_eq(ok, true);
+
+	FILE * f = fopen("./test.log", "r");
+	ck_assert_ptr_ne(f, NULL);
+
+	fseek(f, 0, SEEK_END);
+	long fsize = ftell(f);
+	ck_assert_int_gt(fsize, 150);
+	ck_assert_int_lt(fsize, 200);
+
+	fseek(f, 0, SEEK_SET);  //same as rewind(f);
+
+	char * string = malloc(fsize + 1);
+	string[0] = '\0';
+	ck_assert_ptr_ne(string, NULL);
+
+	fread(string, fsize, 1, f);
+	fclose(f);
+
+	string[fsize] = '\0';
+	fclose(f);
+
+	char * c = strstr(string, "\n2016-12-03T10:04:38.123Z 12345  INFO: >>abcdefge %S %% %d {} <<\n");
+	ck_assert_ptr_ne(c, NULL);
+
+	unlink("./test.log");
+}
+END_TEST
+
+///
+
 Suite * log_tsuite(void)
 {
 	TCase *tc;
@@ -871,6 +923,10 @@ Suite * log_tsuite(void)
 	tc = tcase_create("log-misc");
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, log_if_else_block_utest);
+
+	tc = tcase_create("log-file-ISO-8601");
+	suite_add_tcase(s, tc);
+	tcase_add_test(tc, log_file_iso_8601);
 
 	return s;
 }
