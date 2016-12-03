@@ -16,7 +16,7 @@ struct ft_config ft_config =
 		.flush_counter_max = 100,
 		.flush_last = 0.0,
 		.flush_interval = 5.0, //Seconds
-		.datetime_style = 'U',
+		.datetime_style = 'I', //ISO 8601
 	},
 
 	.lag_detector_sensitivity = 1.0,
