@@ -2,6 +2,8 @@
 
 ///
 
+//TODO: Remove 'internal' or old log format ("%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n") below
+
 static const char * _ft_log_file_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 static inline const char * _ft_log_file_levelname(char level)
@@ -139,6 +141,7 @@ bool ft_log_file_reopen()
 	{
 		FT_INFO("Log file is closed");
 		fclose(ft_config.log_file.file);
+		ft_config.log_file.file = NULL;
 	}
 
 	ft_config.log_file.file = f;
