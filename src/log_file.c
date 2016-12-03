@@ -31,7 +31,24 @@ static inline const char * _ft_log_file_levelname(char level)
 	return lln_UNKNOWN;
 }
 
-static void ft_log_file_fini()
+static void ft_log_file_backend_fini(void);
+
+///
+
+// ft_log_file is a kind of special backend because it works even without init INTENTIONALLY!!
+bool ft_log_file_backend_init(const char * fname)
+{
+	ft_log_file_backend_fini(); // Just for sure
+
+	ft_config.log_file.filename = (fname != NULL) ? strdup(fname) : NULL;
+	bool ok = ft_log_file_reopen();
+	if (!ok) return false;
+
+	return true;
+}
+
+
+static void ft_log_file_backend_fini()
 {
 	if (ft_config.log_file.file != NULL)
 	{
@@ -39,10 +56,16 @@ static void ft_log_file_fini()
 		fclose(ft_config.log_file.file);
 		ft_config.log_file.file = NULL;
 	}
+
+	if (ft_config.log_file.filename != NULL)
+	{
+		free((void *)ft_config.log_file.filename);
+		ft_config.log_file.filename = NULL;
+	}
 }
 
 
-static void ft_log_file_logrecord_process(struct ft_logrecord * le, int le_message_length)
+static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
@@ -82,15 +105,15 @@ static void ft_log_file_logrecord_process(struct ft_logrecord * le, int le_messa
 	ft_config.log_file.flush_counter += 1;
 }
 
-static void ft_log_file_on_heartbeat(struct ft_context * context, ev_tstamp now)
+static void ft_log_file_backend_on_heartbeat(struct ft_context * context, ev_tstamp now)
 {
 	ft_log_file_flush(now);
 }
 
 struct ft_log_backend ft_log_file_backend = {
-	.fini = ft_log_file_fini,
-	.heartbeat = ft_log_file_on_heartbeat,
-	.process = ft_log_file_logrecord_process,
+	.fini = ft_log_file_backend_fini,
+	.heartbeat = ft_log_file_backend_on_heartbeat,
+	.process = ft_log_file_backend_logrecord_process,
 };
 
 
@@ -153,20 +176,6 @@ bool ft_log_file_reopen()
 static void ft_log_file_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
 {
 	ft_log_file_reopen();
-}
-
-
-bool ft_log_file_set(const char * fname)
-{
-	if (ft_config.log_file.filename != NULL)
-	{
-		ft_log_file_fini();
-		free((void *)ft_config.log_file.filename);
-		ft_config.log_file.filename = NULL;
-	}
-
-	ft_config.log_file.filename = (fname != NULL) ? strdup(fname) : NULL;
-	return ft_log_file_reopen();
 }
 
 

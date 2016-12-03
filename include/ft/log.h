@@ -183,14 +183,17 @@ void ft_log_finalise(void);
 
 void ft_log_backend_switch(struct ft_log_backend * backend);
 
-extern struct ft_log_backend ft_log_file_backend;
+///
 
+extern struct ft_log_backend ft_log_file_backend;
 /*
  * Specify location of the log file.
  * Implicitly manages ft_log_reopen().
  * Can be called also with fname set to NULL to remove filename and switch back to stderr 
  */
-bool ft_log_file_set(const char * fname);
+bool ft_log_file_backend_init(const char * fname);
+
+///
 
 // Install log rotate handler on SIGHUP
 void ft_log_handle_sighup(struct ft_context * context);

@@ -326,7 +326,7 @@ START_TEST(log_reopen_wfile_utest)
 	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
 	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
-	bool ok = ft_log_file_set("./log.txt");
+	bool ok = ft_log_file_backend_init("./log.txt");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(ft_config.log_file.file, NULL);
 	ck_assert_ptr_ne(ft_config.log_file.filename, NULL);
@@ -336,7 +336,9 @@ START_TEST(log_reopen_wfile_utest)
 	ok = ft_log_file_reopen();
 	ck_assert_int_eq(ok, true);
 
-	ok = ft_log_file_set(NULL);
+	ft_log_backend_switch(NULL);
+
+	ok = ft_log_file_backend_init(NULL); // reopen on stderr
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
 	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
@@ -344,6 +346,12 @@ START_TEST(log_reopen_wfile_utest)
 	int rc = unlink("./log.txt");
 	ck_assert_int_eq(rc, 0);
 
+	ft_log_backend_switch(&ft_log_file_backend);
+
+	ft_log_stats.info_count = 0;
+	FT_INFO("Testing log to stderr");
+
+	ck_assert_int_eq(ft_log_stats.info_count, 1);
 	ck_assert_int_eq(ft_log_stats.warn_count, 0);
 	ck_assert_int_eq(ft_log_stats.error_count, 0);
 	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
@@ -356,7 +364,7 @@ START_TEST(log_reopen_sighup_utest)
 	ck_assert_ptr_eq(ft_config.log_file.file, NULL);
 	ck_assert_ptr_eq(ft_config.log_file.filename, NULL);
 
-	bool ok = ft_log_file_set("./log.txt");
+	bool ok = ft_log_file_backend_init("./log.txt");
 	ck_assert_int_eq(ok, true);
 	ck_assert_ptr_ne(ft_config.log_file.file, NULL);
 	ck_assert_str_eq(ft_config.log_file.filename, "./log.txt");
@@ -838,7 +846,7 @@ START_TEST(log_file_iso_8601)
 
 	unlink("./test.log");
 
-	ok = ft_log_file_set("./test.log");
+	ok = ft_log_file_backend_init("./test.log");
 	ck_assert_int_eq(ok, true);
 
 	struct ft_logrecord le = {
@@ -852,8 +860,7 @@ START_TEST(log_file_iso_8601)
 	ft_logrecord_process(&le, le_message_length);
 
 	// Close the log file
-	ok = ft_log_file_set(NULL);
-	ck_assert_int_eq(ok, true);
+	ft_log_backend_switch(NULL);
 
 	FILE * f = fopen("./test.log", "r");
 	ck_assert_ptr_ne(f, NULL);

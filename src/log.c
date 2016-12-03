@@ -12,13 +12,13 @@ struct ft_log_stats ft_log_stats = {
 	.audit_count = 0,
 };
 
-static struct ft_context * _ft_log_context = NULL;
+static struct ft_context * ft_log_context_ = NULL;
 
 ///
 
 static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const char * format, va_list args)
 {
-	le->timestamp = ft_safe_now(_ft_log_context);
+	le->timestamp = ft_safe_now(ft_log_context_);
 	le->pid = getpid();
 	le->level = level;
 
@@ -121,13 +121,13 @@ void ft_log_context(struct ft_context * context)
 {
 	if (context == NULL)
 	{
-		assert(_ft_log_context != NULL);
-		_ft_log_context = NULL;
+		assert(ft_log_context_ != NULL);
+		ft_log_context_ = NULL;
 		return;
 	}
 
-	assert(_ft_log_context == NULL);
-	_ft_log_context = context;
+	assert(ft_log_context_ == NULL);
+	ft_log_context_ = context;
 }
 
 
@@ -135,6 +135,11 @@ void ft_log_backend_switch(struct ft_log_backend * backend)
 {
 	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->fini != NULL))
 		ft_config.log_backend->fini();
+
+	if (backend == NULL)
+	{
+		backend = &ft_log_file_backend;
+	}
 
 	ft_config.log_backend = backend;
 }
