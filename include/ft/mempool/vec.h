@@ -46,6 +46,7 @@ struct ft_vec
 
 static inline void ft_vec_advance(struct ft_vec * this, size_t position_delta)
 {
+	assert(this != NULL);
 	assert((this->position + position_delta) <= this->limit);
 	assert((this->position + position_delta) <= this->capacity);
 
@@ -54,6 +55,7 @@ static inline void ft_vec_advance(struct ft_vec * this, size_t position_delta)
 
 static inline void ft_vec_pos(struct ft_vec * this, size_t position)
 {
+	assert(this != NULL);
 	assert(this->position <= this->limit);
 	assert(this->position <= this->capacity);
 	this->position = position;
@@ -61,6 +63,7 @@ static inline void ft_vec_pos(struct ft_vec * this, size_t position)
 
 static inline void ft_vec_flip(struct ft_vec * this)
 {
+	assert(this != NULL);
 	this->limit = this->position;
 	this->position = 0;	
 }
