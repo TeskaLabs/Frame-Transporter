@@ -12,6 +12,7 @@
 /examples/sreply/sreply
 /examples/http_server/httpserver
 /examples/socks/socks
+/examples/logger/logger
 
 /examples/protobuf/amessage.pb-c.c
 /examples/protobuf/amessage.pb-c.h
