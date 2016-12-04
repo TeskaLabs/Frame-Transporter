@@ -41,7 +41,9 @@ pid_t popen2(const char *command, int *infp, int *outfp)
 	pid = fork();
 
 	if (pid < 0)
+	{
 		return pid;
+	}
 	else if (pid == 0)
 	{
 		close(p_stdin[WRITE]);
@@ -54,6 +56,9 @@ pid_t popen2(const char *command, int *infp, int *outfp)
 		exit(1);
 	}
 
+	close(p_stdin[READ]);
+	close(p_stdout[WRITE]);
+
 	if (infp == NULL)
 		close(p_stdin[WRITE]);
 	else
@@ -63,6 +68,54 @@ pid_t popen2(const char *command, int *infp, int *outfp)
 		close(p_stdout[READ]);
 	else
 		*outfp = p_stdout[READ];
+
+	return pid;
+}
+
+pid_t popen3(int *infp, int *outfp, int *errfp, const char *path, char * const argv[])
+{
+	int p_stdin[2], p_stdout[2], p_stderr[2];
+	pid_t pid;
+
+	if (pipe(p_stdin) != 0 || pipe(p_stdout) != 0 || pipe(p_stderr) != 0)
+		return -1;
+
+	pid = fork();
+
+	if (pid < 0)
+		return pid;
+	else if (pid == 0)
+	{
+		close(p_stdin[WRITE]);
+		dup2(p_stdin[READ], READ);
+		close(p_stdout[READ]);
+		dup2(p_stdout[WRITE], WRITE);
+		close(p_stderr[READ]);
+		dup2(p_stderr[WRITE], 2);
+
+		execvp(path,argv);
+		perror("execl");
+		exit(1);
+	}
+
+	close(p_stdin[READ]);
+	close(p_stdout[WRITE]);
+	close(p_stderr[WRITE]);
+
+	if (infp == NULL)
+		close(p_stdin[WRITE]);
+	else
+		*infp = p_stdin[WRITE];
+
+	if (outfp == NULL)
+		close(p_stdout[READ]);
+	else
+		*outfp = p_stdout[READ];
+
+	if (errfp == NULL)
+		close(p_stderr[READ]);
+	else
+		*errfp = p_stderr[READ];
 
 	return pid;
 }

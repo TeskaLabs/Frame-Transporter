@@ -11,6 +11,7 @@
 
 bool resolve(struct addrinfo **res, const char * host, const char * port, int family, int socktype, int protocol);
 pid_t popen2(const char *command, int *infp, int *outfp);
+pid_t popen3(int *infp, int *outfp, int *errfp, const char *path, char * const argv[]);
 
 void generate_random_file(const char * fname, size_t size, size_t nitems);
 void digest_file(EVP_MD_CTX * mdctx, const char * fname);
