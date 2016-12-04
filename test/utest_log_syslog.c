@@ -51,17 +51,21 @@ START_TEST(ft_log_syslog_utest)
 	ck_assert_int_eq(ok, true);
 
 	ft_log_backend_switch(&ft_log_syslog_backend);
+	mark_point();
 
-	// Overfill the frame  times
+	// Overfill the frame times
 	for (int i=0; i<170; i +=1)
 	{
 		FT_WARN("Warning Syslog %d", i);
 		FT_AUDIT("Audit to Syslog %d", i);
 	}
+	mark_point();
 
 	ft_context_run(&context);
+	mark_point();
 
 	ft_log_backend_switch(NULL);
+	mark_point();
 
 	ft_context_fini(&context);
 
