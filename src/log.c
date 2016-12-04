@@ -133,8 +133,7 @@ void ft_log_context(struct ft_context * context)
 
 void ft_log_backend_switch(struct ft_log_backend * backend)
 {
-	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->fini != NULL))
-		ft_config.log_backend->fini();
+	struct ft_log_backend * old_backend = ft_config.log_backend;
 
 	if (backend == NULL)
 	{
@@ -142,6 +141,9 @@ void ft_log_backend_switch(struct ft_log_backend * backend)
 	}
 
 	ft_config.log_backend = backend;
+
+	if ((old_backend != NULL) && (old_backend->fini != NULL))
+		old_backend->fini();
 }
 
 
