@@ -5,6 +5,7 @@
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents);
 static void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents);
+static void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents);
 
 struct _ft_context_callback_entry
 {
@@ -45,6 +46,12 @@ bool ft_context_init(struct ft_context * this)
 	ev_unref(this->ev_loop);
 	this->heartbeat_w.data = this;
 	this->heartbeat_at = 0.0;
+
+	// Install proapre handler that allows to prepare for a event sleep
+	ev_prepare_init(&this->prepare_w, ft_context_on_prepare);
+	ev_prepare_start(this->ev_loop, &this->prepare_w);
+	ev_unref(this->ev_loop);
+	this->prepare_w.data = this;
 
 	this->started_at = ev_now(this->ev_loop);
 	this->shutdown_at = NAN;
@@ -235,6 +242,15 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 		}
 	}
 	this->heartbeat_at = now;
+}
+
+void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents)
+{
+	struct ft_context * this = w->data;
+	assert(this != NULL);
+
+	ev_tstamp now = ev_now(loop);
+
 }
 
 

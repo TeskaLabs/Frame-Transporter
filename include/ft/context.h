@@ -15,6 +15,8 @@ struct ft_context
 	ev_tstamp shutdown_at;
 	ev_timer shutdown_w;
 
+	ev_prepare prepare_w;
+
 	unsigned int shutdown_counter;
 
 	struct
