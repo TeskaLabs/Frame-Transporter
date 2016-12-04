@@ -217,7 +217,6 @@ START_TEST(sock_dgram_2_utest)
 	// ft_config.log_verbose = true;
 	// ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP;
 
-
 	generate_random_file("./sock_dgram_2_utest.bin", 4096, 1);
 
 	EVP_MD_CTX * mdctx = EVP_MD_CTX_create();
@@ -246,7 +245,7 @@ START_TEST(sock_dgram_2_utest)
 
 	struct sockaddr_un addr;
 	addr.sun_family = AF_LOCAL;
-	strncpy(addr.sun_path, "./sock_dgram_2_utest.sock", sizeof (addr.sun_path));
+	strncpy(addr.sun_path, "/tmp/libft_sock_dgram_2_utest.sock", sizeof (addr.sun_path));
 	addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 	unlink(addr.sun_path);
 
@@ -280,7 +279,7 @@ START_TEST(sock_dgram_2_utest)
 
 	struct sockaddr_un addr2;
 	addr2.sun_family = AF_LOCAL;
-	strncpy(addr2.sun_path, "./sock_dgram_2_2_utest.sock", sizeof (addr.sun_path));
+	strncpy(addr2.sun_path, "/tmp/libft_sock_dgram_2_2_utest.sock", sizeof (addr.sun_path));
 	addr2.sun_path[sizeof(addr2.sun_path) - 1] = '\0';
 	unlink(addr2.sun_path);
 
