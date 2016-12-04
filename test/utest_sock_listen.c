@@ -113,17 +113,19 @@ START_TEST(sock_listen_list_utest)
 	ok = ft_context_init(&context);
 	ck_assert_int_eq(ok, true);
 
-	ft_listener_list_init(&listeners);
+	ok = ft_listener_list_init(&listeners);
+	ck_assert_int_eq(ok, true);
 
 	const char * listen_sockets_charv[] = {
-		"./sock_listen_list_utest.sock",
 		"/tmp/sock_listen_list_utest.sock",
 		"127.0.0.1:12345",
 		"localhost:12346",
 		NULL
 	};
 
-	ft_listener_list_extend_autov(&listeners, &listener_delegate, &context, SOCK_STREAM, listen_sockets_charv);
+	rc = ft_listener_list_extend_autov(&listeners, &listener_delegate, &context, SOCK_STREAM, listen_sockets_charv);
+	ck_assert_int_gt(rc, 2); // Can be 3 or 4
+	ck_assert_int_lt(rc, 5);
 
 	ok = ft_listener_list_cntl(&listeners, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
