@@ -241,6 +241,8 @@ bool ft_frame_fread(struct ft_frame * this, FILE * f)
 
 bool ft_frame_fwrite(struct ft_frame * this, FILE * f)
 {
+	assert(this != NULL);
+
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	for (int i=-1; i>(-1-this->vec_limit); i -= 1)
 	{
@@ -252,4 +254,23 @@ bool ft_frame_fwrite(struct ft_frame * this, FILE * f)
 		}
 	}
 	return true;
+}
+
+bool ft_frame_save(struct ft_frame * this, const char * filename)
+{
+	assert(this != NULL);
+	bool ok;
+
+	FILE * f = fopen(filename, "wb");
+	if (f == NULL)
+	{
+		FT_WARN_ERRNO(errno, "Error when opening file '%s'", filename);
+		return false;
+	}
+
+	ok = ft_frame_fwrite(this, f);
+
+	fclose(f);
+
+	return ok;
 }

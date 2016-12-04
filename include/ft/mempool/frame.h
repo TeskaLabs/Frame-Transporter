@@ -44,6 +44,8 @@ void ft_frame_format_simple(struct ft_frame *);
 bool ft_frame_fwrite(struct ft_frame *, FILE * f);
 bool ft_frame_fread(struct ft_frame * , FILE * f);
 
+bool ft_frame_save(struct ft_frame *, const char * filename);
+
 void ft_frame_debug(struct ft_frame *);
 
 static inline void ft_frame_flip(struct ft_frame * this)
