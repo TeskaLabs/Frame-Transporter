@@ -135,15 +135,25 @@ void ft_log_backend_switch(struct ft_log_backend * backend)
 {
 	struct ft_log_backend * old_backend = ft_config.log_backend;
 
+	fprintf(stderr, "ft_log_backend_switch 1 !!!!\n");
+
 	if (backend == NULL)
 	{
+		fprintf(stderr, "ft_log_backend_switch 2 \n");
 		backend = &ft_log_file_backend;
+		fprintf(stderr, "ft_log_backend_switch 3 \n");
 	}
+
+	fprintf(stderr, "ft_log_backend_switch 4 \n");
 
 	ft_config.log_backend = backend;
 
+	fprintf(stderr, "ft_log_backend_switch 5 \n");
+
 	if ((old_backend != NULL) && (old_backend->fini != NULL))
 		old_backend->fini();
+
+	fprintf(stderr, "ft_log_backend_switch 6 \n");
 }
 
 

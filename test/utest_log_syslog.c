@@ -38,10 +38,9 @@ START_TEST(ft_log_syslog_utest)
 			socat_ready = true;
 			break;
 		}
-		usleep(20000);
+		usleep(2000);
 	}
 	ck_assert_int_eq(socat_ready, true);
-	
 
 	struct ft_context context;
 	ok = ft_context_init(&context);
