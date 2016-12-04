@@ -674,7 +674,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		if (rc < 0) // Handle error situation
 		{
 			int lerrno = errno;
-			if (lerrno == EAGAIN)
+			if ((lerrno == EAGAIN) || (lerrno == ENOBUFS))
 			{
 				// OS buffer is full, wait for next write event
 				this->flags.write_ready = false;
