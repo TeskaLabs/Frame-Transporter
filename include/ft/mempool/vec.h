@@ -76,4 +76,12 @@ static inline size_t ft_vec_len(struct ft_vec * this)
 	return this->limit - this->position;
 }
 
+// Adjust position of capacity and limit to on the position
+static inline void ft_vec_cutoff(struct ft_vec * this)
+{
+	assert(this != NULL);
+	this->limit = this->position;
+	this->capacity = this->position;
+}
+
 #endif // FT_MEMPOOL_VEC_H_
