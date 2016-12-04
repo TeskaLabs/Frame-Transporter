@@ -8,6 +8,7 @@ OBJS=\
 	config.o \
 	log.o \
 	log_file.o \
+	log_syslog.o \
 	daemon.o \
 	sock/listener.o \
 	sock/stream.o \

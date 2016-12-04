@@ -195,6 +195,12 @@ bool ft_log_file_backend_init(const char * fname);
 
 ///
 
+extern struct ft_log_backend ft_log_syslog_backend;
+
+bool ft_log_syslog_backend_init(struct ft_context * context);
+
+///
+
 // Install log rotate handler on SIGHUP
 void ft_log_handle_sighup(struct ft_context * context);
 

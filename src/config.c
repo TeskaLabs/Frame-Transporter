@@ -19,6 +19,17 @@ struct ft_config ft_config =
 		.datetime_style = 'I', //ISO 8601
 	},
 
+	.log_syslog = {
+#ifdef __APPLE__
+		.address = "/var/run/syslog",
+#else
+		.address = "/dev/log",
+#endif
+		.facility = 16,
+		.mode = 'B',
+		.hostname = "-",
+	},
+
 	.lag_detector_sensitivity = 1.0,
 
 	.pid_file = NULL,

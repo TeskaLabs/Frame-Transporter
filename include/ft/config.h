@@ -22,6 +22,14 @@ struct ft_config
 		char datetime_style; // 'U' = UTC, 'L' = Local time, 'I' = ISO 8601
 	} log_file;
 
+	struct
+	{
+		const char * address;
+		int facility;
+		char mode; // Old BSD-Style (RFC3164) '3', best-effort 'B' or RFC5424 '5'
+		char hostname[1024];
+	} log_syslog;
+
 	double lag_detector_sensitivity;
 
 	char * pid_file;
