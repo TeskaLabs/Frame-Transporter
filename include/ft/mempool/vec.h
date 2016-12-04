@@ -28,19 +28,19 @@ struct ft_vec
 
 	// 
 	// The offset is never negative and is inside a frame
-	size_t offset;
+	uint16_t offset;
 
 	// The position is the index of the next byte to be read or written.
 	// The position is never negative and is never greater than its limit.
-	size_t position;
+	uint16_t position;
 
 	// The limit is the index of the first byte that should not be read or written.
 	// The limit is never negative and is never greater than its capacity.
-	size_t limit;
+	uint16_t limit;
 
 	// The capacity is the number of bytes it contains.
 	// The capacity is never negative and never changes.
-	size_t capacity;
+	uint16_t capacity;
 };
 
 

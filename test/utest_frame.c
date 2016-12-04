@@ -249,18 +249,18 @@ START_TEST(ft_frame_format_simple_utest)
 	ck_assert_int_eq(x, 0);
 
 	x = ft_frame_len(&frame);
-	ck_assert_int_eq(x, 4056);
+	ck_assert_int_eq(x, 4080);
 
 	vec = ft_frame_get_vec(&frame);
 	ck_assert_ptr_ne(vec, NULL);
 
 	x = ft_vec_len(vec);
-	ck_assert_int_eq(x, 4056);
+	ck_assert_int_eq(x, 4080);
 
 	ft_vec_pos(vec, 10);
 
 	x = ft_vec_len(vec);
-	ck_assert_int_eq(x, 4046);
+	ck_assert_int_eq(x, 4070);
 
 	x = ft_frame_pos(&frame);
 	ck_assert_int_eq(x, 10);
@@ -271,7 +271,7 @@ START_TEST(ft_frame_format_simple_utest)
 	ck_assert_int_eq(x, 43);
 
 	x = ft_vec_len(vec);
-	ck_assert_int_eq(x, 4013);
+	ck_assert_int_eq(x, 4037);
 
 	ft_frame_flip(&frame);
 
