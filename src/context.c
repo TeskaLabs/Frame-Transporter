@@ -215,10 +215,10 @@ bool ft_context_at_heartbeat(struct ft_context * this, ft_context_callback callb
 
 void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents)
 {
-	ev_tstamp now = ev_now(loop);
-
 	struct ft_context * this = w->data;
 	assert(this != NULL);
+
+	ev_tstamp now = ev_now(loop);
 
 	FT_LIST_FOR(&this->on_heartbeat_list, node)
 	{
