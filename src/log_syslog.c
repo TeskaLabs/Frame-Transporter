@@ -108,7 +108,7 @@ retry:
 		case 'E': pri |= 3; level = "ERROR"; break;
 		case 'W': pri |= 4; level = "WARN"; break;
 		case 'A': pri |= 5; level = "AUDIT"; break;
-		case 'I': pri |= 6; level = "INFO"; break;
+		case 'I': pri |= 5; level = "INFO"; break;
 		case 'D': pri |= 7; level = "DEBUG"; break;
 		case 'T': pri |= 7; level = "TRACE"; break;
 		default:  pri |= 7; level = "?"; break;
@@ -121,11 +121,10 @@ retry:
 
 	// Best-effort string, here is an example:
 	// <133>Dec 03 06:30:00 myhost seacat-gw 12345 DEBUG123: [ft@1 t=2016-12-03T06:30:00.123Z] A free-form message that provides information about the event
-	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s %s[%d]: [t=%04d-%02d-%02dT%02d:%02d:%02d.%03dZ l=%s] %s\n",
+	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [t=%04d-%02d-%02dT%02d:%02d:%02d.%03dZ l=%s] %s\n",
 		pri,
 		ft_log_months[tmp.tm_mon], tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
-		ft_config.log_syslog.hostname,
 		le->appname,
 		le->pid,
 		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
