@@ -2,6 +2,10 @@
 
 ////
 
+#define SYSLOG_SOCK "/tmp/libft_test_syslog.sock"
+
+////
+
 int strstrcount(const char * string, const char * substring)
 {
 	int count = -1;
@@ -18,23 +22,23 @@ START_TEST(ft_log_syslog_utest)
 	bool ok;
 	int rc;
 
-	unlink("./syslog.sock");
-	ft_config.log_syslog.address = strdup("./syslog.sock");
+	unlink(SYSLOG_SOCK);
+	ft_config.log_syslog.address = strdup(SYSLOG_SOCK);
 
 	int infp, outfp, errfp;
-	char * cmd[] = {"socat", "-u", "-d", "-v", "unix-recv:./syslog.sock", "open:/dev/null", NULL};
+	char * cmd[] = {"socat", "-u", "-d", "-v", "unix-recv:" SYSLOG_SOCK, "open:/dev/null", NULL};
 	pid_t socat_pid = popen3(&infp, &outfp, &errfp, cmd[0], cmd);
 	ck_assert_int_gt(socat_pid, 0);
 
 	bool socat_ready = false;
 	for (int i=0; i<100; i+=1)
 	{
-		if (access("./syslog.sock", F_OK ) != -1)
+		if (access(SYSLOG_SOCK, F_OK ) != -1)
 		{
 			socat_ready = true;
 			break;
 		}
-		usleep(200);
+		usleep(20000);
 	}
 	ck_assert_int_eq(socat_ready, true);
 	
