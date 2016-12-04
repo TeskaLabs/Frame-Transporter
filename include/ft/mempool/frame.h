@@ -6,6 +6,7 @@ enum ft_frame_type
 	FT_FRAME_TYPE_FREE           = 0xFFFFFFFF,
 	FT_FRAME_TYPE_STREAM_END     = 0xFFFFFFFE,
     FT_FRAME_TYPE_RAW_DATA       = 0xFFFFFFFD,
+    FT_FRAME_TYPE_LOG            = 0xFFFFFFFC,
 };
 
 struct ft_frame
