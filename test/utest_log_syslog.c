@@ -4,7 +4,7 @@
 
 int strstrcount(const char * string, const char * substring)
 {
-	int count = 0;
+	int count = -1;
 	for(const char *tmp = string; tmp != NULL; tmp = strstr(tmp, substring))
 	{
 		count++;
@@ -48,11 +48,11 @@ START_TEST(ft_log_syslog_utest)
 
 	ft_log_backend_switch(&ft_log_syslog_backend);
 
-	// Overfill the frame
-	for (int i=0; i<85; i +=1)
+	// Overfill the frame  times
+	for (int i=0; i<170; i +=1)
 	{
-		FT_WARN("Warning Syslog 1!");
-		FT_AUDIT("Audit to Syslog 2!");
+		FT_WARN("Warning Syslog %d", i);
+		FT_AUDIT("Audit to Syslog %d", i);
 	}
 
 	ft_context_run(&context);
@@ -61,8 +61,8 @@ START_TEST(ft_log_syslog_utest)
 
 	ft_context_fini(&context);
 
-	ck_assert_int_eq(ft_log_stats.warn_count, 85);
-	ck_assert_int_eq(ft_log_stats.error_count, 1);
+	ck_assert_int_eq(ft_log_stats.warn_count, 170);
+	ck_assert_int_eq(ft_log_stats.error_count, 2);
 	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 
 	rc = close(infp);
@@ -74,7 +74,7 @@ START_TEST(ft_log_syslog_utest)
 	rc = kill(socat_pid, SIGINT);
 	ck_assert_int_eq(rc,0);
 
-	int bufsize = 2*1024*1024;
+	int bufsize = 20*1024*1024;
 	char * buffer = malloc(bufsize);
 	char * t = buffer;
 	int readsize = 0;
@@ -93,9 +93,9 @@ START_TEST(ft_log_syslog_utest)
 
 	buffer[readsize] = '\0';
 
-	ck_assert_int_eq(strstrcount(buffer, "Warning Syslog 1!"), 86);
-	ck_assert_int_eq(strstrcount(buffer, "Audit to Syslog 2!"), 85);
-	ck_assert_int_eq(strstrcount(buffer, " length="), 171);
+	ck_assert_int_eq(strstrcount(buffer, "Warning Syslog"), 170);
+	ck_assert_int_eq(strstrcount(buffer, "Audit to Syslog"), 168);
+	ck_assert_int_eq(strstrcount(buffer, " length="), 340);
 
 	//printf("%s\n", buffer);
 
