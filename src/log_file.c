@@ -55,20 +55,20 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	{
 		// ISO 8601
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ%6d %s: %.*s\n",
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s[%5d] %s: %.*s\n",
 			1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-			le->pid,
+			le->appname, le->pid,
 			ft_log_levelname(le->level),
 			le_message_length, le->message
 		);
 	} else {
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-			"%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n",
+			"%s %02d %04d %02d:%02d:%02d.%03d %s %s[%5d] %s: %.*s\n",
 			ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 			tmp.tm_zone,
-			le->pid,
+			le->appname, le->pid,
 			ft_log_levelname(le->level),
 			le_message_length, le->message
 		);

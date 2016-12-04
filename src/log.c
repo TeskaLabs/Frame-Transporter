@@ -21,6 +21,15 @@ static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const
 	le->timestamp = ft_safe_now(ft_log_context_);
 	le->pid = getpid();
 	le->level = level;
+	le->appname = ft_config.appname;
+	if (le->appname == NULL)
+	{
+#ifdef __APPLE__
+		le->appname = getprogname();
+#else
+		le->appname = program_invocation_name;
+#endif
+	}
 
 	if (format != NULL) return vsnprintf(le->message, sizeof(le->message), format, args);
 
@@ -106,6 +115,12 @@ static void _ft_log_libev_on_syserr(const char * msg)
 
 void ft_log_initialise_()
 {
+#ifdef __APPLE__
+	ft_config.appname = getprogname();
+#else
+	ft_config.appname = program_invocation_name;
+#endif
+
 	ev_set_syserr_cb(_ft_log_libev_on_syserr);
 }
 
@@ -135,25 +150,15 @@ void ft_log_backend_switch(struct ft_log_backend * backend)
 {
 	struct ft_log_backend * old_backend = ft_config.log_backend;
 
-	fprintf(stderr, "ft_log_backend_switch 1 !!!!\n");
-
 	if (backend == NULL)
 	{
-		fprintf(stderr, "ft_log_backend_switch 2 \n");
 		backend = &ft_log_file_backend;
-		fprintf(stderr, "ft_log_backend_switch 3 \n");
 	}
-
-	fprintf(stderr, "ft_log_backend_switch 4 \n");
 
 	ft_config.log_backend = backend;
 
-	fprintf(stderr, "ft_log_backend_switch 5 \n");
-
 	if ((old_backend != NULL) && (old_backend->fini != NULL))
 		old_backend->fini();
-
-	fprintf(stderr, "ft_log_backend_switch 6 \n");
 }
 
 
@@ -178,10 +183,10 @@ void ft_logrecord_fprint(struct ft_logrecord * le, int le_message_length, FILE *
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
 
 	fprintf(f, 
-		"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ%6d %s: %.*s\n",
+		"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s[%5d]  %s: %.*s\n",
 		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-		le->pid,
+		le->appname, le->pid,
 		ft_log_levelname(le->level),
 		le_message_length, le->message
 	);

@@ -126,7 +126,7 @@ retry:
 		ft_log_months[tmp.tm_mon], tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
 		ft_config.log_syslog.hostname,
-		"seacat-gw",
+		le->appname,
 		le->pid,
 		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,

@@ -5,6 +5,8 @@ struct ft_config
 {
 	bool initialized;
 
+	const char * appname;
+
 	bool log_verbose;
 	struct ft_log_backend * log_backend;
 	unsigned int log_trace_mask;

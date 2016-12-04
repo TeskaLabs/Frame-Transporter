@@ -163,6 +163,7 @@ struct ft_logrecord
 	ev_tstamp timestamp;
 	pid_t pid;
 	char level;
+	const char * appname; // https://tools.ietf.org/html/rfc5424#section-6.2.5
 	char message[2048]; // Length is somehow defined in https://tools.ietf.org/html/rfc5424#section-6.1
 };
 

@@ -853,6 +853,7 @@ START_TEST(log_file_iso_8601)
 		.timestamp = 1480759478.123,
 		.pid = 12345,
 		.level = 'I',
+		.appname = "appname",
 		.message = "",
 	};
 	int le_message_length = snprintf(le.message, sizeof(le.message), "%s", ">>abcdefge %S %% %d {} <<");
@@ -868,7 +869,7 @@ START_TEST(log_file_iso_8601)
 	fseek(f, 0, SEEK_END);
 	long fsize = ftell(f);
 	ck_assert_int_gt(fsize, 150);
-	ck_assert_int_lt(fsize, 200);
+	ck_assert_int_lt(fsize, 250);
 
 	fseek(f, 0, SEEK_SET);  //same as rewind(f);
 
@@ -881,7 +882,7 @@ START_TEST(log_file_iso_8601)
 
 	string[fsize] = '\0';
 
-	char * c = strstr(string, "\n2016-12-03T10:04:38.123Z 12345  INFO: >>abcdefge %S %% %d {} <<\n");
+	char * c = strstr(string, "\n2016-12-03T10:04:38.123Z appname[12345]  INFO: >>abcdefge %S %% %d {} <<\n");
 	ck_assert_ptr_ne(c, NULL);
 
 	unlink("./test.log");
