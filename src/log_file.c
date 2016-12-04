@@ -105,15 +105,15 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	ft_config.log_file.flush_counter += 1;
 }
 
-static void ft_log_file_backend_on_heartbeat(struct ft_context * context, ev_tstamp now)
+static void ft_log_file_backend_on_prepare(struct ft_context * context, ev_tstamp now)
 {
 	ft_log_file_flush(now);
 }
 
 struct ft_log_backend ft_log_file_backend = {
 	.fini = ft_log_file_backend_fini,
-	.heartbeat = ft_log_file_backend_on_heartbeat,
 	.process = ft_log_file_backend_logrecord_process,
+	.on_prepare = ft_log_file_backend_on_prepare,
 };
 
 
