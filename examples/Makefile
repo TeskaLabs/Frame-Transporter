@@ -5,7 +5,8 @@ SUBDIRS=\
 	sfetch \
 	sreply \
 	http_server \
-	socks
+	socks \
+	logger
 
 all: subdirs
 

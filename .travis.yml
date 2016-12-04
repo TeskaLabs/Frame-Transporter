@@ -32,6 +32,7 @@ script:
     - (cd examples/socks/ && ./test_socks_03.sh)
 # TravisCI doesn't like this example    - (cd examples/socks/ && ./test_socks_04.sh)
     - (cd examples/socks/ && ./test_socks_05.sh)
+    - (cd examples/logger/ && ./test_logger_01.sh)
 
 before_install:
     - sudo apt-get update -qq
