@@ -159,6 +159,8 @@ void ft_frame_debug(struct ft_frame * this)
 
 bool ft_vec_vsprintf(struct ft_vec * this, const char * format, va_list args)
 {
+	assert(this != NULL);
+
 	size_t max_size = (this->limit - this->position) - 1;
 	int rc = vsnprintf((char *)ft_vec_ptr(this), max_size, format, args);
 
@@ -171,6 +173,8 @@ bool ft_vec_vsprintf(struct ft_vec * this, const char * format, va_list args)
 
 bool ft_vec_sprintf(struct ft_vec * this, const char * format, ...)
 {
+	assert(this != NULL);
+
 	va_list ap;
 
 	va_start(ap, format);
@@ -182,6 +186,8 @@ bool ft_vec_sprintf(struct ft_vec * this, const char * format, ...)
 
 bool ft_vec_cat(struct ft_vec * this, const void * data, size_t data_len)
 {
+	assert(this != NULL);
+
 	if ((this->position + data_len) > this->limit) return false;
 
 	memcpy(ft_vec_ptr(this), data, data_len);
@@ -192,6 +198,8 @@ bool ft_vec_cat(struct ft_vec * this, const void * data, size_t data_len)
 
 bool ft_vec_strcat(struct ft_vec * this, const char * text)
 {
+	assert(this != NULL);
+
 	return ft_vec_cat(this, text, strlen(text));
 }
 
