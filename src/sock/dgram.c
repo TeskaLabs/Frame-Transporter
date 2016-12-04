@@ -621,7 +621,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		struct ft_vec * frame_dvec = ft_frame_get_vec(this->write_frames);
 		assert(frame_dvec != NULL);
 
-		//TODO: Transform frame_dvec into iovec array (aka support multiple frame_vec)
+		//TODO: Transform frame_dvec into iovec array (aka support multiple frame_vec) - but this has to be configurable
 		struct iovec iov[1] = {
 			{
 				.iov_base = frame_dvec->frame->data + frame_dvec->offset + frame_dvec->position,
