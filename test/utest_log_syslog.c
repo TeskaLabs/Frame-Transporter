@@ -62,7 +62,7 @@ START_TEST(ft_log_syslog_utest)
 	ft_context_fini(&context);
 
 	ck_assert_int_eq(ft_log_stats.warn_count, 170);
-	ck_assert_int_eq(ft_log_stats.error_count, 2);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
 	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 
 	rc = close(infp);
@@ -93,11 +93,11 @@ START_TEST(ft_log_syslog_utest)
 
 	buffer[readsize] = '\0';
 
-	ck_assert_int_eq(strstrcount(buffer, "Warning Syslog"), 170);
-	ck_assert_int_eq(strstrcount(buffer, "Audit to Syslog"), 168);
-	ck_assert_int_eq(strstrcount(buffer, " length="), 340);
+//	printf("%s\n", buffer);
 
-	//printf("%s\n", buffer);
+	ck_assert_int_eq(strstrcount(buffer, "Warning Syslog"), 170);
+	ck_assert_int_eq(strstrcount(buffer, "Audit to Syslog"), 170);
+	ck_assert_int_eq(strstrcount(buffer, " length="), 340);
 
 }
 END_TEST
