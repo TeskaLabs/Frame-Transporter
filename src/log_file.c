@@ -3,34 +3,6 @@
 ///
 
 //TODO: Remove 'internal' or old log format ("%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n") below
-
-static const char * _ft_log_file_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-
-static inline const char * _ft_log_file_levelname(char level)
-{
-	static const char * lln_TRACE = "TRACE";
-	static const char * lln_DEBUG = "DEBUG";
-	static const char * lln_INFO = " INFO";
-	static const char * lln_WARN = " WARN";
-	static const char * lln_ERROR = "ERROR";
-	static const char * lln_FATAL = "FATAL";
-	static const char * lln_AUDIT = "AUDIT";
-	static const char * lln_UNKNOWN= "?????";
-
-	switch (level)
-	{
-		case 'T': return lln_TRACE;
-		case 'D': return lln_DEBUG;
-		case 'I': return lln_INFO;
-		case 'W': return lln_WARN;
-		case 'E': return lln_ERROR;
-		case 'F': return lln_FATAL;
-		case 'A': return lln_AUDIT;
-	}
-
-	return lln_UNKNOWN;
-}
-
 static void ft_log_file_backend_fini(void);
 
 ///
@@ -87,17 +59,17 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 			1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 			le->pid,
-			_ft_log_file_levelname(le->level),
+			ft_log_levelname(le->level),
 			le_message_length, le->message
 		);
 	} else {
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
 			"%s %02d %04d %02d:%02d:%02d.%03d %s %6d %s: %.*s\n",
-			_ft_log_file_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
+			ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 			tmp.tm_zone,
 			le->pid,
-			_ft_log_file_levelname(le->level),
+			ft_log_levelname(le->level),
 			le_message_length, le->message
 		);
 	}

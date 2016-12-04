@@ -168,6 +168,13 @@ struct ft_logrecord
 
 void ft_logrecord_process(struct ft_logrecord * le, int le_message_length);
 
+// Print log record to the file, can be used for 'emergency' logging
+void ft_logrecord_fprint(struct ft_logrecord * le, int le_message_length, FILE * f);
+
+
+const char * ft_log_months[12];
+const char * ft_log_levelname(char level);
+
 ///
 
 struct ft_log_backend

@@ -13,8 +13,6 @@ static struct ft_dgram ft_log_syslog_dgram = {
 
 static struct ft_frame * ft_log_syslog_frame = NULL;
 
-static const char * ft_log_syslog_months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-
 // Forward declarations
 static struct ft_dgram_delegate ft_log_syslog_backend_dgram_delegate;
 static bool ft_log_syslog_connect(void);
@@ -83,8 +81,8 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 	static bool ft_log_syslog_backend_logrecord_process_reentry = false;
 	if (ft_log_syslog_backend_logrecord_process_reentry == true)
 	{
-		//TODO: Print log message to stdout
 		fprintf(stderr, "Reentry of ft_log_syslog_backend_logrecord_process, that's not supported\n");
+		ft_logrecord_fprint(le, le_message_length, stderr);
 		return;
 	}
 
@@ -125,7 +123,7 @@ retry:
 	// <133>Dec 03 06:30:00 myhost seacat-gw 12345 DEBUG123: [ft@1 t=2016-12-03T06:30:00.123Z] A free-form message that provides information about the event
 	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s %s[%d]: [t=%04d-%02d-%02dT%02d:%02d:%02d.%03dZ l=%s] %s\n",
 		pri,
-		ft_log_syslog_months[tmp.tm_mon], tmp.tm_mday,
+		ft_log_months[tmp.tm_mon], tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
 		ft_config.log_syslog.hostname,
 		"seacat-gw",

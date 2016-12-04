@@ -158,3 +158,50 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 #endif
 	ft_config.log_backend->process(le, le_message_length);
 }
+
+
+void ft_logrecord_fprint(struct ft_logrecord * le, int le_message_length, FILE * f)
+{
+	time_t t = le->timestamp;
+	struct tm tmp;
+	gmtime_r(&t, &tmp);
+	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
+
+	fprintf(f, 
+		"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ%6d %s: %.*s\n",
+		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
+		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+		le->pid,
+		ft_log_levelname(le->level),
+		le_message_length, le->message
+	);
+}
+
+
+const char * ft_log_months[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+const char * ft_log_levelname(char level)
+{
+	static const char * lln_TRACE = "TRACE";
+	static const char * lln_DEBUG = "DEBUG";
+	static const char * lln_INFO = " INFO";
+	static const char * lln_WARN = " WARN";
+	static const char * lln_ERROR = "ERROR";
+	static const char * lln_FATAL = "FATAL";
+	static const char * lln_AUDIT = "AUDIT";
+	static const char * lln_UNKNOWN= "?????";
+
+	switch (level)
+	{
+		case 'T': return lln_TRACE;
+		case 'D': return lln_DEBUG;
+		case 'I': return lln_INFO;
+		case 'W': return lln_WARN;
+		case 'E': return lln_ERROR;
+		case 'F': return lln_FATAL;
+		case 'A': return lln_AUDIT;
+	}
+
+	return lln_UNKNOWN;
+}
+
