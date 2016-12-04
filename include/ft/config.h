@@ -5,7 +5,7 @@ struct ft_config
 {
 	bool initialized;
 
-	const char * appname;
+	char appname[32];
 
 	bool log_verbose;
 	struct ft_log_backend * log_backend;

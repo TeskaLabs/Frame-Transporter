@@ -22,14 +22,6 @@ static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const
 	le->pid = getpid();
 	le->level = level;
 	le->appname = ft_config.appname;
-	if (le->appname == NULL)
-	{
-#ifdef __APPLE__
-		le->appname = getprogname();
-#else
-		le->appname = program_invocation_name;
-#endif
-	}
 
 	if (format != NULL) return vsnprintf(le->message, sizeof(le->message), format, args);
 
@@ -115,11 +107,17 @@ static void _ft_log_libev_on_syserr(const char * msg)
 
 void ft_log_initialise_()
 {
+	// Obtain an application name
 #ifdef __APPLE__
-	ft_config.appname = getprogname();
+	const char * appname = getprogname();
 #else
-	ft_config.appname = program_invocation_name;
+	const char * appname = program_invocation_name;
 #endif
+	const char * p = strrchr(appname, '/');
+	if (p == NULL) p = appname;
+	else p += 1;
+	strncpy(ft_config.appname, p, sizeof(ft_config.appname)-1);
+	ft_config.appname[sizeof(ft_config.appname)-1] = '\0';
 
 	ev_set_syserr_cb(_ft_log_libev_on_syserr);
 }

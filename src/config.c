@@ -4,7 +4,7 @@ struct ft_config ft_config =
 {
 	.initialized = false, // Will be changed to true when initialized
 
-	.appname = NULL,
+	.appname = "",
 
 	.log_verbose = false,
 	.log_backend = &ft_log_file_backend,
