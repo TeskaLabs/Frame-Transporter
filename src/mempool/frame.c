@@ -147,7 +147,7 @@ void ft_frame_debug(struct ft_frame * this)
 	
 	struct ft_vec * vec = (struct ft_vec *)(this->data + this->capacity);
 	for (int i=-1; i>(-1-this->vec_limit); i -= 1)
-		FT_DEBUG(" - vec #%d o:%zd p:%zd l:%zd c:%zd d:%p%s",
+		FT_DEBUG(" - vec #%d o:%u p:%u l:%u c:%u d:%p%s",
 			-i,
 			vec[i].offset, vec[i].position, vec[i].limit, vec[i].capacity,
 			vec[i].frame->data, vec[i].frame->data == this->data ? "" : "!"
@@ -227,7 +227,7 @@ bool ft_frame_fread(struct ft_frame * this, FILE * f)
 
 	if (sz > vec->limit)
 	{
-		FT_WARN("File doesn't fit into a frame (%zd < %ld), truncating", vec->limit, sz);
+		FT_WARN("File doesn't fit into a frame (%u < %ld), truncating", vec->limit, sz);
 		sz = vec->limit;
 	}
 
