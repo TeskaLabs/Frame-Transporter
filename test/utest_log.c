@@ -910,8 +910,8 @@ START_TEST(log_structured_data_01)
 	FT_AUDIT_SD(sd, "Test!");
 	FT_AUDIT("Test old ...");
 
-
 	const struct ft_log_sd sd_est[] = {
+		{"ID", "LOG-ID-345"},
 		{"h", "1.2.3.5"},
 		{"p", "12345"},
 		{"t", "GMYDQMRQGIYGCMBS"},
