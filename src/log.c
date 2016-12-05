@@ -173,6 +173,49 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 }
 
 
+static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
+{
+	int rc;
+	static __thread char * ft_logrecord_expand_sdbuf = NULL;
+	static __thread size_t ft_logrecord_expand_sdbuf_size = 0;
+
+	if (le->sd == NULL) return "";
+
+	size_t len = 3;
+	for (const struct ft_log_sd * sd = le->sd; sd->id != NULL; sd += 1)
+	{
+		len += strlen(sd->id) + 1 + strlen(sd->value);
+	}
+
+	if (ft_logrecord_expand_sdbuf_size < len)
+	{
+		void * old = ft_logrecord_expand_sdbuf;
+		ft_logrecord_expand_sdbuf = realloc(ft_logrecord_expand_sdbuf, len);
+		if (ft_logrecord_expand_sdbuf == NULL)
+		{
+			ft_logrecord_expand_sdbuf = old;
+			return "[NOMEM=1] "; // Out-of-memory situation
+		}
+	}
+
+	char * c = ft_logrecord_expand_sdbuf;
+
+	c[0] = '[';
+	c += 1;
+
+	for (const struct ft_log_sd * sd = le->sd; sd->id != NULL; sd += 1)
+	{
+		rc = sprintf(c, "%s=%s ", sd->id, sd->value);
+		c += rc;
+	}
+
+	c[-1] = ']';
+	c[0] = ' ';
+	c[1] = '\0';
+
+	return ft_logrecord_expand_sdbuf;
+}
+
 void ft_logrecord_fprint(struct ft_logrecord * le, int le_message_length, FILE * f)
 {
 	time_t t = le->timestamp;
@@ -181,11 +224,12 @@ void ft_logrecord_fprint(struct ft_logrecord * le, int le_message_length, FILE *
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
 
 	fprintf(f, 
-		"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s[%5d]  %s: %.*s\n",
+		"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s[%5d]  %s: %s%.*s\n",
 		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 		le->appname, le->pid,
 		ft_log_levelname(le->level),
+		ft_logrecord_expand_sd(le),
 		le_message_length, le->message
 	);
 }

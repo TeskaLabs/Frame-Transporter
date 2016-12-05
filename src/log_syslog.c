@@ -75,6 +75,49 @@ static void ft_log_syslog_backend_fini()
 
 }
 
+
+static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le)
+{
+	int rc;
+	static __thread char * ft_log_syslog_backend_expand_sdbuf = NULL;
+	static __thread size_t ft_log_syslog_backend_expand_sdbuf_size = 0;
+
+	if (le->sd == NULL) return "";
+
+	size_t len = 2;
+	for (const struct ft_log_sd * sd = le->sd; sd->id != NULL; sd += 1)
+	{
+		len += strlen(sd->id) + 3 + strlen(sd->value);
+	}
+
+	if (ft_log_syslog_backend_expand_sdbuf_size < len)
+	{
+		void * old = ft_log_syslog_backend_expand_sdbuf;
+		ft_log_syslog_backend_expand_sdbuf = realloc(ft_log_syslog_backend_expand_sdbuf, len);
+		if (ft_log_syslog_backend_expand_sdbuf == NULL)
+		{
+			ft_log_syslog_backend_expand_sdbuf = old;
+			return " NOMEM=1"; // Out-of-memory situation
+		}
+	}
+
+	char * c = ft_log_syslog_backend_expand_sdbuf;
+
+	c[0] = ' ';
+	c += 1;
+
+	for (const struct ft_log_sd * sd = le->sd; sd->id != NULL; sd += 1)
+	{
+		rc = sprintf(c, "%s=\"%s\" ", sd->id, sd->value);
+		c += rc;
+	}
+
+	c[-1] = '\0';
+
+	return ft_log_syslog_backend_expand_sdbuf;
+}
+
+
 static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
 	bool ok;
@@ -120,8 +163,10 @@ retry:
 	gmtime_r(&t, &tmp);
 
 	// Best-effort string, here is an example:
-	// <133>Dec 03 06:30:00 myhost seacat-gw 12345 DEBUG123: [ft@1 t=2016-12-03T06:30:00.123Z] A free-form message that provides information about the event
-	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [t=%04d-%02d-%02dT%02d:%02d:%02d.%03dZ l=%s] %s\n",
+	// <133>Dec 03 06:30:00 myhost seacat-gw 12345 DEBUG123: [l@47278 t=2016-12-03T06:30:00.123Z] A free-form message that provides information about the event
+	// l@47278 is from http://oidref.com/1.3.6.1.4.1.47278 -> TeskaLabs 'SMI Network Management Private Enterprise Code', maintained by IANA,
+	// whose prefix is iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
+	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [l@47278 t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\" l=\"%s\"%s] %s\n",
 		pri,
 		ft_log_months[tmp.tm_mon], tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
@@ -130,6 +175,7 @@ retry:
 		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 		level, //TODO: Extend with optional message id (e.g. INFO354)
+		ft_log_syslog_backend_expand_sd(le),
 		le->message
 	);
 	if (!ok)
