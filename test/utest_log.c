@@ -891,6 +891,29 @@ END_TEST
 
 ///
 
+
+static inline struct ft_log_sd log_structured_data_01_demo()
+{
+	struct ft_log_sd sd = {"dynamic", "value-foo-bar-ehm"};
+	return sd;
+}
+
+
+START_TEST(log_structured_data_01)
+{
+	const struct ft_log_sd sd[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		log_structured_data_01_demo(),
+		{NULL}
+	};
+	FT_AUDIT_SD(sd, "Test!");
+	FT_AUDIT("Test old ...");
+}
+END_TEST
+
+///
+
 Suite * log_tsuite(void)
 {
 	TCase *tc;
@@ -934,6 +957,10 @@ Suite * log_tsuite(void)
 	tc = tcase_create("log-file-ISO-8601");
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, log_file_iso_8601);
+
+	tc = tcase_create("log-structured-data");
+	suite_add_tcase(s, tc);
+	tcase_add_test(tc, log_structured_data_01);
 
 	return s;
 }

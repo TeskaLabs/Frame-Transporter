@@ -39,64 +39,74 @@ struct ft_log_stats
 extern struct ft_log_stats ft_log_stats;
 
 
-void _ft_log_v(const char level, const char * format, va_list args);
-static inline void _ft_log(const char level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
-static inline void _ft_log(const char level, const char * format, ...)
+// Structured data
+struct ft_log_sd
+{
+	const char * id;
+	const char * value;
+};
+
+
+void _ft_log_v(const char level, const struct ft_log_sd sd[], const char * format, va_list args);
+static inline void _ft_log(const char level, const struct ft_log_sd sd[], const char * format, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+static inline void _ft_log(const char level, const struct ft_log_sd sd[], const char * format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	_ft_log_v(level, format, args);
+	_ft_log_v(level, sd, format, args);
 	va_end(args);
 }
 
-void _ft_log_errno_v(int errnum, const char level, const char * format, va_list args);
+void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], const char * format, va_list args);
 static inline void _ft_log_errno(int errnum, const char level, const char *format, ...) __attribute__((format(printf,3,4)));
 static inline void _ft_log_errno(int errnum, const char level, const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	_ft_log_errno_v(errnum, level, format, args);
+	_ft_log_errno_v(errnum, level, NULL, format, args);
 	va_end(args);
 }
 
 
-void _ft_log_openssl_err_v(char const level, const char * format, va_list args);
+void _ft_log_openssl_err_v(char const level, const struct ft_log_sd sd[], const char * format, va_list args);
 static inline void _ft_log_openssl_err(char const level, const char * format, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 static inline void _ft_log_openssl_err(char const level, const char * format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	_ft_log_openssl_err_v(level, format, args);
+	_ft_log_openssl_err_v(level, NULL, format, args);
 	va_end(args);
 }
 
 #ifdef RELEASE
-#define FT_TRACE(traceid, fmt, args...) do { if (0) _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_TRACE(traceid, fmt, args...) do { if (0) _ft_log('T', NULL, "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_TRACE(traceid, fmt, args...) do { if ((ft_config.log_trace_mask & traceid) == 0) break; _ft_log('T', "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_TRACE(traceid, fmt, args...) do { if ((ft_config.log_trace_mask & traceid) == 0) break; _ft_log('T', NULL, "%04X %s:%s:%d " fmt, traceid, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
 
 #ifdef RELEASE
-#define FT_DEBUG(fmt, args...) do { if (0) _ft_log('D', fmt, ## args); } while (0)
+#define FT_DEBUG(fmt, args...) do { if (0) _ft_log('D', NULL, fmt, ## args); } while (0)
 #else
-#define FT_DEBUG(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log('D', fmt, ## args); } while (0)
+#define FT_DEBUG(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1; _ft_log('D', NULL, fmt, ## args); } while (0)
 #endif
-#define FT_INFO(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', fmt, ## args); } while (0)
-#define FT_WARN(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', fmt, ## args); } while (0)
-#define FT_ERROR(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log('E', fmt, ## args); } while (0)
-#define FT_FATAL(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log('F', fmt, ## args); } while (0)
-#define FT_AUDIT(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', fmt, ## args); } while (0)
+#define FT_INFO(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', NULL, fmt, ## args); } while (0)
+#define FT_WARN(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', NULL, fmt, ## args); } while (0)
+#define FT_ERROR(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log('E', NULL, fmt, ## args); } while (0)
+#define FT_FATAL(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log('F', NULL, fmt, ## args); } while (0)
+#define FT_AUDIT(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', NULL, fmt, ## args); } while (0)
+
+#define FT_AUDIT_SD(sd, fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', sd, fmt, ## args); } while (0)
 
 #ifdef RELEASE
-#define FT_DEBUG_P(fmt, args...) do { if (0) _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_P(fmt, args...) do { if (0) _ft_log('D', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #else
-#define FT_DEBUG_P(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1;  _ft_log('D', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_DEBUG_P(fmt, args...) do { if (!ft_config.log_verbose) break; ft_log_stats.debug_count += 1;  _ft_log('D', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 #endif
-#define FT_INFO_P(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
-#define FT_WARN_P(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
-#define FT_ERROR_P(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log('E', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
-#define FT_FATAL_P(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log('F', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
-#define FT_AUDIT_P(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_INFO_P(fmt, args...)  do { ft_log_stats.info_count  += 1; _ft_log('I', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_WARN_P(fmt, args...)  do { ft_log_stats.warn_count  += 1; _ft_log('W', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_ERROR_P(fmt, args...) do { ft_log_stats.error_count += 1; _ft_log('E', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_FATAL_P(fmt, args...) do { ft_log_stats.fatal_count += 1; _ft_log('F', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
+#define FT_AUDIT_P(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
 
 #ifdef RELEASE
 #define FT_DEBUG_ERRNO(errnum, fmt, args...) do { if (0) _ft_log_errno(errnum, 'D', fmt, ## args); } while (0)
@@ -158,12 +168,15 @@ static inline void ft_log_verbose(bool v)
 
 ///
 
+// This structure is designed to be short-lived, within one event loop generation or shorter
+// It is not meant to be queued etc. - if needed, serialize the data etc.
 struct ft_logrecord
 {
 	ev_tstamp timestamp;
 	pid_t pid;
 	char level;
 	const char * appname; // https://tools.ietf.org/html/rfc5424#section-6.2.5
+	const struct ft_log_sd * sd; // Structured data array terminated by NULL or NULL
 	char message[2048]; // Length is somehow defined in https://tools.ietf.org/html/rfc5424#section-6.1
 };
 

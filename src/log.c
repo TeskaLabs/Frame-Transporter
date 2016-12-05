@@ -16,13 +16,13 @@ static struct ft_context * ft_log_context_ = NULL;
 
 ///
 
-static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const char * format, va_list args)
+static inline int _ft_logrecord_build(struct ft_logrecord * le, char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
 	le->timestamp = ft_safe_now(ft_log_context_);
 	le->pid = getpid();
 	le->level = level;
 	le->appname = ft_config.appname;
-
+	le->sd = sd;
 	if (format != NULL) return vsnprintf(le->message, sizeof(le->message), format, args);
 
 	le->message[0] = '\0';
@@ -31,17 +31,17 @@ static inline int _ft_logrecord_build(struct ft_logrecord * le, char level,const
 
 ///
 
-void _ft_log_v(const char level, const char * format, va_list args)
+void _ft_log_v(const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
 	static __thread struct ft_logrecord le;
-	int le_message_length = _ft_logrecord_build(&le, level, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 	ft_logrecord_process(&le, le_message_length);
 }
 
-void _ft_log_errno_v(int errnum, const char level, const char * format, va_list args)
+void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
 	static __thread struct ft_logrecord le;
-	int le_message_length = _ft_logrecord_build(&le, level, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 
 	if (le_message_length > 0)
 	{
@@ -67,10 +67,10 @@ void _ft_log_errno_v(int errnum, const char level, const char * format, va_list 
 	ft_logrecord_process(&le, le_message_length);
 }
 
-void _ft_log_openssl_err_v(const char level, const char * format, va_list args)
+void _ft_log_openssl_err_v(const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
 	static __thread struct ft_logrecord le;
-	int le_message_length = _ft_logrecord_build(&le, level, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
 	while (true)
