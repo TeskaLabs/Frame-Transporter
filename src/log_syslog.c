@@ -27,7 +27,7 @@ bool ft_log_syslog_backend_init(struct ft_context * context)
 
 	if (ft_log_syslog_dgram.base.socket.clazz != NULL)
 	{
-		FT_WARN("ft_log_syslog_backend aalready initialized");
+		FT_WARN("ft_log_syslog_backend already initialized");
 		return false;
 	}
 
