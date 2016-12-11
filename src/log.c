@@ -147,6 +147,7 @@ void ft_log_context(struct ft_context * context)
 void ft_log_backend_switch(struct ft_log_backend * backend)
 {
 	struct ft_log_backend * old_backend = ft_config.log_backend;
+	if (old_backend == backend) return;
 
 	if (backend == NULL)
 	{
