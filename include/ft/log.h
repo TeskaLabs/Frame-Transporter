@@ -42,7 +42,7 @@ extern struct ft_log_stats ft_log_stats;
 // Structured data
 struct ft_log_sd
 {
-	const char * id;
+	const char * name;
 	const char * value;
 };
 

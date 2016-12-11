@@ -183,9 +183,9 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 	if (le->sd == NULL) return "";
 
 	size_t len = 3;
-	for (const struct ft_log_sd * sd = le->sd; sd->id != NULL; sd += 1)
+	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		len += strlen(sd->id) + 1 + strlen(sd->value);
+		len += strlen(sd->name) + 1 + strlen(sd->value);
 	}
 
 	if (ft_logrecord_expand_sdbuf_size < len)
@@ -204,9 +204,9 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 	c[0] = '[';
 	c += 1;
 
-	for (const struct ft_log_sd * sd = le->sd; sd->id != NULL; sd += 1)
+	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		rc = sprintf(c, "%s=%s ", sd->id, sd->value);
+		rc = sprintf(c, "%s=%s ", sd->name, sd->value);
 		c += rc;
 	}
 
