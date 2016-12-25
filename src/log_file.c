@@ -47,18 +47,21 @@ static const char * ft_log_file_expand_sd(struct ft_logrecord * le)
 	size_t len = 3;
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		len += strlen(sd->name) + 1 + strlen(sd->value);
+		len += strlen(sd->name) + 1 + strlen(sd->value) + 1;
 	}
 
 	if (ft_log_file_expand_sdbuf_size < len)
 	{
+		size_t alloc_len = len;
+		if (alloc_len < 256) alloc_len = 256;
 		void * old = ft_log_file_expand_sdbuf;
-		ft_log_file_expand_sdbuf = realloc(ft_log_file_expand_sdbuf, len);
+		ft_log_file_expand_sdbuf = realloc(ft_log_file_expand_sdbuf, alloc_len);
 		if (ft_log_file_expand_sdbuf == NULL)
 		{
 			ft_log_file_expand_sdbuf = old;
 			return "[NOMEM=1] "; // Out-of-memory situation
 		}
+		ft_log_file_expand_sdbuf_size = alloc_len;
 	}
 
 	char * c = ft_log_file_expand_sdbuf;
