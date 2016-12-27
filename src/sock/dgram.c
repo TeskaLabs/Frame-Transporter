@@ -690,7 +690,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 			}
 			else
 			{
-				FT_WARN_ERRNO(lerrno, "System error on datagram socket when writting, the is frame lost");
+				FT_WARN_ERRNO(lerrno, "System error on datagram socket when writting, the frame is lost");
 				_ft_dgram_return_write_frame(this);
 			}
 
