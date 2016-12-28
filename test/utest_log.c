@@ -868,8 +868,8 @@ START_TEST(log_file_iso_8601)
 
 	fseek(f, 0, SEEK_END);
 	long fsize = ftell(f);
-	ck_assert_int_gt(fsize, 150);
-	ck_assert_int_lt(fsize, 250);
+	ck_assert_int_gt(fsize, 70);
+	ck_assert_int_lt(fsize, 150);
 
 	fseek(f, 0, SEEK_SET);  //same as rewind(f);
 
