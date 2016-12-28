@@ -24,7 +24,6 @@ static void ft_log_file_backend_fini()
 {
 	if (ft_config.log_file.file != NULL)
 	{
-		FT_INFO("Log file is closed");
 		fclose(ft_config.log_file.file);
 		ft_config.log_file.file = NULL;
 	}
@@ -182,13 +181,16 @@ bool ft_log_file_reopen()
 	bool reopen = (ft_config.log_file.file != NULL);
 	if (reopen)
 	{
-		FT_INFO("Log file is closed");
 		fclose(ft_config.log_file.file);
 		ft_config.log_file.file = NULL;
 	}
 
 	ft_config.log_file.file = f;
-	FT_INFO("Log file is %s", reopen ? "reopen" : "open");
+
+	if (reopen)
+	{
+		FT_INFO("Log file is reopen");
+	}
 
 	return true;
 }
