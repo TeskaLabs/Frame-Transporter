@@ -882,7 +882,7 @@ START_TEST(log_file_iso_8601)
 
 	string[fsize] = '\0';
 
-	char * c = strstr(string, "\n2016-12-03T10:04:38.123Z appname[12345]  INFO: >>abcdefge %S %% %d {} <<\n");
+	char * c = strstr(string, "2016-12-03T10:04:38.123Z appname[12345]  INFO: >>abcdefge %S %% %d {} <<\n");
 	ck_assert_ptr_ne(c, NULL);
 
 	unlink("./test.log");
