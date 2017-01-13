@@ -196,7 +196,12 @@ struct ft_log_backend
 	void (*fini)(void);
 	void (*process)(struct ft_logrecord * le, int le_message_length);
 	void (*on_prepare)(struct ft_context * context, ev_tstamp now);
+	void (*on_forkexec)(void); // Called from forked child prior hard discard of the log context, similar to fini() but must be 'harder'
 };
+
+// Call this from child after fork to reset logging prior exec
+// It is mainly to prevent file descriptors leak
+void ft_log_forkexec(void);
 
 void ft_log_finalise(void);
 

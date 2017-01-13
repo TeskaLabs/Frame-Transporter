@@ -130,6 +130,17 @@ void ft_log_finalise()
 	fflush(stderr);
 }
 
+
+void ft_log_forkexec()
+{
+	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->on_forkexec != NULL))
+		ft_config.log_backend->on_forkexec();
+
+	// Switch to slow log
+	ft_config.log_backend = NULL;
+}
+
+
 void ft_log_context(struct ft_context * context)
 {
 	if (context == NULL)
