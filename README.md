@@ -15,7 +15,7 @@ Features include:
 
 ![image](./doc/images/stream_socket.png)  
 
-Stay tunes, more to come in a near future.
+Stay tuned, more (e.g. the proper documentation) to come in a near future.
 
 
 ## Copyright and License
