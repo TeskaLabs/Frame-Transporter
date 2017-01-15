@@ -10,6 +10,14 @@ Features include:
 * SSL/TLS encryption ([OpenSSL](https://www.openssl.org))
 * Tracing, logging and auditing
 
+
+## The concept
+
+![image](./doc/images/stream_socket.png)  
+
+Stay tunes, more to come in a near future.
+
+
 ## Copyright and License
 
 Copyright (c) 2016, TeskaLabs Ltd, Ales Teska  
