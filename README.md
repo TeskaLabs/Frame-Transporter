@@ -2,13 +2,13 @@
 
 The high-performance networking library for C and POSIX.
 
-Features include:
+## Features
 
 * High-speed event loop ([libev](http://software.schmorp.de/pkg/libev.html))
-* Fixed-size block memory pool
 * [Network socket](https://en.wikipedia.org/wiki/Network_socket) abstraction
 * 100% non-blocking I/O or [asynchronous I/O](https://en.wikipedia.org/wiki/Asynchronous_I/O)
 * SSL/TLS encryption ([OpenSSL](https://www.openssl.org))
+* Fixed-size block memory pool
 * Tracing, logging and auditing
 
 
@@ -21,7 +21,7 @@ Stay tuned, more (e.g. the proper documentation) to come in a near future.
 
 ## Copyright and License
 
-Copyright (c) 2016, TeskaLabs Ltd, Ales Teska  
+Copyright (c) 2016-2017, TeskaLabs Ltd, [Ales Teska](https://github.com/ateska)  
 The project is released under the BSD license.
 
 ---
