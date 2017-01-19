@@ -274,6 +274,9 @@ static void ft_log_syslog_backend_on_forkexec(void)
 		ft_log_syslog_frame = NULL;
 	}
 
+	// Trash a queued packet in the syslog datagram to avoid an warning message
+	ft_dgram_trash_write_buffer(&ft_log_syslog_dgram);
+
 	ft_log_syslog_backend_fini();
 }
 

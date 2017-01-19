@@ -175,7 +175,15 @@ void ft_dgram_fini(struct ft_dgram * this)
 		if (cap > 0) FT_WARN("Lost %zu bytes in read buffer of the socket", cap);
 	}
 
-	cap = 0;
+	cap = ft_dgram_trash_write_buffer(this);
+	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
+}
+
+size_t ft_dgram_trash_write_buffer(struct ft_dgram * this)
+{
+	assert(this != NULL);
+
+	size_t cap = 0;
 	while (this->write_frames != NULL)
 	{
 		struct ft_frame * frame = this->write_frames;
@@ -184,7 +192,7 @@ void ft_dgram_fini(struct ft_dgram * this)
 		cap += ft_frame_len(frame);
 		ft_frame_return(frame);
 	}
-	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
+	return cap;
 }
 
 ///

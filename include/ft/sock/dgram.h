@@ -75,6 +75,10 @@ bool ft_dgram_write(struct ft_dgram *, struct ft_frame * frame);
 
 void ft_dgram_diagnose(struct ft_dgram *);
 
+// This function trashes an output queue
+// Use that with caution!
+size_t ft_dgram_trash_write_buffer(struct ft_dgram *);
+
 ///
 
 enum ft_dgram_cntl_codes
