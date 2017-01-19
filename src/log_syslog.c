@@ -87,7 +87,7 @@ static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le)
 	size_t len = 2;
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		len += strlen(sd->name) + 3 + strlen(sd->value);
+		len += strlen(sd->name) + 4 + strlen(sd->value);
 	}
 
 	if (ft_log_syslog_backend_expand_sdbuf_size < len)
@@ -99,6 +99,7 @@ static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le)
 			ft_log_syslog_backend_expand_sdbuf = old;
 			return " NOMEM=1"; // Out-of-memory situation
 		}
+		ft_log_syslog_backend_expand_sdbuf_size = len;
 	}
 
 	char * c = ft_log_syslog_backend_expand_sdbuf;
@@ -110,8 +111,8 @@ static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le)
 	{
 		rc = sprintf(c, "%s=\"%s\" ", sd->name, sd->value);
 		c += rc;
+		assert(c < (ft_log_syslog_backend_expand_sdbuf + ft_log_syslog_backend_expand_sdbuf_size));
 	}
-
 	c[-1] = '\0';
 
 	return ft_log_syslog_backend_expand_sdbuf;
