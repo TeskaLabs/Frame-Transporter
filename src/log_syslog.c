@@ -164,7 +164,7 @@ retry:
 	gmtime_r(&t, &tmp);
 
 	// Best-effort string, here is an example:
-	// <133>Dec 03 06:30:00 myhost seacat-gw 12345 DEBUG123: [l@47278 t=2016-12-03T06:30:00.123Z] A free-form message that provides information about the event
+	// <133>Dec 03 06:30:00 seacat-gw[12345]: [l@47278 t="2016-12-03T06:30:00.123Z" l="INFO"] A free-form message that provides information about the event
 	// l@47278 is from http://oidref.com/1.3.6.1.4.1.47278 -> TeskaLabs 'SMI Network Management Private Enterprise Code', maintained by IANA,
 	// whose prefix is iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
 	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [l@47278 t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\" l=\"%s\"%s] %s\n",
