@@ -43,6 +43,7 @@
 struct ft_context;
 
 #include <ft/cols/list.h>
+#include <ft/cols/iphashmap.h>
 
 #include <ft/config.h>
 #include <ft/log.h>
