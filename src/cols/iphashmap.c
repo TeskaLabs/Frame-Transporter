@@ -349,14 +349,12 @@ struct ft_iphashmap_entry * ft_iphashmap_get_sa(struct ft_iphashmap * this, cons
 	{
 		case AF_INET:
 		{
-			fprintf(stderr, "ft_iphashmap_get_sa - AF_INET\n");
 			const struct sockaddr_in * addr_in = (const struct sockaddr_in *)addr;
 			return ft_iphashmap_get_ip4(this, addr_in->sin_addr);
 		}
 
 		case AF_INET6:
 		{
-			fprintf(stderr, "ft_iphashmap_get_sa - AF_INET6\n");
 			const struct sockaddr_in6 * addr_in = (const struct sockaddr_in6 *)addr;
 			return ft_iphashmap_get_ip6(this, addr_in->sin6_addr);
 		}
