@@ -36,6 +36,8 @@ const char * ft_sockaddr_hostport_str(const struct sockaddr * client_addr, sockl
 				else
 					snprintf(addrbuf, sizeof(addrbuf)-1, "%s:%s", hoststr, portstr);
 			}
+
+			break;
 		}
 
 		//TODO: AF_LOCAL
