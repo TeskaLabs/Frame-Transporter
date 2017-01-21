@@ -27,6 +27,19 @@ void ft_iphashmap_fini(struct ft_iphashmap * this)
 	}
 }
 
+
+void ft_iphashmap_clear(struct ft_iphashmap * this)
+{
+	assert(this != NULL);
+
+	this->count = 0;
+	if (this->buckets != NULL)
+	{
+		free(this->buckets);
+		this->buckets = NULL;
+	}
+}
+
 /// Hash functions
 
 static inline unsigned int ft_iphashmap_hash_ip4(struct in_addr * ip4)
@@ -47,30 +60,29 @@ static inline unsigned int ft_iphashmap_hash_ip6(struct in6_addr * ip6)
 	unsigned int x6 = (ip6->s6_addr[10] << 8) | ip6->s6_addr[11];
 	unsigned int x7 = (ip6->s6_addr[12] << 8) | ip6->s6_addr[13];
 	unsigned int x8 = (ip6->s6_addr[14] << 8) | ip6->s6_addr[15];
-	return AF_INET6  ^ x1 ^ x2 ^ x3 ^ x4 ^ x5 ^ x6 ^ x7 ^ x8;
+	return AF_INET6 ^ x1 ^ x2 ^ x3 ^ x4 ^ x5 ^ x6 ^ x7 ^ x8;
 }
 
 /// Generics
 
-static bool ft_iphashmap_add(struct ft_iphashmap * this, struct ft_iphashmap_entry * entry)
+static struct ft_iphashmap_entry * ft_iphashmap_add(struct ft_iphashmap * this, int family, union ft_iphashmap_addr addr)
 {
 	assert(this != NULL);
-	assert(entry != NULL);
 
 	unsigned int hash = 0;
-	switch (entry->family)
+	switch (family)
 	{
 		case AF_INET:
-			hash = ft_iphashmap_hash_ip4(&entry->addr.ip4);
+			hash = ft_iphashmap_hash_ip4(&addr.ip4);
 			break;
 
 		case AF_INET6:
-			hash = ft_iphashmap_hash_ip6(&entry->addr.ip6);
+			hash = ft_iphashmap_hash_ip6(&addr.ip6);
 			break;
 
 		default:
-			FT_ERROR("Unimplemented family (ft_iphashmap_add): %d", entry->family);
-			return false;
+			FT_ERROR("Unimplemented family (ft_iphashmap_add): %d", family);
+			return NULL;
 	}
 
 	if (this->buckets == NULL)
@@ -82,12 +94,55 @@ static bool ft_iphashmap_add(struct ft_iphashmap * this, struct ft_iphashmap_ent
 
 	unsigned int index = hash % this->bucket_size;
 
-	entry->next = this->buckets[index];
-	this->buckets[index] = entry;
+	struct ft_iphashmap_entry ** bucket_ptr = &this->buckets[index];
+	for(;*bucket_ptr != NULL; bucket_ptr = &(*bucket_ptr)->next)
+	{
+		struct ft_iphashmap_entry * bucket = * bucket_ptr;
+		if (bucket->family != family) continue;
+		switch (family)
+		{
+			case AF_INET:
+				if (bucket->addr.ip4.s_addr != addr.ip4.s_addr) continue;
+				break;
+
+			case AF_INET6:
+				if (memcmp(bucket->addr.ip6.s6_addr, addr.ip6.s6_addr, sizeof(addr.ip6.s6_addr)) != 0) continue;
+				break;
+
+			default:
+				continue;
+		}
+
+		// We found a collision
+		return bucket;
+	}
+
+	assert(bucket_ptr != NULL);
+	assert(*bucket_ptr == NULL);
+	
+	struct ft_iphashmap_entry * entry = malloc(sizeof(struct ft_iphashmap_entry));
+	if (entry == NULL)
+	{
+		FT_ERROR_ERRNO(errno, "malloc(sizeof(struct ft_iphashmap_entry)=%zu)", sizeof(struct ft_iphashmap_entry));
+		return NULL;
+	}
+
+	entry->family = family;
+	if (entry->family == AF_INET)
+	{
+		entry->addr.ip4 = addr.ip4;
+	}
+	else if (entry->family == AF_INET6)
+	{
+		entry->addr.ip6 = addr.ip6;
+	}
+
+	entry->next = NULL;
+	*bucket_ptr = entry;
 
 	this->count += 1;
 
-	return true;
+	return entry;
 }
 
 static struct ft_iphashmap_entry * ft_iphashmap_get(struct ft_iphashmap * this, unsigned int hash, int family, union ft_iphashmap_addr addr)
@@ -167,27 +222,8 @@ static bool ft_iphashmap_pop(struct ft_iphashmap * this, unsigned int hash, int 
 
 struct ft_iphashmap_entry * ft_iphashmap_add_ip4(struct ft_iphashmap * this, struct in_addr addr)
 {
-	bool ok;
-	assert(this != NULL);
-
-	struct ft_iphashmap_entry * entry = malloc(sizeof(struct ft_iphashmap_entry));
-	if (entry == NULL)
-	{
-		FT_ERROR_ERRNO(errno, "malloc(sizeof(struct ft_iphashmap_entry)=%zu)", sizeof(struct ft_iphashmap_entry));
-		return NULL;
-	}
-
-	entry->family = AF_INET;
-	entry->addr.ip4 = addr;
-
-	ok = ft_iphashmap_add(this, entry);
-	if (!ok)
-	{
-		free(entry);
-		return NULL;
-	}
-
-	return entry;
+	union ft_iphashmap_addr uaddr = { .ip4 = addr };
+	return ft_iphashmap_add(this, AF_INET, uaddr);
 }
 
 struct ft_iphashmap_entry * ft_iphashmap_get_ip4(struct ft_iphashmap * this, struct in_addr addr)
@@ -206,27 +242,9 @@ bool ft_iphashmap_pop_ip4(struct ft_iphashmap * this, struct in_addr addr, void 
 
 struct ft_iphashmap_entry * ft_iphashmap_add_ip6(struct ft_iphashmap * this, struct in6_addr addr)
 {
-	bool ok;
-	assert(this != NULL);
+	union ft_iphashmap_addr uaddr = { .ip6 = addr };
+	return ft_iphashmap_add(this, AF_INET6, uaddr);
 
-	struct ft_iphashmap_entry * entry = malloc(sizeof(struct ft_iphashmap_entry));
-	if (entry == NULL)
-	{
-		FT_ERROR_ERRNO(errno, "malloc(sizeof(struct ft_iphashmap_entry)=%zu)", sizeof(struct ft_iphashmap_entry));
-		return NULL;
-	}
-
-	entry->family = AF_INET6;
-	entry->addr.ip6 = addr;
-
-	ok = ft_iphashmap_add(this, entry);
-	if (!ok)
-	{
-		free(entry);
-		return NULL;
-	}
-
-	return entry;
 }
 
 struct ft_iphashmap_entry * ft_iphashmap_get_ip6(struct ft_iphashmap * this, struct in6_addr addr)

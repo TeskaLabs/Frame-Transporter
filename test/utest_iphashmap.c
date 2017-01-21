@@ -260,6 +260,91 @@ START_TEST(ft_iphashmap_sockaddr_utest)
 	ft_iphashmap_fini(&iphmap);
 }
 END_TEST
+
+START_TEST(ft_iphashmap_unique_utest)
+{
+	bool ok;
+	struct ft_iphashmap iphmap;
+	struct ft_iphashmap_entry * e, *e1;
+
+	ok = ft_iphashmap_init(&iphmap, 4);
+	ck_assert_int_eq(ok, true);
+	ck_assert_int_eq(iphmap.count, 0);
+
+	e = ft_iphashmap_add_p(&iphmap, AF_INET, "127.0.0.1");
+	ck_assert_ptr_ne(e, NULL);
+	ck_assert_int_eq(iphmap.count, 1);
+
+	e1 = ft_iphashmap_add_p(&iphmap, AF_INET, "127.0.0.1");
+	ck_assert_ptr_eq(e, e1);
+	ck_assert_int_eq(iphmap.count, 1);
+
+	ft_iphashmap_fini(&iphmap);
+}
+END_TEST
+
+
+START_TEST(ft_iphashmap_clear_utest)
+{
+	bool ok;
+	struct ft_iphashmap iphmap;
+	struct ft_iphashmap_entry * e;
+	char line[256];
+	FILE * f;
+
+	ok = ft_iphashmap_init(&iphmap, 10000);
+	ck_assert_int_eq(ok, true);
+
+	f = fopen("utest_iphashmap_ips.txt", "r");
+	ck_assert_ptr_ne(f, NULL);
+
+	int count = 0;
+	while (fgets(line, sizeof(line), f))
+	{
+		char * c = line;
+		while (*c != '\0')
+		{
+			if (*c == '\n') *c = '\0';
+			if (*c == '\r') *c = '\0';
+			c += 1;
+		}
+		e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, line);
+		ck_assert_ptr_ne(e, NULL);
+		count += 1;
+    }
+	fclose(f);
+
+	ck_assert_int_eq(count, iphmap.count);
+
+	ft_iphashmap_clear(&iphmap);
+
+	ck_assert_int_eq(iphmap.count, 0);
+	ck_assert_ptr_eq(iphmap.buckets, NULL);
+
+	f = fopen("utest_iphashmap_ips.txt", "r");
+	ck_assert_ptr_ne(f, NULL);
+
+	count = 0;
+	while (fgets(line, sizeof(line), f))
+	{
+		char * c = line;
+		while (*c != '\0')
+		{
+			if (*c == '\n') *c = '\0';
+			if (*c == '\r') *c = '\0';
+			c += 1;
+		}
+		e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, line);
+		ck_assert_ptr_ne(e, NULL);
+		count += 1;
+    }
+	fclose(f);
+
+	ck_assert_int_eq(count, iphmap.count);
+
+	ft_iphashmap_fini(&iphmap);
+}
+END_TEST
 ///
 
 Suite * iphashmap_tsuite(void)
@@ -274,6 +359,8 @@ Suite * iphashmap_tsuite(void)
 	tcase_add_test(tc, ft_iphashmap_str_utest);
 	tcase_add_test(tc, ft_iphashmap_load_utest);
 	tcase_add_test(tc, ft_iphashmap_sockaddr_utest);
+	tcase_add_test(tc, ft_iphashmap_unique_utest);
+	tcase_add_test(tc, ft_iphashmap_clear_utest);
 
 	return s;
 }

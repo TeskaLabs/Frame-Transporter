@@ -33,6 +33,8 @@ bool ft_iphashmap_init(struct ft_iphashmap * , int initial_bucket_size);
 void ft_iphashmap_fini(struct ft_iphashmap *);
 //TODO: resize function
 
+void ft_iphashmap_clear(struct ft_iphashmap *);
+
 struct ft_iphashmap_entry * ft_iphashmap_add_ip4(struct ft_iphashmap * this, struct in_addr addr);
 struct ft_iphashmap_entry * ft_iphashmap_get_ip4(struct ft_iphashmap * this, struct in_addr addr);
 bool ft_iphashmap_pop_ip4(struct ft_iphashmap * this, struct in_addr addr, void ** data);
