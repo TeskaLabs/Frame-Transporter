@@ -18,6 +18,7 @@ struct _ft_context_callback_entry
 bool ft_context_init(struct ft_context * this)
 {
 	bool ok;
+	assert(this != NULL);
 
 	this->ev_loop = ev_default_loop(ft_config.libev_loop_flags);
 	if (this->ev_loop == NULL) return false;
