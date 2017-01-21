@@ -10,6 +10,7 @@ OBJS=\
 	log_file.o \
 	log_syslog.o \
 	daemon.o \
+	sockaddr.o \
 	sock/listener.o \
 	sock/stream.o \
 	sock/dgram.o \

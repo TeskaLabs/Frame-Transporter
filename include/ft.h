@@ -118,4 +118,8 @@ int ft_base32_encode(char * buf, size_t * buflen, const void * data, size_t size
 		addr.ai_next = NULL; \
 	}
 
+// This function returns a string repreentation of the sockaddr address
+// It uses thread specific common buffer to store the result
+const char * ft_sockaddr_str(const struct sockaddr * client_addr, socklen_t client_addr_len);
+
 #endif // FT_H_
