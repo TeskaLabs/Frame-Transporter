@@ -129,7 +129,7 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	rc = bind(fd, (const struct sockaddr *)&this->base.socket.addr, this->base.socket.addrlen);
 	if (rc != 0)
 	{
-		FT_ERROR_ERRNO_P(errno, "bind to %s ", addrstr);
+		FT_ERROR_ERRNO(errno, "Failed to bind to '%s'", addrstr);
 		goto error_exit;
 	}
 
