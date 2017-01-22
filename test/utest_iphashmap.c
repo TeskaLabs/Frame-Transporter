@@ -163,37 +163,19 @@ START_TEST(ft_iphashmap_load_utest)
 {
 	bool ok;
 	struct ft_iphashmap iphmap;
-	struct ft_iphashmap_entry * e;
-	char line[256];
-	FILE * f;
+	ssize_t count;
 
 	ok = ft_iphashmap_init(&iphmap, 10000);
 	ck_assert_int_eq(ok, true);
 
-	f = fopen("utest_iphashmap_ips.txt", "r");
-	ck_assert_ptr_ne(f, NULL);
-
-	int count = 0;
-	while (fgets(line, sizeof(line), f))
-	{
-		char * c = line;
-		while (*c != '\0')
-		{
-			if (*c == '\n') *c = '\0';
-			if (*c == '\r') *c = '\0';
-			c += 1;
-		}
-		e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, line);
-		ck_assert_ptr_ne(e, NULL);
-		count += 1;
-    }
-	fclose(f);
-
+	count = ft_iphashmap_load(&iphmap, "utest_iphashmap_ips.txt");
 	ck_assert_int_eq(count, iphmap.count);
+	ck_assert_int_gt(count, 500);
 
-	f = fopen("utest_iphashmap_ips.txt", "r");
+	FILE * f = fopen("utest_iphashmap_ips.txt", "r");
 	ck_assert_ptr_ne(f, NULL);
 
+	char line[256];
 	while (fgets(line, sizeof(line), f))
 	{
 		char * c = line;
@@ -205,7 +187,7 @@ START_TEST(ft_iphashmap_load_utest)
 		}
 		ok = ft_iphashmap_pop_p(&iphmap, AF_UNSPEC, line, NULL);
 		ck_assert_int_eq(ok, true);
-    }
+	}
 	fclose(f);
 
 	ck_assert_int_eq(iphmap.count, 0);
@@ -288,32 +270,12 @@ START_TEST(ft_iphashmap_clear_utest)
 {
 	bool ok;
 	struct ft_iphashmap iphmap;
-	struct ft_iphashmap_entry * e;
-	char line[256];
-	FILE * f;
+	ssize_t count;
 
 	ok = ft_iphashmap_init(&iphmap, 10000);
 	ck_assert_int_eq(ok, true);
 
-	f = fopen("utest_iphashmap_ips.txt", "r");
-	ck_assert_ptr_ne(f, NULL);
-
-	int count = 0;
-	while (fgets(line, sizeof(line), f))
-	{
-		char * c = line;
-		while (*c != '\0')
-		{
-			if (*c == '\n') *c = '\0';
-			if (*c == '\r') *c = '\0';
-			c += 1;
-		}
-		e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, line);
-		ck_assert_ptr_ne(e, NULL);
-		count += 1;
-    }
-	fclose(f);
-
+	count = ft_iphashmap_load(&iphmap, "utest_iphashmap_ips.txt");
 	ck_assert_int_eq(count, iphmap.count);
 
 	ft_iphashmap_clear(&iphmap);
@@ -321,25 +283,7 @@ START_TEST(ft_iphashmap_clear_utest)
 	ck_assert_int_eq(iphmap.count, 0);
 	ck_assert_ptr_eq(iphmap.buckets, NULL);
 
-	f = fopen("utest_iphashmap_ips.txt", "r");
-	ck_assert_ptr_ne(f, NULL);
-
-	count = 0;
-	while (fgets(line, sizeof(line), f))
-	{
-		char * c = line;
-		while (*c != '\0')
-		{
-			if (*c == '\n') *c = '\0';
-			if (*c == '\r') *c = '\0';
-			c += 1;
-		}
-		e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, line);
-		ck_assert_ptr_ne(e, NULL);
-		count += 1;
-    }
-	fclose(f);
-
+	count = ft_iphashmap_load(&iphmap, "utest_iphashmap_ips.txt");
 	ck_assert_int_eq(count, iphmap.count);
 
 	ft_iphashmap_fini(&iphmap);

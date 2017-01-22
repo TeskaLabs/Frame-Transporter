@@ -395,3 +395,58 @@ static struct ft_iphashmap_entry ** ft_iphashmap_alloc(size_t size)
 
 	return buckets;
 }
+
+///
+
+static inline char *ft_iphashmap_trim_whitespace(char *str)
+{
+	char *end;
+
+	// Trim leading space
+	while(isspace((unsigned char)*str)) str++;
+
+	if(*str == 0)  // All spaces?
+		return str;
+
+	// Trim trailing space
+	end = str + strlen(str) - 1;
+	while(end > str && isspace((unsigned char)*end)) end--;
+
+	// Write new null terminator
+	*(end+1) = 0;
+
+	return str;
+}
+
+ssize_t ft_iphashmap_load(struct ft_iphashmap * this, const char * filename)
+{
+	assert(this != NULL);
+
+	char line[256];
+
+	FILE * f = fopen(filename, "r");
+	if (f == NULL)
+	{
+		FT_WARN_ERRNO(errno, "fopen(%s)", filename);
+		return -1;
+	}
+
+	ssize_t count = 0;
+	while (fgets(line, sizeof(line), f))
+	{
+		char * c = ft_iphashmap_trim_whitespace(line);
+		if (strlen(c) == 0) continue;
+		if (c[0] == '#') continue;
+		if (c[0] == ';') continue;
+
+		struct ft_iphashmap_entry * e = ft_iphashmap_add_p(this, AF_UNSPEC, c);
+		if (e == NULL)
+		{
+			FT_WARN("Cannot parse '%s' from '%s' file", line, c);
+		}
+		else count += 1;
+	}
+	fclose(f);
+
+	return count;
+}

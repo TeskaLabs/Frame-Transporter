@@ -49,4 +49,6 @@ bool ft_iphashmap_pop_p(struct ft_iphashmap * this, int family, const void * src
 
 struct ft_iphashmap_entry * ft_iphashmap_get_sa(struct ft_iphashmap * this, const struct sockaddr * addr, socklen_t addrlen);
 
+ssize_t ft_iphashmap_load(struct ft_iphashmap *, const char * filename);
+
 #endif //FT_COLS_IPHASHMAP_H_
