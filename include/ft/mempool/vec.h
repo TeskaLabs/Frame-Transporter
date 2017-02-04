@@ -80,7 +80,7 @@ static inline size_t ft_vec_len(struct ft_vec * this)
 }
 
 // Adjust position of capacity and limit to on the position
-static inline void ft_vec_cutoff(struct ft_vec * this)
+static inline void ft_vec_trim(struct ft_vec * this)
 {
 	assert(this != NULL);
 	this->limit = this->position;

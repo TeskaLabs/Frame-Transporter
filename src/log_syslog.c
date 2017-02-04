@@ -185,7 +185,7 @@ retry:
 		return;
 	}
 
-	ft_vec_cutoff(vec);
+	ft_vec_trim(vec);
 
 	ft_log_syslog_backend_logrecord_process_reentry = false;
 }
