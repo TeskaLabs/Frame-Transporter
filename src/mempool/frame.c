@@ -126,6 +126,13 @@ struct ft_vec * ft_frame_append_vec(struct ft_frame * this, size_t capacity)
 	return vec;
 }
 
+struct ft_vec * ft_frame_append_max_vec(struct ft_frame * this)
+{
+	struct ft_vec * vec = ft_frame_append_vec(this, 0);
+	vec->limit = vec->capacity = ((uint8_t *)vec - this->data) - vec->offset;
+	return vec;
+}
+
 void ft_frame_format_empty(struct ft_frame * this)
 {
 	assert(this != NULL);
