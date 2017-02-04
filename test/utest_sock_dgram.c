@@ -39,7 +39,7 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 
 		default:
 		{
-			if ((frame->addr.ss_family == AF_UNSPEC) && (frame->type == FT_FRAME_TYPE_STREAM_END))
+			if ((frame->addr.ss_family == AF_UNSPEC) && (frame->type == FT_FRAME_TYPE_END_OF_STREAM))
 				snprintf(addrstr, sizeof(addrstr)-1, "STREAM-END");
 			else
 				snprintf(addrstr, sizeof(addrstr)-1, "UNKNOWN(%d)", frame->addr.ss_family);
@@ -48,7 +48,7 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 
 	FT_INFO("Incoming frame: fd:%d %s f:%p ft:%08llx", dgram->read_watcher.fd, addrstr, frame, (unsigned long long) frame->type);
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 		return false;
 
 //	ft_frame_fwrite(frame, stdout);

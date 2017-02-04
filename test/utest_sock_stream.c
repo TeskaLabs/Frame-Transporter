@@ -61,7 +61,7 @@ bool sock_stream_1_on_read(struct ft_stream * established_sock, struct ft_frame 
 	}
 
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -178,7 +178,7 @@ bool sock_stream_2_on_read(struct ft_stream * established_sock, struct ft_frame 
 	}
 
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);
@@ -546,7 +546,7 @@ bool sock_stream_ssl_server_on_read(struct ft_stream * established_sock, struct 
 	}
 
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 	{
 		ck_assert_int_eq(established_sock->error.sys_errno, 0);
 		ck_assert_int_eq(established_sock->error.ssl_error, 0);

@@ -532,12 +532,12 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 		this->read_frame = NULL;
 
 		ft_frame_format_empty(frame);
-		ft_frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
+		ft_frame_set_type(frame, FT_FRAME_TYPE_END_OF_STREAM);
 	}
 
 	if (frame == NULL)
 	{
-		frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+		frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_END_OF_STREAM);
 	}
 
 	if (frame == NULL)
@@ -865,7 +865,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 		}
 		write_loop += 1;
 
-		if (this->write_frames->type == FT_FRAME_TYPE_STREAM_END)
+		if (this->write_frames->type == FT_FRAME_TYPE_END_OF_STREAM)
 		{
 			struct ft_frame * frame = this->write_frames;
 			this->write_frames = frame->next;
@@ -1075,7 +1075,7 @@ bool ft_stream_write(struct ft_stream * this, struct ft_frame * frame)
 		return false;
 	}
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 		this->flags.write_open = false;
 
 	//Add frame to the write queue
@@ -1108,7 +1108,7 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 	if (this->flags.write_shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct ft_frame * frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+	struct ft_frame * frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_END_OF_STREAM);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");

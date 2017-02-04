@@ -16,7 +16,7 @@ struct ft_list streams;
 
 bool on_read(struct ft_stream * established_sock, struct ft_frame * frame)
 {
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 	{
 		ft_stream_write(established_sock, frame);
 		return true;

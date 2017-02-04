@@ -151,11 +151,11 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 	for (int i = 0; i<frame_count; i += 1)
 	{
-		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_STREAM_END);
+		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_END_OF_STREAM);
 		ck_assert_ptr_ne(frames[i], NULL);
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
-		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_STREAM_END);
+		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_END_OF_STREAM);
 		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
 		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
 

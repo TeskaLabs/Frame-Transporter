@@ -317,12 +317,12 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 			this->read_frame = NULL;
 
 			ft_frame_format_empty(frame);
-			ft_frame_set_type(frame, FT_FRAME_TYPE_STREAM_END);
+			ft_frame_set_type(frame, FT_FRAME_TYPE_END_OF_STREAM);
 		}
 
 		if (frame == NULL)
 		{
-			frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+			frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_END_OF_STREAM);
 		}
 
 		if (frame == NULL)
@@ -612,7 +612,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		}
 		write_loop += 1;
 
-		if (this->write_frames->type == FT_FRAME_TYPE_STREAM_END)
+		if (this->write_frames->type == FT_FRAME_TYPE_END_OF_STREAM)
 		{
 			struct ft_frame * frame = this->write_frames;
 			this->write_frames = frame->next;
@@ -779,7 +779,7 @@ bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 
 	if (this->flags.write_open == false)
 	{
-		if (frame->type == FT_FRAME_TYPE_STREAM_END)
+		if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 		{
 			ft_frame_return(frame);
 			return true;
@@ -788,7 +788,7 @@ bool ft_dgram_write(struct ft_dgram * this, struct ft_frame * frame)
 		return false;
 	}
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 		this->flags.write_open = false;
 
 	//Add frame to the write queue
@@ -821,7 +821,7 @@ bool _ft_dgram_cntl_shutdown(struct ft_dgram * this)
 	if (this->flags.shutdown == true) return true;
 	if (this->flags.write_open == false) return true;
 
-	struct ft_frame * frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_STREAM_END);
+	struct ft_frame * frame = ft_pool_borrow(&this->base.socket.context->frame_pool, FT_FRAME_TYPE_END_OF_STREAM);
 	if (frame == NULL)
 	{
 		FT_WARN("Out of frames when preparing end of stream (write)");

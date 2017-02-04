@@ -293,7 +293,7 @@ static bool ft_proto_socks_stream_delegate_read(struct ft_stream * stream, struc
 	struct ft_proto_socks * this = (struct ft_proto_socks *)stream->base.socket.protocol;
 	assert(this != NULL);
 
-	if (frame->type == FT_FRAME_TYPE_STREAM_END)
+	if (frame->type == FT_FRAME_TYPE_END_OF_STREAM)
 	{
 		if (!stream->flags.write_open)
 			ft_frame_return(frame);

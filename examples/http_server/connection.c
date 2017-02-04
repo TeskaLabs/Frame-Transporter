@@ -83,7 +83,7 @@ bool connection_on_read(struct ft_stream * stream, struct ft_frame * frame)
 			nparsed = http_parser_execute(&this->http_request_parser, &http_request_parser_settings, ft_vec_ptr(vec), recved);
 			break;
 
-		case FT_FRAME_TYPE_STREAM_END:
+		case FT_FRAME_TYPE_END_OF_STREAM:
 			if (this->idling)
 			{
 				if (!this->stream.flags.write_open)
