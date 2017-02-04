@@ -143,6 +143,8 @@ bool ft_context_at_termination(struct ft_context * this, ft_context_callback cal
 // It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
 static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loop)
 {
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_terminate");
+
 	if (this->flags.running)
 	{
 		this->flags.running = false;
@@ -160,6 +162,8 @@ static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loo
 		this->shutdown_w.data = this;
 
 	}
+
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_terminate");
 }
 
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
@@ -177,6 +181,8 @@ void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int reve
 	struct ft_context * this = w->data;
 	assert(this != NULL);
 
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_on_shutdown_timer");
+
 	this->shutdown_counter += 1;
 
 	// Disable term. signal handlers - it allows the secondary signaling that has a bigger (unpolite) effect on the app
@@ -193,6 +199,8 @@ void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int reve
 	}
 
 	//TODO: Propagate this event -> it can be used for forceful shutdown
+
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_on_shutdown_timer");
 }
 
 ///
@@ -204,6 +212,7 @@ bool ft_context_at_heartbeat(struct ft_context * this, ft_context_callback callb
 
 	struct ft_list_node * node = ft_list_node_new(sizeof(struct _ft_context_callback_entry));
 	if (node == NULL) return false;
+
 	struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
 
 	e->callback = callback;
@@ -218,6 +227,8 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 {
 	struct ft_context * this = w->data;
 	assert(this != NULL);
+
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_on_heartbeat_timer");
 
 	ev_tstamp now = ev_now(loop);
 
@@ -237,12 +248,16 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 		}
 	}
 	this->heartbeat_at = now;
+
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_on_heartbeat_timer");
 }
 
 void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents)
 {
 	struct ft_context * this = w->data;
 	assert(this != NULL);
+
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN ft_context_on_prepare");
 
 	ev_tstamp now = ev_now(loop);
 
@@ -251,6 +266,8 @@ void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents)
 	{
 		ft_config.log_backend->on_prepare(this, now);
 	}
+
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END ft_context_on_prepare");
 }
 
 
