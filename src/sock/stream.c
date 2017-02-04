@@ -77,6 +77,7 @@ static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate *
 
 	assert(this != NULL);
 	assert(delegate != NULL);
+	assert(delegate->read != NULL);
 
 	assert(ai_socktype == SOCK_STREAM);
 

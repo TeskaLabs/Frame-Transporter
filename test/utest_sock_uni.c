@@ -2,14 +2,27 @@
 
 ///
 
+bool sock_uni_1_dgram_utest_on_read(struct ft_dgram * stream, struct ft_frame * frame)
+{
+	return false;
+}
+
 struct ft_dgram_delegate sock_uni_1_ft_dgram_delegate = 
 {
+	.read = sock_uni_1_dgram_utest_on_read
 };
+
+
+bool sock_uni_1_stream_utest_on_read(struct ft_stream * stream, struct ft_frame * frame)
+{
+	return false;
+}
 
 struct ft_stream_delegate sock_uni_1_ft_stream_delegate =
 {
-
+	.read = sock_uni_1_stream_utest_on_read
 };
+
 
 START_TEST(sock_uni_1_utest)
 {

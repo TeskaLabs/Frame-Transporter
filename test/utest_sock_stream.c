@@ -279,12 +279,16 @@ void sock_stream_conn_fail_on_error(struct ft_stream * established_sock)
 	printf("ERROR - NICE!\n");
 }
 
+bool sock_stream_conn_fail_on_read(struct ft_stream * stream, struct ft_frame * frame)
+{
+	return false;
+}
 
 struct ft_stream_delegate sock_stream_conn_fail_delegate = 
 {
 	.connected = NULL,
 	.get_read_frame = NULL,
-	.read = NULL,
+	.read = sock_stream_conn_fail_on_read,
 	.error = sock_stream_conn_fail_on_error,
 };
 
