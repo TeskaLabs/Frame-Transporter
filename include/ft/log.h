@@ -224,6 +224,7 @@ bool ft_log_file_backend_init(const char * fname);
 extern struct ft_log_backend ft_log_syslog_backend;
 
 bool ft_log_syslog_backend_init(struct ft_context * context);
+bool ft_log_syslog_set_format(char format); // 3 for RFC3164, 5 for RFC5424, C for compatibility mode
 
 ///
 

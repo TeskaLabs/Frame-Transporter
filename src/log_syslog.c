@@ -12,6 +12,7 @@ static struct ft_dgram ft_log_syslog_dgram = {
 };
 
 static struct ft_frame * ft_log_syslog_frame = NULL;
+static char ft_log_syslog_format = '5';
 
 // Forward declarations
 static struct ft_dgram_delegate ft_log_syslog_backend_dgram_delegate;
@@ -130,6 +131,16 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 		return;
 	}
 
+	static char hostname[256] = "-";
+	static char domainname[256] = "-";
+	if (hostname[0] == '-')
+	{
+		gethostname(domainname, sizeof(domainname));
+		gethostname(hostname, sizeof(hostname));
+		char * c = strchr(hostname, '.');
+		if (c != NULL) *c ='\0';
+	}
+
 retry:
 	ft_log_syslog_backend_logrecord_process_reentry = true;
 
@@ -161,24 +172,63 @@ retry:
 	time_t t = le->timestamp;
 	struct tm tmp;
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
-	gmtime_r(&t, &tmp);
 
-	// Best-effort string, here is an example:
-	// <133>Dec 03 06:30:00 seacat-gw[12345]: [l@47278 t="2016-12-03T06:30:00.123Z" l="INFO"] A free-form message that provides information about the event
-	// l@47278 is from http://oidref.com/1.3.6.1.4.1.47278 -> TeskaLabs 'SMI Network Management Private Enterprise Code', maintained by IANA,
-	// whose prefix is iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
-	ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [l@47278 t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\" l=\"%s\"%s] %s\n",
-		pri,
-		ft_log_months[tmp.tm_mon], tmp.tm_mday,
-		tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
-		le->appname,
-		le->pid,
-		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
-		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-		level, //TODO: Extend with optional message id (e.g. INFO354)
-		ft_log_syslog_backend_expand_sd(le),
-		le->message
-	);
+	switch (ft_log_syslog_format)
+	{
+		case 'C':
+			gmtime_r(&t, &tmp);
+			ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [l@47278 t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\" l=\"%s\"%s] %s\n",
+				pri,
+				ft_log_months[tmp.tm_mon], tmp.tm_mday,
+				tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
+				le->appname,
+				le->pid,
+				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
+				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+				level, //TODO: Extend with optional message id (e.g. INFO354)
+				ft_log_syslog_backend_expand_sd(le),
+				le->message
+			);
+			break;
+
+		case '3':
+			// RFC3164
+			localtime_r(&t, &tmp);
+			ok = ft_vec_sprintf(vec, "<%d>%s %d %02d:%02d:%02d %s %s[%d]: [t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\"%s] %s: %s\n",
+				pri,
+				ft_log_months[tmp.tm_mon], tmp.tm_mday,
+				tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
+				hostname,
+				le->appname,
+				le->pid,
+				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
+				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+				ft_log_syslog_backend_expand_sd(le),
+				level, //TODO: Extend with optional message id (e.g. INFO354)
+				le->message
+			);
+			break;
+
+		case '5':
+		default:
+			// RFC5424
+			gmtime_r(&t, &tmp);
+			// l@47278 is from http://oidref.com/1.3.6.1.4.1.47278 -> TeskaLabs 'SMI Network Management Private Enterprise Code', maintained by IANA,
+			// whose prefix is iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
+			ok = ft_vec_sprintf(vec, "<%d>1 %04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s %s %d - [l@47278 l=\"%s\"%s] %s\n",
+				pri,
+				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
+				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
+				domainname,
+				le->appname,
+				le->pid,
+				level,
+				ft_log_syslog_backend_expand_sd(le),
+				le->message
+			);
+			break;
+	}
+
 	if (!ok)
 	{
 		fprintf(stderr, "ft_log_syslog_backend_logrecord_process ft_vec_sprintf failed.\n");
@@ -201,6 +251,10 @@ static void ft_log_syslog_send(bool alloc_new_frame)
 	if (frame != NULL)
 	{
 		ft_frame_flip(frame);
+
+		//This line dumps syslog 'raw' format to stderr
+		ft_frame_fwrite(frame, stderr);
+
 		ok = ft_dgram_write(&ft_log_syslog_dgram, frame);
 		if (!ok)
 		{
@@ -278,6 +332,14 @@ static void ft_log_syslog_backend_on_forkexec(void)
 	ft_dgram_trash_write_buffer(&ft_log_syslog_dgram);
 
 	ft_log_syslog_backend_fini();
+}
+
+bool ft_log_syslog_set_format(char format)
+{
+	char * c = strchr("35C", format);
+	if (c == NULL) return false;
+	ft_log_syslog_format = format;
+	return true;
 }
 
 ///
