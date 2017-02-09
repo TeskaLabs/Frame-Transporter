@@ -12,7 +12,6 @@ static struct ft_dgram ft_log_syslog_dgram = {
 };
 
 static struct ft_frame * ft_log_syslog_frame = NULL;
-static char ft_log_syslog_format = '5';
 
 // Forward declarations
 static struct ft_dgram_delegate ft_log_syslog_backend_dgram_delegate;
@@ -63,11 +62,12 @@ static void ft_log_syslog_backend_fini()
 		if (ft_log_syslog_frame != NULL)
 		{
 			if (ft_log_syslog_frame->vec_limit > 0) FT_WARN("Lost a data in a syslog log frame");
-			ft_frame_return(ft_log_syslog_frame);
+			struct ft_frame * frame = ft_log_syslog_frame;
 			ft_log_syslog_frame = NULL;
+			ft_frame_return(frame);
+			
 		}
 	}
-
 
 	if (ft_log_syslog_dgram.base.socket.clazz != NULL)
 	{
@@ -131,13 +131,11 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 		return;
 	}
 
-	static char hostname[256] = "-";
-	static char domainname[256] = "-";
-	if (hostname[0] == '-')
+	if (ft_config.log_syslog.hostname[0] == '-')
 	{
-		gethostname(domainname, sizeof(domainname));
-		gethostname(hostname, sizeof(hostname));
-		char * c = strchr(hostname, '.');
+		gethostname(ft_config.log_syslog.domainname, sizeof(ft_config.log_syslog.domainname));
+		gethostname(ft_config.log_syslog.hostname, sizeof(ft_config.log_syslog.hostname));
+		char * c = strchr(ft_config.log_syslog.hostname, '.');
 		if (c != NULL) *c ='\0';
 	}
 
@@ -173,7 +171,7 @@ retry:
 	struct tm tmp;
 	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
 
-	switch (ft_log_syslog_format)
+	switch (ft_config.log_syslog.format)
 	{
 		case 'C':
 			gmtime_r(&t, &tmp);
@@ -198,7 +196,7 @@ retry:
 				pri,
 				ft_log_months[tmp.tm_mon], tmp.tm_mday,
 				tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
-				hostname,
+				ft_config.log_syslog.hostname,
 				le->appname,
 				le->pid,
 				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
@@ -219,7 +217,7 @@ retry:
 				pri,
 				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-				domainname,
+				ft_config.log_syslog.domainname,
 				le->appname,
 				le->pid,
 				level,
@@ -334,14 +332,6 @@ static void ft_log_syslog_backend_on_forkexec(void)
 	ft_log_syslog_backend_fini();
 }
 
-bool ft_log_syslog_set_format(char format)
-{
-	char * c = strchr("35C", format);
-	if (c == NULL) return false;
-	ft_log_syslog_format = format;
-	return true;
-}
-
 ///
 
 struct ft_log_backend ft_log_syslog_backend = {
@@ -349,6 +339,7 @@ struct ft_log_backend ft_log_syslog_backend = {
 	.process = ft_log_syslog_backend_logrecord_process,
 	.on_prepare = ft_log_syslog_backend_on_prepare,
 	.on_forkexec = ft_log_syslog_backend_on_forkexec,
+	.on_sighup = NULL,
 };
 
 static struct ft_dgram_delegate ft_log_syslog_backend_dgram_delegate = {

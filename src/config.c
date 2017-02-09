@@ -13,7 +13,6 @@ struct ft_config ft_config =
 	.log_file = {
 		.filename = NULL,
 		.file = NULL,
-		.sighup_w.signum = 0,
 		.flush_counter = 0,
 		.flush_counter_max = 100,
 		.flush_last = 0.0,
@@ -28,8 +27,9 @@ struct ft_config ft_config =
 		.address = "/dev/log",
 #endif
 		.facility = 16,
-		.mode = 'B',
+		.format = '5',
 		.hostname = "-",
+		.domainname = "-",
 	},
 
 	.lag_detector_sensitivity = 1.0,

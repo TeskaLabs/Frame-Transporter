@@ -135,12 +135,18 @@ static void ft_log_file_backend_on_forkexec(void)
 	ft_log_file_backend_fini();
 }
 
+static void ft_log_file_on_sighup()
+{
+	ft_log_file_reopen();
+}
+
 
 struct ft_log_backend ft_log_file_backend = {
 	.fini = ft_log_file_backend_fini,
 	.process = ft_log_file_backend_logrecord_process,
 	.on_prepare = ft_log_file_backend_on_prepare,
 	.on_forkexec = ft_log_file_backend_on_forkexec,
+	.on_sighup = ft_log_file_on_sighup
 };
 
 
@@ -203,23 +209,3 @@ bool ft_log_file_reopen()
 	return true;
 }
 
-static void ft_log_file_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
-{
-	ft_log_file_reopen();
-}
-
-
-void ft_log_handle_sighup(struct ft_context * context)
-{
-	assert(context != NULL);
-
-	if (ft_config.log_file.sighup_w.signum != 0)
-	{
-		FT_WARN("SIGHUP handler seems to be already installed");
-		return;
-	}
-
-	ev_signal_init(&ft_config.log_file.sighup_w, ft_log_file_on_sighup, SIGHUP);
-	ev_signal_start(context->ev_loop, &ft_config.log_file.sighup_w);
-	ev_unref(context->ev_loop);
-}

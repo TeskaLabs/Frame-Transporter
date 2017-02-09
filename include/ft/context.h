@@ -7,6 +7,7 @@ struct ft_context
 
 	ev_signal sigint_w;
 	ev_signal sigterm_w;
+	ev_signal sighup_w;
 
 	ev_timer heartbeat_w;
 	ev_tstamp heartbeat_at;

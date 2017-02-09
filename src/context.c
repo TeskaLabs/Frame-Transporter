@@ -3,6 +3,7 @@
 ///
 
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
+static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents);
 static void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents);
 static void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents);
@@ -39,6 +40,11 @@ bool ft_context_init(struct ft_context * this)
 	ev_signal_start(this->ev_loop, &this->sigterm_w);
 	ev_unref(this->ev_loop);
 	this->sigterm_w.data = this;
+
+	ev_signal_init(&this->sighup_w, _ft_context_on_sighup, SIGHUP);
+	ev_signal_start(this->ev_loop, &this->sighup_w);
+	ev_unref(this->ev_loop);
+	this->sighup_w.data = this;
 
 	// Install heartbeat timer watcher
 	ev_timer_init(&this->heartbeat_w, _ft_context_on_heartbeat_timer, 0.0, ft_config.heartbeat_interval);
@@ -198,6 +204,12 @@ void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int reve
 		ev_signal_stop(this->ev_loop, &this->sigterm_w);
 	}
 
+	if (ev_is_active(&this->sighup_w))
+	{
+		ev_ref(this->ev_loop);
+		ev_signal_stop(this->ev_loop, &this->sighup_w);
+	}
+
 	//TODO: Propagate this event -> it can be used for forceful shutdown
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_on_shutdown_timer");
@@ -270,6 +282,15 @@ void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents)
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END ft_context_on_prepare");
 }
 
+void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents)
+{
+	// Forward to logging
+	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->on_sighup != NULL))
+	{
+		ft_config.log_backend->on_sighup();
+	}
+
+}
 
 ev_tstamp ft_safe_now(struct ft_context * this)
 {

@@ -197,6 +197,7 @@ struct ft_log_backend
 	void (*process)(struct ft_logrecord * le, int le_message_length);
 	void (*on_prepare)(struct ft_context * context, ev_tstamp now);
 	void (*on_forkexec)(void); // Called from forked child prior hard discard of the log context, similar to fini() but must be 'harder'
+	void (*on_sighup)(void);
 };
 
 // Call this from child after fork to reset logging prior exec
@@ -227,9 +228,6 @@ bool ft_log_syslog_backend_init(struct ft_context * context);
 bool ft_log_syslog_set_format(char format); // 3 for RFC3164, 5 for RFC5424, C for compatibility mode
 
 ///
-
-// Install log rotate handler on SIGHUP
-void ft_log_handle_sighup(struct ft_context * context);
 
 void ft_log_file_flush(ev_tstamp now);
 

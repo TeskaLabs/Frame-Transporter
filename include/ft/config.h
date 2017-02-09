@@ -16,7 +16,6 @@ struct ft_config
 	{
 		const char * filename;
 		FILE * file;
-		ev_signal sighup_w;
 		unsigned int flush_counter;
 		unsigned int flush_counter_max;
 		ev_tstamp flush_last;
@@ -28,8 +27,9 @@ struct ft_config
 	{
 		const char * address;
 		int facility;
-		char mode; // Old BSD-Style (RFC3164) '3', best-effort 'B' or RFC5424 '5'
-		char hostname[1024];
+		char format; // Old BSD-Style (RFC3164) '3', best-effort 'C' or RFC5424 '5'
+		char hostname[256];
+		char domainname[256];
 	} log_syslog;
 
 	double lag_detector_sensitivity;
