@@ -96,6 +96,7 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 #define FT_AUDIT(fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', NULL, fmt, ## args); } while (0)
 
 #define FT_AUDIT_SD(sd, fmt, args...) do { ft_log_stats.audit_count += 1; _ft_log('A', sd, fmt, ## args); } while (0)
+#define FT_INFO_SD(sd, fmt, args...) do { ft_log_stats.info_count += 1; _ft_log('I', sd, fmt, ## args); } while (0)
 
 #ifdef RELEASE
 #define FT_DEBUG_P(fmt, args...) do { if (0) _ft_log('D', NULL, "%s:%s:%d " fmt, __FILE__, __func__, __LINE__, ## args); } while (0)
