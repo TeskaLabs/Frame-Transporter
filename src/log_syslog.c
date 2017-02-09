@@ -253,7 +253,7 @@ static void ft_log_syslog_send(bool alloc_new_frame)
 		ft_frame_flip(frame);
 
 		//This line dumps syslog 'raw' format to stderr
-		ft_frame_fwrite(frame, stderr);
+		//ft_frame_fwrite(frame, stderr);
 
 		ok = ft_dgram_write(&ft_log_syslog_dgram, frame);
 		if (!ok)
