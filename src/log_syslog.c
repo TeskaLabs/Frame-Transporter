@@ -43,9 +43,21 @@ bool ft_log_syslog_backend_init(struct ft_context * context)
 		if (!ok) return false;
 	}
 
-	gethostname(ft_config.log_syslog.hostname, sizeof(ft_config.log_syslog.hostname)-1);
-	char * c = strchr(ft_config.log_syslog.hostname, '.');
-	if (c != NULL) *c = '\0';
+	if (ft_config.log_syslog.hostname == NULL)
+	{
+		char hostname[1024];
+		gethostname(hostname, sizeof(hostname));
+		char * c = strchr(hostname, '.');
+		if (c != NULL) *c ='\0';
+		ft_config.log_syslog.hostname = strdup(hostname);
+	}
+
+	if (ft_config.log_syslog.domainname == NULL)
+	{
+		char hostname[1024];
+		gethostname(hostname, sizeof(hostname));
+		ft_config.log_syslog.domainname = strdup(hostname);
+	}
 
 	return true;
 }
@@ -77,7 +89,7 @@ static void ft_log_syslog_backend_fini()
 }
 
 
-static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le)
+static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le, char separator)
 {
 	int rc;
 	static __thread char * ft_log_syslog_backend_expand_sdbuf = NULL;
@@ -105,12 +117,12 @@ static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le)
 
 	char * c = ft_log_syslog_backend_expand_sdbuf;
 
-	c[0] = ' ';
+	c[0] = separator;
 	c += 1;
 
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		rc = sprintf(c, "%s=\"%s\" ", sd->name, sd->value);
+		rc = sprintf(c, "%s=\"%s\"%c", sd->name, sd->value, separator);
 		c += rc;
 		assert(c < (ft_log_syslog_backend_expand_sdbuf + ft_log_syslog_backend_expand_sdbuf_size));
 	}
@@ -129,14 +141,6 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 		fprintf(stderr, "Reentry of ft_log_syslog_backend_logrecord_process, that's not supported\n");
 		ft_logrecord_fprint(le, le_message_length, stderr);
 		return;
-	}
-
-	if (ft_config.log_syslog.hostname[0] == '-')
-	{
-		gethostname(ft_config.log_syslog.domainname, sizeof(ft_config.log_syslog.domainname));
-		gethostname(ft_config.log_syslog.hostname, sizeof(ft_config.log_syslog.hostname));
-		char * c = strchr(ft_config.log_syslog.hostname, '.');
-		if (c != NULL) *c ='\0';
 	}
 
 retry:
@@ -173,19 +177,17 @@ retry:
 
 	switch (ft_config.log_syslog.format)
 	{
-		case 'C':
-			gmtime_r(&t, &tmp);
-			ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: [l@47278 t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\" l=\"%s\"%s] %s\n",
+		case 'm':
+			localtime_r(&t, &tmp);
+			ok = ft_vec_sprintf(vec, "<%d>%s %2d %02d:%02d:%02d %s[%d]: %s:%s%s\n",
 				pri,
 				ft_log_months[tmp.tm_mon], tmp.tm_mday,
 				tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
 				le->appname,
 				le->pid,
-				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
-				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 				level, //TODO: Extend with optional message id (e.g. INFO354)
-				ft_log_syslog_backend_expand_sd(le),
-				le->message
+				le->message,
+				ft_log_syslog_backend_expand_sd(le, ';')
 			);
 			break;
 
@@ -201,7 +203,7 @@ retry:
 				le->pid,
 				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-				ft_log_syslog_backend_expand_sd(le),
+				ft_log_syslog_backend_expand_sd(le, ' '),
 				level, //TODO: Extend with optional message id (e.g. INFO354)
 				le->message
 			);
@@ -221,7 +223,7 @@ retry:
 				le->appname,
 				le->pid,
 				level,
-				ft_log_syslog_backend_expand_sd(le),
+				ft_log_syslog_backend_expand_sd(le, ' '),
 				le->message
 			);
 			break;

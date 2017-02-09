@@ -27,9 +27,9 @@ struct ft_config
 	{
 		const char * address;
 		int facility;
-		char format; // Old BSD-Style (RFC3164) '3', best-effort 'C' or RFC5424 '5'
-		char hostname[256];
-		char domainname[256];
+		char format; // Old BSD-Style (RFC3164) '3', RFC5424 '5', macos 'm'
+		char * hostname;
+		char * domainname;
 	} log_syslog;
 
 	double lag_detector_sensitivity;

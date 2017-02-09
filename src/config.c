@@ -28,8 +28,8 @@ struct ft_config ft_config =
 #endif
 		.facility = 16,
 		.format = '5',
-		.hostname = "-",
-		.domainname = "-",
+		.hostname = NULL,
+		.domainname = NULL,
 	},
 
 	.lag_detector_sensitivity = 1.0,
