@@ -69,6 +69,9 @@ struct ft_dgram
 bool ft_dgram_init(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol);
 bool ft_dgram_bind(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
 bool ft_dgram_connect(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
+
+// This function may block depending on the state of the output queue of frames (see ft_dgram_flush, called implicitly)
+//IDEA: If it represents a problem, it is possible to implement a flag that control if block or trash write frames
 void ft_dgram_fini(struct ft_dgram *);
 
 bool ft_dgram_write(struct ft_dgram *, struct ft_frame * frame);
