@@ -13,6 +13,7 @@ const char * ft_dgram_class = "ft_dgram";
 
 static void _ft_dgram_on_read(struct ev_loop * loop, struct ev_io * watcher, int revents);
 static void _ft_dgram_on_write(struct ev_loop * loop, struct ev_io * watcher, int revents);
+static void _ft_dgram_write_real(struct ft_dgram * this);
 
 enum _ft_dgram_read_event
 {
@@ -86,7 +87,7 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &i, sizeof(i));
 	if (rc == -1) FT_WARN_ERRNO(errno, "setsockopt(%d, SOL_SOCKET, SO_RCVBUF, %d)", fd, i);
 
-	ok = ft_fd_nonblock(fd);
+	ok = ft_fd_nonblock(fd, true);
 	if (!ok) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	this->delegate = delegate;
@@ -132,13 +133,15 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 
 void ft_dgram_fini(struct ft_dgram * this)
 {
+	size_t cap;
+
 	assert(this != NULL);
 	assert(this->base.socket.clazz == ft_dgram_class);
 
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
 
-	if(this->delegate->fini != NULL) this->delegate->fini(this);	
+	ft_dgram_flush(this);
 
 	ft_dgram_cntl(this, FT_DGRAM_READ_STOP | FT_DGRAM_WRITE_STOP);
 
@@ -153,6 +156,8 @@ void ft_dgram_fini(struct ft_dgram * this)
 		if (rc != 0) FT_WARN_ERRNO(errno, "Unlinking unix socket '%s'", un->sun_path);
 	}
 
+	if(this->delegate->fini != NULL) this->delegate->fini(this);	
+
 	this->read_watcher.fd = -1;
 	this->write_watcher.fd = -1;
 
@@ -165,7 +170,6 @@ void ft_dgram_fini(struct ft_dgram * this)
 	this->flags.write_open = false;
 	this->flags.write_ready = false;
 
-	size_t cap;
 	if (this->read_frame != NULL)
 	{
 		cap = ft_frame_pos(this->read_frame);
@@ -174,25 +178,22 @@ void ft_dgram_fini(struct ft_dgram * this)
 
 		if (cap > 0) FT_WARN("Lost %zu bytes in read buffer of the socket", cap);
 	}
-
-	cap = ft_dgram_trash_write_buffer(this);
-	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
 }
 
-size_t ft_dgram_trash_write_buffer(struct ft_dgram * this)
+void ft_dgram_flush(struct ft_dgram * this)
 {
 	assert(this != NULL);
 
-	size_t cap = 0;
+	if (this->write_frames == 0) return;
+
+	ft_fd_nonblock(this->read_watcher.fd, false);
+
 	while (this->write_frames != NULL)
 	{
-		struct ft_frame * frame = this->write_frames;
-		this->write_frames = frame->next;
-
-		cap += ft_frame_len(frame);
-		ft_frame_return(frame);
+		_ft_dgram_write_real(this);
 	}
-	return cap;
+
+	ft_fd_nonblock(this->read_watcher.fd, true);
 }
 
 ///

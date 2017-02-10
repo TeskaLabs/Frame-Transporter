@@ -233,14 +233,14 @@ START_TEST(ft_log_syslog_format_utest)
 	ft_log_backend_switch(&ft_log_syslog_backend);
 	mark_point();
 
-	ft_log_syslog_set_format('5');
+	ft_config.log_syslog.format = '5';
 	FT_INFO("Test syslog format RFC5424");
 
-	ft_log_syslog_set_format('3');
+	ft_config.log_syslog.format = '3';
 	FT_INFO("Test syslog format RFC3164");
 
-	ft_log_syslog_set_format('C');
-	FT_INFO("Test syslog format 'C'");
+	ft_config.log_syslog.format = 'm';
+	FT_INFO("Test syslog format 'm'");
 
 	mark_point();
 

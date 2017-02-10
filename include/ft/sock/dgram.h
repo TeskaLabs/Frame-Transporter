@@ -75,9 +75,8 @@ bool ft_dgram_write(struct ft_dgram *, struct ft_frame * frame);
 
 void ft_dgram_diagnose(struct ft_dgram *);
 
-// This function trashes an output queue
-// Use that with caution!
-size_t ft_dgram_trash_write_buffer(struct ft_dgram *);
+// This function flushes an output queue, it is a blocking (!!!) operation
+void ft_dgram_flush(struct ft_dgram *);
 
 ///
 

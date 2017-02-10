@@ -18,6 +18,7 @@ static struct ft_dgram_delegate ft_log_syslog_backend_dgram_delegate;
 static bool ft_log_syslog_connect(void);
 static void ft_log_syslog_send(bool alloc_new_frame);
 static bool ft_log_syslog_frame_alloc(void);
+static void ft_log_syslog_backend_flush(ev_tstamp now);
 
 ///
 
@@ -64,28 +65,12 @@ bool ft_log_syslog_backend_init(struct ft_context * context)
 
 static void ft_log_syslog_backend_fini()
 {
-	if (ft_log_syslog_frame != NULL)
-	{
-		if (ft_log_syslog_frame->vec_limit > 0)
-		{
-			ft_log_syslog_send(false);
-		}
-		
-		if (ft_log_syslog_frame != NULL)
-		{
-			if (ft_log_syslog_frame->vec_limit > 0) FT_WARN("Lost a data in a syslog log frame");
-			struct ft_frame * frame = ft_log_syslog_frame;
-			ft_log_syslog_frame = NULL;
-			ft_frame_return(frame);
-			
-		}
-	}
+	ft_log_syslog_backend_flush(1e77); // Flush at any cost
 
 	if (ft_log_syslog_dgram.base.socket.clazz != NULL)
 	{
 		ft_dgram_fini(&ft_log_syslog_dgram);
 	}
-
 }
 
 
@@ -321,6 +306,27 @@ static void ft_log_syslog_on_dgram_error(struct ft_dgram * dgram)
 
 static void ft_log_syslog_backend_flush(ev_tstamp now)
 {
+	if (ft_log_syslog_frame != NULL)
+	{
+		if (ft_log_syslog_frame->vec_limit > 0)
+		{
+			ft_log_syslog_send(false);
+		}
+		
+		if (ft_log_syslog_frame != NULL)
+		{
+			if (ft_log_syslog_frame->vec_limit > 0) FT_WARN("Lost a data in a syslog log frame");
+			struct ft_frame * frame = ft_log_syslog_frame;
+			ft_log_syslog_frame = NULL;
+			ft_frame_return(frame);
+			
+		}
+	}
+
+	if (ft_log_syslog_dgram.base.socket.clazz != NULL)
+	{
+		ft_dgram_flush(&ft_log_syslog_dgram);
+	}
 }
 
 /*
