@@ -216,6 +216,7 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 	);
 	if (!ok)
 	{
+		close(fd);
 		FT_TRACE(FT_TRACE_ID_STREAM, "END error" TRACE_FMT, TRACE_ARGS);
 		return false;
 	}
@@ -232,6 +233,7 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 		if (errno != EINPROGRESS)
 		{
 			FT_ERROR_ERRNO(errno, "connect()");
+			close(fd);
 			FT_TRACE(FT_TRACE_ID_STREAM, "END connect err" TRACE_FMT, TRACE_ARGS);
 			return false;
 		}
