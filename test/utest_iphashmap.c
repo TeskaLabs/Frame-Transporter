@@ -131,26 +131,26 @@ START_TEST(ft_iphashmap_str_utest)
 	ok = ft_iphashmap_init(&iphmap, 4);
 	ck_assert_int_eq(ok, true);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET, "1.2.3.4");
+	e = ft_iphashmap_add(&iphmap, AF_INET, "1.2.3.4");
 	ck_assert_ptr_ne(e, NULL);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET6, "1.2.3.4");
+	e = ft_iphashmap_add(&iphmap, AF_INET6, "1.2.3.4");
 	ck_assert_ptr_eq(e, NULL); // Invalid family
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET6, "::1");
+	e = ft_iphashmap_add(&iphmap, AF_INET6, "::1");
 	ck_assert_ptr_ne(e, NULL);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET, "::11");
+	e = ft_iphashmap_add(&iphmap, AF_INET, "::11");
 	ck_assert_ptr_eq(e, NULL); // Invalid family
 
 
-	e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, "::11");
+	e = ft_iphashmap_add(&iphmap, AF_UNSPEC, "::11");
 	ck_assert_ptr_ne(e, NULL);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, "1.2.3.5");
+	e = ft_iphashmap_add(&iphmap, AF_UNSPEC, "1.2.3.5");
 	ck_assert_ptr_ne(e, NULL);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_UNSPEC, "xxxx");
+	e = ft_iphashmap_add(&iphmap, AF_UNSPEC, "xxxx");
 	ck_assert_ptr_eq(e, NULL);
 
 
@@ -185,7 +185,7 @@ START_TEST(ft_iphashmap_load_utest)
 			if (*c == '\r') *c = '\0';
 			c += 1;
 		}
-		ok = ft_iphashmap_pop_p(&iphmap, AF_UNSPEC, line, NULL);
+		ok = ft_iphashmap_pop(&iphmap, AF_UNSPEC, line, NULL);
 		ck_assert_int_eq(ok, true);
 	}
 	fclose(f);
@@ -209,10 +209,10 @@ START_TEST(ft_iphashmap_sockaddr_utest)
 	ok = ft_iphashmap_init(&iphmap, 4);
 	ck_assert_int_eq(ok, true);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET, "127.0.0.1");
+	e = ft_iphashmap_add(&iphmap, AF_INET, "127.0.0.1");
 	ck_assert_ptr_ne(e, NULL);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET6, "::17");
+	e = ft_iphashmap_add(&iphmap, AF_INET6, "::17");
 	ck_assert_ptr_ne(e, NULL);
 
 	struct addrinfo hints;
@@ -253,11 +253,11 @@ START_TEST(ft_iphashmap_unique_utest)
 	ck_assert_int_eq(ok, true);
 	ck_assert_int_eq(iphmap.count, 0);
 
-	e = ft_iphashmap_add_p(&iphmap, AF_INET, "127.0.0.1");
+	e = ft_iphashmap_add(&iphmap, AF_INET, "127.0.0.1");
 	ck_assert_ptr_ne(e, NULL);
 	ck_assert_int_eq(iphmap.count, 1);
 
-	e1 = ft_iphashmap_add_p(&iphmap, AF_INET, "127.0.0.1");
+	e1 = ft_iphashmap_add(&iphmap, AF_INET, "127.0.0.1");
 	ck_assert_ptr_eq(e, e1);
 	ck_assert_int_eq(iphmap.count, 1);
 
