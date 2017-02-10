@@ -105,7 +105,7 @@ static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate *
 #endif
 	}	
 
-	bool res = ft_fd_nonblock(fd);
+	bool res = ft_fd_nonblock(fd, true);
 	if (!res) FT_WARN_ERRNO(errno, "Failed when setting established socket to non-blocking mode");
 
 	this->delegate = delegate;
