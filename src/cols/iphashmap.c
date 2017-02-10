@@ -65,7 +65,7 @@ static inline unsigned int ft_iphashmap_hash_ip6(struct in6_addr * ip6)
 
 /// Generics
 
-static struct ft_iphashmap_entry * ft_iphashmap_add(struct ft_iphashmap * this, int family, union ft_iphashmap_addr addr)
+static struct ft_iphashmap_entry * ft_iphashmap_add_int_(struct ft_iphashmap * this, int family, union ft_iphashmap_addr addr)
 {
 	assert(this != NULL);
 
@@ -174,7 +174,7 @@ static struct ft_iphashmap_entry * ft_iphashmap_get(struct ft_iphashmap * this, 
 	return NULL;
 }
 
-static bool ft_iphashmap_pop(struct ft_iphashmap * this, unsigned int hash, int family, union ft_iphashmap_addr addr, void ** data)
+static bool ft_iphashmap_pop_int_(struct ft_iphashmap * this, unsigned int hash, int family, union ft_iphashmap_addr addr, void ** data)
 {
 	assert(this != NULL);
 	if (this->buckets == NULL) return false; // Hash map is empty
@@ -223,7 +223,7 @@ static bool ft_iphashmap_pop(struct ft_iphashmap * this, unsigned int hash, int 
 struct ft_iphashmap_entry * ft_iphashmap_add_ip4(struct ft_iphashmap * this, struct in_addr addr)
 {
 	union ft_iphashmap_addr uaddr = { .ip4 = addr };
-	return ft_iphashmap_add(this, AF_INET, uaddr);
+	return ft_iphashmap_add_int_(this, AF_INET, uaddr);
 }
 
 struct ft_iphashmap_entry * ft_iphashmap_get_ip4(struct ft_iphashmap * this, struct in_addr addr)
@@ -235,7 +235,7 @@ struct ft_iphashmap_entry * ft_iphashmap_get_ip4(struct ft_iphashmap * this, str
 bool ft_iphashmap_pop_ip4(struct ft_iphashmap * this, struct in_addr addr, void ** data)
 {
 	union ft_iphashmap_addr uaddr = { .ip4 = addr };
-	return ft_iphashmap_pop(this, ft_iphashmap_hash_ip4(&addr), AF_INET, uaddr, data);
+	return ft_iphashmap_pop_int_(this, ft_iphashmap_hash_ip4(&addr), AF_INET, uaddr, data);
 }
 
 /// IPv6
@@ -243,7 +243,7 @@ bool ft_iphashmap_pop_ip4(struct ft_iphashmap * this, struct in_addr addr, void 
 struct ft_iphashmap_entry * ft_iphashmap_add_ip6(struct ft_iphashmap * this, struct in6_addr addr)
 {
 	union ft_iphashmap_addr uaddr = { .ip6 = addr };
-	return ft_iphashmap_add(this, AF_INET6, uaddr);
+	return ft_iphashmap_add_int_(this, AF_INET6, uaddr);
 
 }
 
@@ -256,12 +256,12 @@ struct ft_iphashmap_entry * ft_iphashmap_get_ip6(struct ft_iphashmap * this, str
 bool ft_iphashmap_pop_ip6(struct ft_iphashmap * this, struct in6_addr addr, void ** data)
 {
 	union ft_iphashmap_addr uaddr = { .ip6 = addr };
-	return ft_iphashmap_pop(this, ft_iphashmap_hash_ip6(&addr), AF_INET6, uaddr, data);
+	return ft_iphashmap_pop_int_(this, ft_iphashmap_hash_ip6(&addr), AF_INET6, uaddr, data);
 }
 
 ///
 
-struct ft_iphashmap_entry * ft_iphashmap_add_p(struct ft_iphashmap * this, int family, const void * src)
+struct ft_iphashmap_entry * ft_iphashmap_add(struct ft_iphashmap * this, int family, const char * src)
 {
 	int rc;
 	assert(this != NULL);
@@ -310,7 +310,7 @@ retry:
 }
 
 
-bool ft_iphashmap_pop_p(struct ft_iphashmap * this, int family, const void * src, void ** data)
+bool ft_iphashmap_pop(struct ft_iphashmap * this, int family, const char * src, void ** data)
 {
 	int rc;
 	assert(this != NULL);
@@ -439,7 +439,7 @@ ssize_t ft_iphashmap_load(struct ft_iphashmap * this, const char * filename)
 		if (c[0] == '#') continue;
 		if (c[0] == ';') continue;
 
-		struct ft_iphashmap_entry * e = ft_iphashmap_add_p(this, AF_UNSPEC, c);
+		struct ft_iphashmap_entry * e = ft_iphashmap_add(this, AF_UNSPEC, c);
 		if (e == NULL)
 		{
 			FT_WARN("Cannot parse '%s' from '%s' file", line, c);

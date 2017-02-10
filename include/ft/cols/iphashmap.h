@@ -44,8 +44,8 @@ struct ft_iphashmap_entry * ft_iphashmap_get_ip6(struct ft_iphashmap * this, str
 bool ft_iphashmap_pop_ip6(struct ft_iphashmap * this, struct in6_addr addr, void ** data);
 
 // family can be one of AF_INET, AF_INET6 and AF_UNSPEC (autodetect)
-struct ft_iphashmap_entry * ft_iphashmap_add_p(struct ft_iphashmap * this, int family, const void * src);
-bool ft_iphashmap_pop_p(struct ft_iphashmap * this, int family, const void * src, void ** data);
+struct ft_iphashmap_entry * ft_iphashmap_add(struct ft_iphashmap * this, int family, const char * src);
+bool ft_iphashmap_pop(struct ft_iphashmap * this, int family, const char * src, void ** data);
 
 struct ft_iphashmap_entry * ft_iphashmap_get_sa(struct ft_iphashmap * this, const struct sockaddr * addr, socklen_t addrlen);
 
