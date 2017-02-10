@@ -41,7 +41,7 @@ int main(int argc, char const *argv[])
 	struct ft_context context;
 	struct ft_stream sock;
 
-	ft_log_verbose(true);
+	ft_config.log_verbose = true;
 	ft_initialise();
 	
 	//ft_config.log_trace_mask |= FT_TRACE_ID_STREAM | FT_TRACE_ID_EVENT_LOOP;

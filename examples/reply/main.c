@@ -131,7 +131,7 @@ int main(int argc, char const *argv[])
 	bool ok;
 	int rc;
 
-	ft_log_verbose(true);
+	ft_config.log_verbose = true;
 	//ft_config.log_trace_mask |= FT_TRACE_ID_STREAM | FT_TRACE_ID_EVENT_LOOP;
 
 	ft_initialise();
