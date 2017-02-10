@@ -58,7 +58,6 @@ mozilla.org 443
 slideshare.net 443
 yandex.ru 443
 wsj.com 443
-delicious.com 443
 mail.ru 443
 t.co 443
 sourceforge.net 443
@@ -69,7 +68,6 @@ fc2.com 443
 livejournal.com 443
 icio.us 443
 ebay.com 443
-about.com 443
 joomla.org 443
 google.co.jp 443
 typepad.com 443
@@ -254,7 +252,7 @@ xiti.com 443
 istockphoto.com 443
 register.it 443
 www.yellowbook.com 443
-exblog.jp 443
+www.exblog.jp 443
 t-online.de 443
 www.samsung.com 443
 ovh.com 443
@@ -264,7 +262,6 @@ nhs.uk 443
 houzz.com 443
 www.nic.tel 443
 theverge.com 443
-indiatimes.com 443
 paginegialle.it 443
 prweb.com 443
 www.fastcompany.com 443
@@ -346,7 +343,7 @@ enom.com 443
 chronoengine.com 443
 google.pl 443
 aliyun.com 443
-nielsen.com 443
+www.nielsen.com 443
 www.politico.com 443
 livestream.com 443
 doubleclick.net 443
