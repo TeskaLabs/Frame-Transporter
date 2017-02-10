@@ -1,10 +1,19 @@
 #include "_ft_internal.h"
 
-bool ft_fd_nonblock(int fd)
+bool ft_fd_nonblock(int fd, bool nonblock)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
-  	if (flags < 0) return false;
-	flags |= O_NONBLOCK;
+  	if (flags < 0)
+  	{
+  		FT_WARN_ERRNO(errno, "fcntl(O_NONBLOCK)");
+  		return false;
+  	}
+  	if (nonblock)
+  	{
+		flags |= O_NONBLOCK;
+	} else {
+		flags &= ~O_NONBLOCK;
+	}
 	return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
 }
 

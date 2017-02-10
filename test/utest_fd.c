@@ -7,7 +7,7 @@ START_TEST(ft_fd_nonblock_utest)
 	int fd=socket(PF_INET, SOCK_STREAM, 0);
 	ck_assert_int_ne(fd, -1);
 
-	bool ret = ft_fd_nonblock(fd);
+	bool ret = ft_fd_nonblock(fd, true);
 	ck_assert_int_eq(ret, true);
 
 	close(fd);
