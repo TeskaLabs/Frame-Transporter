@@ -124,33 +124,7 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	ft_config.log_file.flush_counter += 1;
 }
 
-static void ft_log_file_backend_on_prepare(struct ft_context * context, ev_tstamp now)
-{
-	ft_log_file_flush(now);
-}
-
-static void ft_log_file_backend_on_forkexec(void)
-{
-	// We are in the forked child
-	ft_log_file_backend_fini();
-}
-
-static void ft_log_file_on_sighup()
-{
-	ft_log_file_reopen();
-}
-
-
-struct ft_log_backend ft_log_file_backend = {
-	.fini = ft_log_file_backend_fini,
-	.process = ft_log_file_backend_logrecord_process,
-	.on_prepare = ft_log_file_backend_on_prepare,
-	.on_forkexec = ft_log_file_backend_on_forkexec,
-	.on_sighup = ft_log_file_on_sighup
-};
-
-
-void ft_log_file_flush(ev_tstamp now)
+static void ft_log_file_flush(ev_tstamp now)
 {
 	bool do_flush = false;
 
@@ -169,6 +143,25 @@ void ft_log_file_flush(ev_tstamp now)
 	ft_config.log_file.flush_counter = 0;
 	ft_config.log_file.flush_last = now;
 }
+
+static void ft_log_file_backend_on_prepare(struct ft_context * context, ev_tstamp now)
+{
+	ft_log_file_flush(now);
+}
+
+static void ft_log_file_on_sighup()
+{
+	ft_log_file_reopen();
+}
+
+
+struct ft_log_backend ft_log_file_backend = {
+	.fini = ft_log_file_backend_fini,
+	.process = ft_log_file_backend_logrecord_process,
+	.flush = ft_log_file_flush,
+	.on_prepare = ft_log_file_backend_on_prepare,
+	.on_sighup = ft_log_file_on_sighup
+};
 
 
 bool ft_log_file_reopen()

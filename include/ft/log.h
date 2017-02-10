@@ -155,20 +155,6 @@ static inline void _ft_log_openssl_err(char const level, const char * format, ..
 
 ///
 
-void ft_log_context(struct ft_context * context);
-
-static inline bool ft_log_is_verbose(void)
-{
-	return ft_config.log_verbose;
-}
-
-static inline void ft_log_verbose(bool v)
-{
-	ft_config.log_verbose = v;
-}
-
-///
-
 // This structure is designed to be short-lived, within one event loop generation or shorter
 // It is not meant to be queued etc. - if needed, serialize the data etc.
 struct ft_logrecord
@@ -196,15 +182,17 @@ struct ft_log_backend
 {
 	void (*fini)(void);
 	void (*process)(struct ft_logrecord * le, int le_message_length);
+	void (*flush)(ev_tstamp now);
 	void (*on_prepare)(struct ft_context * context, ev_tstamp now);
-	void (*on_forkexec)(void); // Called from forked child prior hard discard of the log context, similar to fini() but must be 'harder'
 	void (*on_sighup)(void);
 };
 
-// Call this from child after fork to reset logging prior exec
-// It is mainly to prevent file descriptors leak
-void ft_log_forkexec(void);
+void ft_log_context(struct ft_context * context);
 
+void ft_log_flush(bool force);
+
+// Finalise current log environment, close a backend and revert back to a configuration that is the same as the initial (after launch)
+// Useful for situations after fork() etc.
 void ft_log_finalise(void);
 
 ///
@@ -228,8 +216,6 @@ extern struct ft_log_backend ft_log_syslog_backend;
 bool ft_log_syslog_backend_init(struct ft_context * context);
 
 ///
-
-void ft_log_file_flush(ev_tstamp now);
 
 /*
  * Call this to open or reopen log file.

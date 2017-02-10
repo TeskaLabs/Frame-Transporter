@@ -318,6 +318,12 @@ static void ft_log_syslog_on_dgram_error(struct ft_dgram * dgram)
 	//TODO: This - probably try to reconnect
 }
 
+
+static void ft_log_syslog_backend_flush(ev_tstamp now)
+{
+}
+
+/*
 static void ft_log_syslog_backend_on_forkexec(void)
 {
 	// We are in the forked child
@@ -333,14 +339,15 @@ static void ft_log_syslog_backend_on_forkexec(void)
 
 	ft_log_syslog_backend_fini();
 }
+*/
 
 ///
 
 struct ft_log_backend ft_log_syslog_backend = {
 	.fini = ft_log_syslog_backend_fini,
 	.process = ft_log_syslog_backend_logrecord_process,
+	.flush = ft_log_syslog_backend_flush,
 	.on_prepare = ft_log_syslog_backend_on_prepare,
-	.on_forkexec = ft_log_syslog_backend_on_forkexec,
 	.on_sighup = NULL,
 };
 

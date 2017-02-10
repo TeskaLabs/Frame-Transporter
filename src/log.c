@@ -124,20 +124,33 @@ void ft_log_initialise_()
 
 void ft_log_finalise()
 {
-	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->fini != NULL))
-		ft_config.log_backend->fini();
+	struct ft_log_backend * log_backend = ft_config.log_backend;
+
+	// Switch to slow log
+	ft_config.log_backend = NULL;
+	if (ft_log_context_ != NULL) ft_log_context(NULL);
+
+	if ((log_backend != NULL) && (log_backend->fini != NULL))
+	{
+		log_backend->fini();
+	}
 
 	fflush(stderr);
 }
 
 
-void ft_log_forkexec()
+void ft_log_flush(bool force)
 {
-	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->on_forkexec != NULL))
-		ft_config.log_backend->on_forkexec();
+	ev_tstamp now;
+	if (force) now = 1e77;
+	else
+	{
+		if (ft_log_context_ == NULL) now = 1e77;
+		else now = ev_now(ft_log_context_->ev_loop);
+	}
 
-	// Switch to slow log
-	ft_config.log_backend = NULL;
+	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->flush != NULL))
+		ft_config.log_backend->flush(now);
 }
 
 
@@ -174,13 +187,12 @@ void ft_log_backend_switch(struct ft_log_backend * backend)
 
 void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
-#ifndef RELEASE
 	if ((ft_config.log_backend == NULL) || (ft_config.log_backend->process == NULL))
 	{
-		fprintf(stderr, "Log config backend is not configued!\n");
+		fprintf(stderr, "Log config backend is not configured!\n");
+		ft_logrecord_fprint(le, le_message_length, stderr);
 		return;
 	}
-#endif
 	ft_config.log_backend->process(le, le_message_length);
 }
 
