@@ -187,13 +187,18 @@ void ft_dgram_flush(struct ft_dgram * this)
 	if (this->write_frames == 0) return;
 
 	ft_fd_nonblock(this->read_watcher.fd, false);
+	bool write_ready_store = this->flags.write_ready;
 
 	while (this->write_frames != NULL)
 	{
+		this->flags.write_ready = true;
 		_ft_dgram_write_real(this);
 	}
 
 	ft_fd_nonblock(this->read_watcher.fd, true);
+
+	// TODO: This could be a bit more optimal - set to yes, start ev_write watcher
+	this->flags.write_ready = write_ready_store;
 }
 
 ///
