@@ -329,24 +329,6 @@ static void ft_log_syslog_backend_flush(ev_tstamp now)
 	}
 }
 
-/*
-static void ft_log_syslog_backend_on_forkexec(void)
-{
-	// We are in the forked child
-
-	if (ft_log_syslog_frame != NULL)
-	{
-		ft_frame_return(ft_log_syslog_frame);
-		ft_log_syslog_frame = NULL;
-	}
-
-	// Trash a queued packet in the syslog datagram to avoid an warning message
-	ft_dgram_trash_write_buffer(&ft_log_syslog_dgram);
-
-	ft_log_syslog_backend_fini();
-}
-*/
-
 ///
 
 struct ft_log_backend ft_log_syslog_backend = {
