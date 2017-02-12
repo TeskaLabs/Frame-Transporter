@@ -38,12 +38,6 @@ bool ft_log_syslog_backend_init(struct ft_context * context)
 	ok = ft_log_syslog_connect();
 	if (!ok) return false;
 
-	if (ft_log_syslog_frame == NULL)
-	{
-		ok = ft_log_syslog_frame_alloc();
-		if (!ok) return false;
-	}
-
 	if (ft_config.log_syslog.hostname == NULL)
 	{
 		char hostname[1024];
@@ -123,7 +117,7 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 	static bool ft_log_syslog_backend_logrecord_process_reentry = false;
 	if (ft_log_syslog_backend_logrecord_process_reentry == true)
 	{
-		fprintf(stderr, "Reentry of ft_log_syslog_backend_logrecord_process, that's not supported\n");
+		//TODO: Swap this for 'emergency log function'
 		ft_logrecord_fprint(le, le_message_length, stderr);
 		return;
 	}
@@ -131,8 +125,16 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 retry:
 	ft_log_syslog_backend_logrecord_process_reentry = true;
 
-	// !!!! Try to use functions that don't log anything, this is not reentrant !!!
-	assert(ft_log_syslog_frame != NULL);
+	if (ft_log_syslog_frame == NULL)
+	{
+		ok = ft_log_syslog_frame_alloc();
+		if (!ok)
+		{
+			//TODO: Swap this for 'emergency log function'
+			ft_logrecord_fprint(le, le_message_length, stderr);
+			return;
+		}
+	}
 
 	struct ft_vec * vec = ft_frame_append_vec(ft_log_syslog_frame, le_message_length + 200);
 	if (vec == NULL)
@@ -217,6 +219,11 @@ retry:
 	if (!ok)
 	{
 		fprintf(stderr, "ft_log_syslog_backend_logrecord_process ft_vec_sprintf failed.\n");
+		//TODO: Swap this for 'emergency log function'
+		ft_logrecord_fprint(le, le_message_length, stderr);
+
+		ft_log_syslog_backend_logrecord_process_reentry = false;
+
 		return;
 	}
 
