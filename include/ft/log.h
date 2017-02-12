@@ -34,6 +34,7 @@ struct ft_log_stats
 	unsigned int error_count;
 	unsigned int fatal_count;
 	unsigned int audit_count;
+	unsigned int reentry_fails;
 };
 
 extern struct ft_log_stats ft_log_stats;

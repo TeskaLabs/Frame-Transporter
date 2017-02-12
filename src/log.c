@@ -10,6 +10,8 @@ struct ft_log_stats ft_log_stats = {
 	.error_count = 0,
 	.fatal_count = 0,
 	.audit_count = 0,
+
+	.reentry_fails = 0,
 };
 
 static struct ft_context * ft_log_context_ = NULL;
@@ -193,7 +195,20 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 		ft_logrecord_fprint(le, le_message_length, stderr);
 		return;
 	}
+
+	static bool ft_logrecord_process_reentry = false;
+	if (ft_logrecord_process_reentry == true)
+	{
+		ft_log_stats.reentry_fails += 1;
+		// Log record re-entry ... that's an emergency situation
+		ft_logrecord_fprint(le, le_message_length, stderr);
+		return;
+	}
+	ft_logrecord_process_reentry = true;
+
 	ft_config.log_backend->process(le, le_message_length);
+
+	ft_logrecord_process_reentry = false;
 }
 
 

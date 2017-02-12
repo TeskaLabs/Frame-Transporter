@@ -114,17 +114,8 @@ static const char * ft_log_syslog_backend_expand_sd(struct ft_logrecord * le, ch
 static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
 	bool ok;
-	static bool ft_log_syslog_backend_logrecord_process_reentry = false;
-	if (ft_log_syslog_backend_logrecord_process_reentry == true)
-	{
-		//TODO: Swap this for 'emergency log function'
-		ft_logrecord_fprint(le, le_message_length, stderr);
-		return;
-	}
 
 retry:
-	ft_log_syslog_backend_logrecord_process_reentry = true;
-
 	if (ft_log_syslog_frame == NULL)
 	{
 		ok = ft_log_syslog_frame_alloc();
@@ -132,6 +123,8 @@ retry:
 		{
 			//TODO: Swap this for 'emergency log function'
 			ft_logrecord_fprint(le, le_message_length, stderr);
+
+			FT_WARN("No memory for syslog frame");
 			return;
 		}
 	}
@@ -139,7 +132,6 @@ retry:
 	struct ft_vec * vec = ft_frame_append_vec(ft_log_syslog_frame, le_message_length + 200);
 	if (vec == NULL)
 	{
-		ft_log_syslog_backend_logrecord_process_reentry = false;
 		ft_log_syslog_send(true);
 		goto retry;
 	}
@@ -218,18 +210,13 @@ retry:
 
 	if (!ok)
 	{
-		fprintf(stderr, "ft_log_syslog_backend_logrecord_process ft_vec_sprintf failed.\n");
+		FT_WARN("Failed to dump log entry into syslog format");
 		//TODO: Swap this for 'emergency log function'
 		ft_logrecord_fprint(le, le_message_length, stderr);
-
-		ft_log_syslog_backend_logrecord_process_reentry = false;
-
 		return;
 	}
 
 	ft_vec_trim(vec);
-
-	ft_log_syslog_backend_logrecord_process_reentry = false;
 }
 
 static void ft_log_syslog_send(bool alloc_new_frame)
