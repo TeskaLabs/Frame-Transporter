@@ -1105,6 +1105,166 @@ START_TEST(log_structured_data_fprint)
 }
 END_TEST
 
+
+START_TEST(log_structured_data_02)
+{
+	const struct ft_log_sd sd1[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{NULL}
+	};
+
+	FT_INFO_SD(sd1, NULL);
+
+///
+
+	const struct ft_log_sd sd2[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{NULL}
+	};
+
+	FT_INFO_SD(sd2, NULL);
+
+///
+
+	const struct ft_log_sd sd3[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{NULL}
+	};
+
+	FT_INFO_SD(sd3, NULL);
+}
+END_TEST
+
 ///
 
 Suite * log_tsuite(void)
@@ -1155,6 +1315,7 @@ Suite * log_tsuite(void)
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, log_structured_data_01);
 	tcase_add_test(tc, log_structured_data_fprint);
+	tcase_add_test(tc, log_structured_data_02);
 
 	return s;
 }

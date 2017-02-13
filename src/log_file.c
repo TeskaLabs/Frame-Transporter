@@ -64,19 +64,31 @@ static const char * ft_log_file_expand_sd(struct ft_logrecord * le)
 	}
 
 	char * c = ft_log_file_expand_sdbuf;
-
+	assert(c != NULL);
+	assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
 	c[0] = '[';
+
 	c += 1;
+	assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
 
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
 		rc = sprintf(c, "%s=%s ", sd->name, sd->value);
 		c += rc;
+		assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
 	}
 
-	c[-1] = ']';
+	c -= 1;
+	assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
+	c[0] = ']';
+
+	c += 1;
+	assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
 	c[0] = ' ';
-	c[1] = '\0';
+
+	c += 1;
+	assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
+	c[0] = '\0';
 
 	return ft_log_file_expand_sdbuf;
 }
