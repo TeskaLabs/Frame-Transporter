@@ -225,7 +225,7 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 	size_t len = 3;
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		len += strlen(sd->name) + 1 + strlen(sd->value);
+		len += strlen(sd->name) + 2 + strlen(sd->value);
 	}
 
 	if (ft_logrecord_expand_sdbuf_size < len)
@@ -237,21 +237,35 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 			ft_logrecord_expand_sdbuf = old;
 			return "[NOMEM=1] "; // Out-of-memory situation
 		}
+		ft_logrecord_expand_sdbuf_size = len;
 	}
 
 	char * c = ft_logrecord_expand_sdbuf;
-
+	assert(c != NULL);
+	fprintf(stderr, ">>>>> %p %p\n", c, (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
+	assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 	c[0] = '[';
+
 	c += 1;
+	assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
 		rc = sprintf(c, "%s=%s ", sd->name, sd->value);
 		c += rc;
+		assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 	}
 
-	c[-1] = ']';
+	c -= 1;
+	assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
+	c[0] = ']';
+
+	c += 1;
+	assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 	c[0] = ' ';
+
+	c += 1;
+	assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 	c[1] = '\0';
 
 	return ft_logrecord_expand_sdbuf;

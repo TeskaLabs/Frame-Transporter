@@ -916,6 +916,197 @@ END_TEST
 
 ///
 
+START_TEST(log_structured_data_fprint)
+{
+	const struct ft_log_sd sd1[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		log_structured_data_01_demo(),
+		{NULL}
+	};
+
+	struct ft_logrecord le1 = {
+		.timestamp = 12345667.9,
+		.pid = 123456,
+		.level = 'A',
+		.appname = "test",
+		.sd = sd1,
+		.message = ""
+	};
+
+	ft_logrecord_fprint(&le1, 0, stdout);
+
+///
+
+	const struct ft_log_sd sd2[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		log_structured_data_01_demo(),
+		{NULL}
+	};
+
+	struct ft_logrecord le2 = {
+		.timestamp = 12345667.9,
+		.pid = 123456,
+		.level = 'A',
+		.appname = "test",
+		.sd = sd2,
+		.message = ""
+	};
+
+	ft_logrecord_fprint(&le2, 0, stdout);
+
+///
+
+	const struct ft_log_sd sd3[] = {
+		{"sditem", "\"With some content\""},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		{"another_sditem", "with-other-content"},
+		log_structured_data_01_demo(),
+		{NULL}
+	};
+
+	struct ft_logrecord le3 = {
+		.timestamp = 12345667.9,
+		.pid = 123456,
+		.level = 'A',
+		.appname = "test",
+		.sd = sd3,
+		.message = ""
+	};
+
+	ft_logrecord_fprint(&le3, 0, stdout);
+}
+END_TEST
+
+///
+
 Suite * log_tsuite(void)
 {
 	TCase *tc;
@@ -963,6 +1154,7 @@ Suite * log_tsuite(void)
 	tc = tcase_create("log-structured-data");
 	suite_add_tcase(s, tc);
 	tcase_add_test(tc, log_structured_data_01);
+	tcase_add_test(tc, log_structured_data_fprint);
 
 	return s;
 }
