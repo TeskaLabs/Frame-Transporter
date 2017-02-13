@@ -84,6 +84,8 @@ static const char * ft_log_file_expand_sd(struct ft_logrecord * le)
 
 static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
+	assert(le_message_length >= 0);
+
 	time_t t = le->timestamp;
 	struct tm tmp;
 	if (ft_config.log_file.datetime_style == 'L')

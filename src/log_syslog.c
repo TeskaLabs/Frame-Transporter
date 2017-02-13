@@ -115,6 +115,8 @@ static void ft_log_syslog_backend_logrecord_process(struct ft_logrecord * le, in
 {
 	bool ok;
 
+	assert(le_message_length >= 0);
+
 retry:
 	if (ft_log_syslog_frame == NULL)
 	{
@@ -129,7 +131,7 @@ retry:
 		}
 	}
 
-	struct ft_vec * vec = ft_frame_append_vec(ft_log_syslog_frame, le_message_length + 200);
+	struct ft_vec * vec = ft_frame_append_vec(ft_log_syslog_frame, le_message_length + 192);
 	if (vec == NULL)
 	{
 		ft_log_syslog_send(true);
@@ -210,6 +212,8 @@ retry:
 
 	if (!ok)
 	{
+		ft_frame_remove_last_vec(ft_log_syslog_frame);
+
 		FT_WARN("Failed to dump log entry into syslog format");
 		//TODO: Swap this for 'emergency log function'
 		ft_logrecord_fprint(le, le_message_length, stderr);
@@ -217,6 +221,9 @@ retry:
 	}
 
 	ft_vec_trim(vec);
+
+	assert(vec->limit > 0);
+	assert(vec->capacity > 0);
 }
 
 static void ft_log_syslog_send(bool alloc_new_frame)
@@ -224,11 +231,30 @@ static void ft_log_syslog_send(bool alloc_new_frame)
 	bool ok;
 
 	struct ft_frame * frame = ft_log_syslog_frame;
+	size_t frame_size = (frame != NULL) ? ft_frame_pos(frame) : 0;
+
 	ft_log_syslog_frame = NULL;
-	if (alloc_new_frame) ft_log_syslog_frame_alloc();
+	if (alloc_new_frame)
+	{
+		if (frame_size == 0)
+		{
+			// Reuse empty frame and exit since there is nothing to send
+			ft_log_syslog_frame = frame;
+			ft_frame_format_empty(ft_log_syslog_frame);
+			return;
+		}
+
+		ft_log_syslog_frame_alloc();
+	}
 
 	if (frame != NULL)
 	{
+		// Ignore empty frame
+		if (frame_size == 0)
+		{
+			return;
+		}
+
 		ft_frame_flip(frame);
 
 		//This line dumps syslog 'raw' format to stderr
@@ -313,7 +339,6 @@ static void ft_log_syslog_backend_flush(ev_tstamp now)
 			struct ft_frame * frame = ft_log_syslog_frame;
 			ft_log_syslog_frame = NULL;
 			ft_frame_return(frame);
-			
 		}
 	}
 

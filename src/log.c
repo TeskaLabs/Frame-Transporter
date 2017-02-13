@@ -189,6 +189,8 @@ void ft_log_backend_switch(struct ft_log_backend * backend)
 
 void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 {
+	assert(le_message_length >= 0);
+
 	if ((ft_config.log_backend == NULL) || (ft_config.log_backend->process == NULL))
 	{
 		fprintf(stderr, "Log config backend is not configured!\n");

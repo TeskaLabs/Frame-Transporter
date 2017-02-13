@@ -291,6 +291,39 @@ START_TEST(ft_log_syslog_format_utest)
 
 }
 END_TEST
+
+
+START_TEST(ft_log_syslog_flush)
+{
+	bool ok;
+
+	struct ft_context context;
+	ok = ft_context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_log_syslog_backend_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	ft_log_flush(true);
+	mark_point();
+
+	ft_log_flush(false);
+	mark_point();
+
+	ft_log_flush(true);
+	mark_point();
+
+	ft_log_flush(true);
+	mark_point();
+
+	ft_log_flush(false);
+	mark_point();
+
+	ft_log_flush(false);	
+	mark_point();
+}
+END_TEST
+
 //
 
 Suite * log_syslog_tsuite(void)
@@ -303,6 +336,10 @@ Suite * log_syslog_tsuite(void)
 	tcase_add_test(tc, ft_log_syslog_utest);
 	tcase_add_test(tc, ft_log_syslog_sd_utest);
 	tcase_add_test(tc, ft_log_syslog_format_utest);
+
+	tc = tcase_create("log-syslog-flush");
+	suite_add_tcase(s, tc);
+	tcase_add_test(tc, ft_log_syslog_flush);
 
 	return s;
 }
