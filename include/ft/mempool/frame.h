@@ -74,6 +74,7 @@ static inline void ft_frame_set_type(struct ft_frame * this, enum ft_frame_type 
 struct ft_vec * ft_frame_create_vec(struct ft_frame * this, size_t offset, size_t capacity);
 struct ft_vec * ft_frame_append_vec(struct ft_frame * this, size_t capacity);
 struct ft_vec * ft_frame_append_max_vec(struct ft_frame * this); // Append new vector into a frame and maximalize its size
+bool ft_frame_remove_last_vec(struct ft_frame * this); // aka undo of ft_frame_append() 
 
 static inline struct ft_vec * ft_frame_next_vec(struct ft_frame * this)
 {

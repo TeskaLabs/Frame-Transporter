@@ -133,6 +133,14 @@ struct ft_vec * ft_frame_append_max_vec(struct ft_frame * this)
 	return vec;
 }
 
+bool ft_frame_remove_last_vec(struct ft_frame * this)
+{
+	assert(this != NULL);
+	if (this->vec_limit == 0) return false;
+	this->vec_limit -= 1;
+	return true;
+}
+
 void ft_frame_format_empty(struct ft_frame * this)
 {
 	assert(this != NULL);
