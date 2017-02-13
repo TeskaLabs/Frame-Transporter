@@ -35,14 +35,14 @@ static inline int _ft_logrecord_build(struct ft_logrecord * le, char level, cons
 
 void _ft_log_v(const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
-	static __thread struct ft_logrecord le;
+	static struct ft_logrecord le;
 	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 	ft_logrecord_process(&le, le_message_length);
 }
 
 void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
-	static __thread struct ft_logrecord le;
+	static struct ft_logrecord le;
 	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 
 	if (le_message_length > 0)
@@ -71,7 +71,7 @@ void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], 
 
 void _ft_log_openssl_err_v(const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
-	static __thread struct ft_logrecord le;
+	static struct ft_logrecord le;
 	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
@@ -217,8 +217,8 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 {
 	int rc;
-	static __thread char * ft_logrecord_expand_sdbuf = NULL;
-	static __thread size_t ft_logrecord_expand_sdbuf_size = 0;
+	static char * ft_logrecord_expand_sdbuf = NULL;
+	static size_t ft_logrecord_expand_sdbuf_size = 0;
 
 	if (le->sd == NULL) return "";
 

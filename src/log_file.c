@@ -38,8 +38,8 @@ static void ft_log_file_backend_fini()
 static const char * ft_log_file_expand_sd(struct ft_logrecord * le)
 {
 	int rc;
-	static __thread char * ft_log_file_expand_sdbuf = NULL;
-	static __thread size_t ft_log_file_expand_sdbuf_size = 0;
+	static char * ft_log_file_expand_sdbuf = NULL;
+	static size_t ft_log_file_expand_sdbuf_size = 0;
 
 	if (le->sd == NULL) return "";
 
