@@ -131,7 +131,16 @@ retry:
 		}
 	}
 
-	struct ft_vec * vec = ft_frame_append_vec(ft_log_syslog_frame, le_message_length + 192);
+	size_t vec_limit = le_message_length + 128;
+	if (le->sd != NULL)
+	{
+		for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
+		{
+			vec_limit += strlen(sd->name) + 4 + strlen(sd->value);
+		}
+	}
+
+	struct ft_vec * vec = ft_frame_append_vec(ft_log_syslog_frame, vec_limit);
 	if (vec == NULL)
 	{
 		ft_log_syslog_send(true);
@@ -258,7 +267,7 @@ static void ft_log_syslog_send(bool alloc_new_frame)
 		ft_frame_flip(frame);
 
 		//This line dumps syslog 'raw' format to stderr
-		//ft_frame_fwrite(frame, stderr);
+		ft_frame_fwrite(frame, stderr);
 
 		ok = ft_dgram_write(&ft_log_syslog_dgram, frame);
 		if (!ok)
