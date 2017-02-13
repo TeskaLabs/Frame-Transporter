@@ -242,7 +242,6 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 
 	char * c = ft_logrecord_expand_sdbuf;
 	assert(c != NULL);
-	fprintf(stderr, ">>>>> %p %p\n", c, (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 	assert(c < (ft_logrecord_expand_sdbuf + ft_logrecord_expand_sdbuf_size));
 	c[0] = '[';
 
