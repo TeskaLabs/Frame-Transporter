@@ -50,9 +50,9 @@ static struct ft_listener_delegate listener_https_delegate =
 
 ///
 
-static void on_termination_cb(struct ft_context * context, void * data)
+static void on_exit(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
 {
-	struct listen * this = data;
+	struct listen * this = exit->data;
 	assert(this != NULL);
 
 	ft_listener_list_cntl(&this->listeners, FT_LISTENER_STOP);
@@ -68,7 +68,8 @@ bool listen_init(struct listen * this, struct ft_context * context)
 	ft_listener_list_init(&this->listeners);
 
 	// Install termination handler
-	ft_context_at_termination(context, on_termination_cb, this);
+	ft_exit_init(&this->exit, context, on_exit);
+	this->exit.data = this;
 
 	return true;
 }

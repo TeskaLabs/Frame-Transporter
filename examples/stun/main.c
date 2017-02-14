@@ -149,7 +149,7 @@ struct ft_listener_delegate listener_delegate =
 
 ///
 
-static void on_termination_cb(struct ft_context * context, void * data)
+static void on_exit(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
 {
 	FT_LIST_FOR(&stream_pairs, node)
 	{
@@ -220,7 +220,8 @@ int main(int argc, char const *argv[])
 	ok = ft_context_init(&context);
 	if (!ok) return EXIT_FAILURE;
 
-	ft_context_at_termination(&context, on_termination_cb, NULL);
+	struct ft_exit exit;
+	ft_exit_init(&exit, &context, on_exit);
 
 	// Initialize OpenSSL context
 	ssl_ctx = SSL_CTX_new(SSLv23_client_method());

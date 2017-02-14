@@ -27,7 +27,7 @@ struct ft_context
 
 	struct ft_pool frame_pool;
 
-	struct ft_list on_termination_list;
+	struct ft_exit * on_exit_list;
 };
 
 bool ft_context_init(struct ft_context * );
@@ -35,10 +35,6 @@ void ft_context_fini(struct ft_context * );
 
 void ft_context_run(struct ft_context * );
 
-
-typedef void (* ft_context_callback)(struct ft_context * context, void * data);
-
-bool ft_context_at_termination(struct ft_context * , ft_context_callback callback, void * data);
 // Can be safely called with NULL in the context
 ev_tstamp ft_safe_now(struct ft_context *);
 

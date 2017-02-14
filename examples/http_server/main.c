@@ -17,9 +17,9 @@ struct application app = {
 
 ///
 
-static void on_termination_cb(struct ft_context * context, void * data)
+static void on_exit(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
 {
-	struct application * app = data;
+	struct application * app = exit->data;
 	assert(app != NULL);
 
 	FT_LIST_FOR(&app->connections, node)
@@ -72,6 +72,9 @@ int main(int argc, char const *argv[])
 		return EXIT_FAILURE;
 	}
 
+	ft_exit_init(&app.exit, &app.context, on_exit);
+	app.exit.data = &app;
+
 	// Initialize a list for listening sockets
 	ok = listen_init(&app.listen, &app.context);
 	if (!ok) return EXIT_FAILURE;
@@ -111,8 +114,6 @@ int main(int argc, char const *argv[])
 	FT_INFO("Using hugetlb pages!");
 	ft_pool_set_alloc(&app.context.frame_pool, ft_pool_alloc_hugetlb);
 #endif
-	// Install termination handler
-	ft_context_at_termination(&app.context, on_termination_cb, &app);
 
 	// Registed check handler
 	ev_prepare prepare_w;

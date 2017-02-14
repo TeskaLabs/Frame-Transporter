@@ -48,6 +48,7 @@ struct ft_context;
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
+#include <ft/exit.h>
 #include <ft/loadstore.h>
 #include <ft/mempool/vec.h>
 #include <ft/mempool/frame.h>

@@ -9,6 +9,7 @@ OBJS=\
 	log.o \
 	log_file.o \
 	log_syslog.o \
+	exit.o \
 	daemon.o \
 	sockaddr.o \
 	sock/listener.o \

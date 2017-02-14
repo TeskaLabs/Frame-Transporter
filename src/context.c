@@ -8,12 +8,6 @@ static void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, 
 static void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents);
 static void ft_context_on_prepare(struct ev_loop * loop, ev_prepare * w, int revents);
 
-struct _ft_context_callback_entry
-{
-	ft_context_callback callback;
-	void * data;
-};
-
 ///
 
 bool ft_context_init(struct ft_context * this)
@@ -26,6 +20,7 @@ bool ft_context_init(struct ft_context * this)
 
 	this->flags.running = true;
 	this->shutdown_counter = 0;
+	this->on_exit_list = NULL;
 
 	// Set a logging context
 	ft_log_context(this);
@@ -63,9 +58,6 @@ bool ft_context_init(struct ft_context * this)
 	this->started_at = ev_now(this->ev_loop);
 	this->shutdown_at = NAN;
 
-	ok = ft_list_init(&this->on_termination_list, NULL);
-	if (!ok) return false;
-
 	ok = ft_pool_init(&this->frame_pool);
 	if (!ok) return false;
 
@@ -90,7 +82,6 @@ void ft_context_fini(struct ft_context * this)
 
 	//TODO: Destroy frame pool
 	//TODO: Uninstall signal handlers
-	//TODO: Fini of on_termination_list
 
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;
@@ -119,23 +110,6 @@ void ft_context_run(struct ft_context * this)
 
 ///
 
-bool ft_context_at_termination(struct ft_context * this, ft_context_callback callback, void * data)
-{
-	assert(this != NULL);
-	assert(callback != NULL);
-
-	struct ft_list_node * node = ft_list_node_new(sizeof(struct _ft_context_callback_entry));
-	if (node == NULL) return false;
-	struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
-
-	e->callback = callback;
-	e->data = data;
-
-	ft_list_add(&this->on_termination_list, node);	
-
-	return true;
-}
-
 // This is a polite way of termination
 // It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
 static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loop)
@@ -147,11 +121,7 @@ static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loo
 		this->flags.running = false;
 		this->shutdown_at = ev_now(loop);
 
-		FT_LIST_FOR(&this->on_termination_list, node)
-		{
-			struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
-			e->callback(this, e->data);
-		}
+		ft_exit_invoke_all(this->on_exit_list, this, FT_EXIT_PHASE_POLITE);
 
 		ev_timer_init(&this->shutdown_w, _ft_context_on_shutdown_timer, 0.0, 2.0);
 		ev_timer_start(this->ev_loop, &this->shutdown_w);
