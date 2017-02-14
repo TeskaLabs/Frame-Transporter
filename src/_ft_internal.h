@@ -14,3 +14,7 @@ void _ft_frame_init(struct ft_frame * , uint8_t * data, size_t capacity, struct 
 // Package private pool zone methods
 void _ft_poolzone_del(struct ft_poolzone * );
 struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * , uint64_t frame_type, const char * file, unsigned int line);
+
+// Private method
+void ft_exit_invoke_all_(struct ft_exit * list,  struct ft_context * context, enum ft_exit_phase phase);
+

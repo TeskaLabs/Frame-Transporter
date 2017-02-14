@@ -34,7 +34,7 @@ good:
 }
 
 
-void ft_exit_invoke_all(struct ft_exit * list,  struct ft_context * context, enum ft_exit_phase phase)
+void ft_exit_invoke_all_(struct ft_exit * list,  struct ft_context * context, enum ft_exit_phase phase)
 {
 	for (struct ft_exit * this = list; this != NULL; this = this->next)
 	{

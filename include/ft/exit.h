@@ -1,6 +1,10 @@
 #ifndef FT_EXIT_H_
 #define FT_EXIT_H_
 
+// Implementation of termination / exit watcher
+// Triggered when ft_context is about to exit event loop
+// Application should remove all active watchers to ensure smooth event loop termination
+
 enum ft_exit_phase
 {
 	FT_EXIT_PHASE_POLITE
@@ -21,7 +25,5 @@ struct ft_exit
 
 bool ft_exit_init(struct ft_exit * , struct ft_context * context, ft_exit_cb callback);
 void ft_exit_fini(struct ft_exit * );
-
-void ft_exit_invoke_all(struct ft_exit * list,  struct ft_context * context, enum ft_exit_phase phase);
 
 #endif // FT_EXIT_H_

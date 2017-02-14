@@ -121,7 +121,7 @@ static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loo
 		this->flags.running = false;
 		this->shutdown_at = ev_now(loop);
 
-		ft_exit_invoke_all(this->on_exit_list, this, FT_EXIT_PHASE_POLITE);
+		ft_exit_invoke_all_(this->on_exit_list, this, FT_EXIT_PHASE_POLITE);
 
 		ev_timer_init(&this->shutdown_w, _ft_context_on_shutdown_timer, 0.0, 2.0);
 		ev_timer_start(this->ev_loop, &this->shutdown_w);
