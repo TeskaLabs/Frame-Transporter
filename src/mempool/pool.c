@@ -2,11 +2,7 @@
 
 ///
 
-static void ft_pool_on_heartbeat(struct ft_context * context, void * data);
-
-//
-
-bool ft_pool_init(struct ft_pool * this, struct ft_context * context)
+bool ft_pool_init(struct ft_pool * this)
 {
 	assert(this != NULL);
 	this->zones = NULL;
@@ -14,11 +10,6 @@ bool ft_pool_init(struct ft_pool * this, struct ft_context * context)
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
 
 	this->alloc_fnct = ft_pool_alloc_default;
-
-	if (context != NULL)
-	{
-		ft_context_at_heartbeat(context, ft_pool_on_heartbeat, this);
-	}
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 
@@ -95,14 +86,11 @@ void ft_pool_set_alloc(struct ft_pool * this, ft_pool_alloc_fnct alloc_fnct)
 }
 
 
-static void ft_pool_on_heartbeat(struct ft_context * context, void * data)
+void ft_pool_heartbeat(struct ft_pool * this, ev_tstamp now)
 {
-	struct ft_pool * this = (struct ft_pool *)data;
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN fa:%zd zc:%zd", ft_pool_count_available_frames(this), ft_pool_count_zones(this));
-
-	ev_tstamp now = ev_now(context->ev_loop);
 
 	// Iterate via zones and find free-able ones with no used frames ...
 	struct ft_poolzone ** last_zone_next = &this->zones;

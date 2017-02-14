@@ -69,7 +69,7 @@ bool ft_context_init(struct ft_context * this)
 	ok = ft_list_init(&this->on_heartbeat_list, NULL);
 	if (!ok) return false;
 
-	ok = ft_pool_init(&this->frame_pool, this);
+	ok = ft_pool_init(&this->frame_pool);
 	if (!ok) return false;
 
 	if (ft_config.stream_ssl_ex_data_index == -2)
@@ -244,6 +244,7 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 		struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
 		e->callback(this, e->data);
 	}
+	ft_pool_heartbeat(&this->frame_pool, now);
 
 	//Lag detector
 	if (this->heartbeat_at > 0.0)

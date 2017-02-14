@@ -12,7 +12,7 @@ struct ft_pool
 	ft_pool_alloc_fnct alloc_fnct;
 };
 
-bool ft_pool_init(struct ft_pool *, struct ft_context * context); // Context can be null
+bool ft_pool_init(struct ft_pool *); // Context can be null
 void ft_pool_fini(struct ft_pool *);
 
 void ft_pool_set_alloc(struct ft_pool *, ft_pool_alloc_fnct alloc_fnct);
@@ -60,5 +60,8 @@ static inline void ft_frame_return(struct ft_frame * frame)
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 }
+
+// Call this peridically (ft_context do that for default pool)
+void ft_pool_heartbeat(struct ft_pool *, ev_tstamp now);
 
 #endif // FT_MEMPOOL_POOL_H_
