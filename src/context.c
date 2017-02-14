@@ -66,9 +66,6 @@ bool ft_context_init(struct ft_context * this)
 	ok = ft_list_init(&this->on_termination_list, NULL);
 	if (!ok) return false;
 
-	ok = ft_list_init(&this->on_heartbeat_list, NULL);
-	if (!ok) return false;
-
 	ok = ft_pool_init(&this->frame_pool);
 	if (!ok) return false;
 
@@ -94,7 +91,6 @@ void ft_context_fini(struct ft_context * this)
 	//TODO: Destroy frame pool
 	//TODO: Uninstall signal handlers
 	//TODO: Fini of on_termination_list
-	//TODO: Fini of on_heartbeat_list
 
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;
@@ -212,24 +208,6 @@ void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int reve
 
 ///
 
-bool ft_context_at_heartbeat(struct ft_context * this, ft_context_callback callback, void * data)
-{
-	assert(this != NULL);
-	assert(callback != NULL);
-
-	struct ft_list_node * node = ft_list_node_new(sizeof(struct _ft_context_callback_entry));
-	if (node == NULL) return false;
-
-	struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
-
-	e->callback = callback;
-	e->data = data;
-
-	ft_list_add(&this->on_heartbeat_list, node);	
-
-	return true;
-}
-
 void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents)
 {
 	struct ft_context * this = w->data;
@@ -239,11 +217,6 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 
 	ev_tstamp now = ev_now(loop);
 
-	FT_LIST_FOR(&this->on_heartbeat_list, node)
-	{
-		struct _ft_context_callback_entry * e = (struct _ft_context_callback_entry *)node->data;
-		e->callback(this, e->data);
-	}
 	ft_pool_heartbeat(&this->frame_pool, now);
 
 	//Lag detector
