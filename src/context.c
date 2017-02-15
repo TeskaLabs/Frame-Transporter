@@ -189,6 +189,8 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 
 	ft_pool_heartbeat(&this->frame_pool, now);
 
+	ft_heartbeat_invoke_all_(this->on_heartbeat_list, this, now);
+
 	//Lag detector
 	if (this->heartbeat_at > 0.0)
 	{

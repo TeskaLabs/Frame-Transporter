@@ -17,4 +17,4 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * , uint64_t frame_type
 
 // Private method
 void ft_exit_invoke_all_(struct ft_exit * list,  struct ft_context * context, enum ft_exit_phase phase);
-
+void ft_heartbeat_invoke_all_(struct ft_heartbeat * list,  struct ft_context * context, ev_tstamp now);
