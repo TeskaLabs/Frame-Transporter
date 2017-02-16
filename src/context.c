@@ -21,6 +21,7 @@ bool ft_context_init(struct ft_context * this)
 	this->flags.running = true;
 	this->shutdown_counter = 0;
 	this->on_exit_list = NULL;
+	this->on_heartbeat_list = NULL;
 
 	// Set a logging context
 	ft_log_context(this);
