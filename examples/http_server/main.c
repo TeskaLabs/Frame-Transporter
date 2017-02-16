@@ -17,7 +17,7 @@ struct application app = {
 
 ///
 
-static void on_exit(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
+static void on_exit_cb(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
 {
 	struct application * app = exit->data;
 	assert(app != NULL);
@@ -72,7 +72,7 @@ int main(int argc, char const *argv[])
 		return EXIT_FAILURE;
 	}
 
-	ft_exit_init(&app.exit, &app.context, on_exit);
+	ft_exit_init(&app.exit, &app.context, on_exit_cb);
 	app.exit.data = &app;
 
 	// Initialize a list for listening sockets

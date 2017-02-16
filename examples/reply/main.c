@@ -78,7 +78,7 @@ struct ft_listener_delegate listener_delegate =
 
 ///
 
-static void on_exit(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
+static void on_exit_cb(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
 {
 	FT_LIST_FOR(&streams, node)
 	{
@@ -141,7 +141,7 @@ int main(int argc, char const *argv[])
 	if (!ok) return EXIT_FAILURE;
 
 	struct ft_exit exit;
-	ft_exit_init(&exit, &context, on_exit);
+	ft_exit_init(&exit, &context, on_exit_cb);
 
 #ifdef MAP_HUGETLB
 	FT_INFO("Using hugetlb pages!");
