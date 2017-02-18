@@ -2,7 +2,7 @@
 
 const char * ft_sockaddr_hostport_str(const struct sockaddr * client_addr, socklen_t client_addr_len)
 {
-	static __thread char addrbuf[1024] = "-";	
+	static char addrbuf[1024] = "-";	
 
 	if (client_addr == NULL)
 	{
@@ -40,7 +40,12 @@ const char * ft_sockaddr_hostport_str(const struct sockaddr * client_addr, sockl
 			break;
 		}
 
-		//TODO: AF_LOCAL
+		case AF_LOCAL:
+		{
+			const struct sockaddr_un * uaddr = (const struct sockaddr_un *)client_addr;
+			snprintf(addrbuf, sizeof(addrbuf)-1, "%s", uaddr->sun_path);
+			break;
+		}
 
 		default:
 			snprintf(addrbuf, sizeof(addrbuf)-1, "(family:%d)", client_addr->sa_family);
