@@ -25,6 +25,8 @@ struct ft_frame
 	} flags;
 
 	// Used to store address of inbound/outbound socket
+	//TODO: Consider storing sockaddr_storage addr in the data section, at the end of the frame
+	//      or anywhere else, since this could be a pointer then
 	struct sockaddr_storage addr;
 	socklen_t addrlen;
 
