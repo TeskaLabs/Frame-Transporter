@@ -110,11 +110,14 @@ static void _ft_log_libev_on_syserr(const char * msg)
 void ft_log_initialise_()
 {
 	// Obtain an application name
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 	const char * appname = getprogname();
-#else
+#elif defined(_GNU_SOURCE)
 	const char * appname = program_invocation_name;
+#else
+	const char * appname = "?";
 #endif
+
 	const char * p = strrchr(appname, '/');
 	if (p == NULL) p = appname;
 	else p += 1;
