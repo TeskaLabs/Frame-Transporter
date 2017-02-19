@@ -37,6 +37,9 @@ static inline void ft_frame_return(struct ft_frame * frame)
 	frame->next = zone->available_frames;
 	zone->available_frames = frame;
 
+	frame->borrowed_by_file = NULL;
+	frame->borrowed_by_line = -1;
+
 	zone->frames_used -= 1;
 	zone->flags.free_on_hb = (frame->zone->frames_used == 0);
 
