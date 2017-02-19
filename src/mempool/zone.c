@@ -104,6 +104,9 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 {
 	int rc;
 
+	assert(file != NULL);
+	assert(line > 0);
+
 	if (this->available_frames == NULL) return NULL; // Zone has no available frames
 	struct ft_frame * frame = this->available_frames;
 	this->available_frames = frame->next;

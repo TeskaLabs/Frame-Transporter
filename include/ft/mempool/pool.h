@@ -20,25 +20,31 @@ void ft_pool_set_alloc(struct ft_pool *, ft_pool_alloc_fnct alloc_fnct);
 size_t ft_pool_count_available_frames(struct ft_pool *);
 size_t ft_pool_count_zones(struct ft_pool *);
 
-struct ft_frame * _ft_pool_borrow_real(struct ft_pool *, uint64_t frame_type, const char * file, unsigned int line);
-#define ft_pool_borrow(pool, frame_type) _ft_pool_borrow_real(pool, frame_type, __FILE__, __LINE__)
+struct ft_frame * ft_pool_borrow_real_(struct ft_pool *, uint64_t frame_type, const char * file, unsigned int line);
+#define ft_pool_borrow(pool, frame_type) ft_pool_borrow_real_(pool, frame_type, __FILE__, __LINE__)
 
 // Following function requires access to pool object internals
 // and for this reason it is here and not with ft_frame object
 static inline void ft_frame_return(struct ft_frame * frame)
 {
 	int rc;
+
+	assert(frame != NULL);
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN f:%p ft:%x fb:%s:%u", frame, frame->type, frame->borrowed_by_file, frame->borrowed_by_line);
+
+	assert(frame->type != FT_FRAME_TYPE_FREE);
+	assert(frame->borrowed_by_file != NULL);
+	assert(frame->borrowed_by_line > 0);
+
 	struct ft_poolzone * zone = frame->zone;
-
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN f:%p", frame);
-
 	frame->type = FT_FRAME_TYPE_FREE;
 
 	frame->next = zone->available_frames;
 	zone->available_frames = frame;
 
 	frame->borrowed_by_file = NULL;
-	frame->borrowed_by_line = -1;
+	frame->borrowed_by_line = 0;
 
 	zone->frames_used -= 1;
 	zone->flags.free_on_hb = (frame->zone->frames_used == 0);

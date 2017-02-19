@@ -517,8 +517,17 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 		if (!ok)
 		{
 			// All dvecs in the frame are filled with data
-			bool upstreamed = this->delegate->read(this, this->read_frame);
-			if (upstreamed) this->read_frame = NULL;
+
+			// Detach read frame (because there is an optimisation in shutdown to re-use read frame if empty and delegate can call shutdown)
+			struct ft_frame * frame = this->read_frame;
+			this->read_frame = NULL;
+			bool upstreamed = this->delegate->read(this, frame);
+			if (!upstreamed)
+			{
+				assert(this->read_frame == NULL);
+				this->read_frame = frame;
+			}
+
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
 				// If watcher is stopped, break reading	
@@ -621,6 +630,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		if (this->write_frames->type == FT_FRAME_TYPE_END_OF_STREAM)
 		{
 			struct ft_frame * frame = this->write_frames;
+
 			this->write_frames = frame->next;
 			ft_frame_return(frame);
 

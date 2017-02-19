@@ -40,7 +40,7 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 		default:
 		{
 			if ((frame->addr.ss_family == AF_UNSPEC) && (frame->type == FT_FRAME_TYPE_END_OF_STREAM))
-				snprintf(addrstr, sizeof(addrstr)-1, "STREAM-END");
+				snprintf(addrstr, sizeof(addrstr)-1, "END_OF_STREAM");
 			else
 				snprintf(addrstr, sizeof(addrstr)-1, "UNKNOWN(%d)", frame->addr.ss_family);
 		}
@@ -70,6 +70,7 @@ bool sock_dgram_1_delegate_read(struct ft_dgram * dgram, struct ft_frame * frame
 	//ok  = ft_dgram_write(dgram, frame);
 	//ck_assert_int_eq(ok, true);
 	ft_frame_return(frame);
+	mark_point();
 
 	ok = ft_dgram_cntl(dgram, FT_DGRAM_SHUTDOWN);
 	ck_assert_int_eq(ok, true);
@@ -93,8 +94,7 @@ START_TEST(sock_dgram_1_utest)
 	sock_dgram_1_result_counter = 0;
 
 	//ft_config.log_verbose = true;
-	//ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP;
-
+	// /ft_config.log_trace_mask |= FT_TRACE_ID_DGRAM | FT_TRACE_ID_EVENT_LOOP | FT_TRACE_ID_MEMPOOL;
 
 	generate_random_file("./sock_dgram_1_utest.bin", 4096, 1);
 

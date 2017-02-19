@@ -37,7 +37,7 @@ void ft_pool_fini(struct ft_pool * this)
 }
 
 
-struct ft_frame * _ft_pool_borrow_real(struct ft_pool * this, uint64_t frame_type, const char * file, unsigned int line)
+struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_type, const char * file, unsigned int line)
 {
 	assert(this != NULL);
 	struct ft_frame * frame =  NULL;
