@@ -549,6 +549,7 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 							FT_WARN("Unknown ATYP: %u", this->ATYP);
 					}
 				}
+				break;
 
 			case 3:
 				if (this->ATYP == 3) // DOMAINNAME: X'03'

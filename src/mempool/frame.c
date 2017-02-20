@@ -104,7 +104,6 @@ struct ft_vec * ft_frame_append_vec(struct ft_frame * this, size_t capacity)
 
 		offset = prev_vec->offset + prev_vec->capacity;
 	}
-	assert(offset >= 0);
 
 	//Test if there is enough space in the frame
 	if (((uint8_t *)vec - this->data) < (offset + capacity))
