@@ -44,6 +44,7 @@ struct ft_vec
 };
 
 
+//TODO: Sunset following function and introduce ft_vec_forward
 static inline void ft_vec_advance(struct ft_vec * this, size_t position_delta)
 {
 	assert(this != NULL);
@@ -51,6 +52,19 @@ static inline void ft_vec_advance(struct ft_vec * this, size_t position_delta)
 	assert((this->position + position_delta) <= this->capacity);
 
 	this->position += position_delta;
+}
+
+static inline bool ft_vec_forward(struct ft_vec * this, size_t position_delta)
+{
+	assert(this != NULL);
+	assert((this->position + position_delta) <= this->limit);
+	assert((this->position + position_delta) <= this->capacity);
+
+	if ((this->position + position_delta) > this->limit) return false;
+	if ((this->position + position_delta) > this->capacity) return false;
+
+	this->position += position_delta;
+	return true;	
 }
 
 static inline void ft_vec_pos(struct ft_vec * this, size_t position)
