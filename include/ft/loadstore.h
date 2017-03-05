@@ -58,6 +58,18 @@ static inline uint8_t * ft_load_u32(uint8_t * cursor, uint32_t * value)
 	return ft_skip_u32(cursor);
 }
 
+static inline uint8_t * ft_load_u64(uint8_t * cursor, uint64_t * value)
+{
+	uint64_t v = 0;
+	for (int i=0; i<8; i+=1)
+	{
+		v <<= 8;
+		v |= cursor[i];
+	}
+	*value = v;
+	return ft_skip_u64(cursor);
+}
+
 static inline uint8_t * ft_load_f64(uint8_t * cursor, double * value)
 {
 	assert(sizeof(*value) == 8);
@@ -111,6 +123,20 @@ static inline uint8_t * ft_store_u32(uint8_t * cursor, uint32_t value)
 	cursor[2] = 0xFF & (value >> 8);
 	cursor[3] = 0xFF & value;
 	return ft_skip_u32(cursor);
+}
+
+static inline uint8_t * ft_store_u64(uint8_t * cursor, uint64_t value)
+{
+	cursor[0] = 0xFF & (value >> 56);
+	cursor[1] = 0xFF & (value >> 48);
+	cursor[2] = 0xFF & (value >> 40);
+	cursor[3] = 0xFF & (value >> 32);
+	cursor[4] = 0xFF & (value >> 24);
+	cursor[5] = 0xFF & (value >> 16);
+	cursor[6] = 0xFF & (value >> 8);
+	cursor[7] = 0xFF & value;
+
+	return ft_skip_u64(cursor);
 }
 
 static inline uint8_t * ft_store_f64(uint8_t * cursor, double value)
