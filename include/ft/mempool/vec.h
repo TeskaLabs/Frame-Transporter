@@ -101,4 +101,13 @@ static inline void ft_vec_trim(struct ft_vec * this)
 	this->capacity = this->position;
 }
 
+// Extend a vector limit by given size
+static inline bool ft_vec_extend(struct ft_vec * this, size_t size)
+{
+	if ((this->limit + size) > this->capacity) return false;
+	this->limit += size;
+	return true;
+}
+
+
 #endif // FT_MEMPOOL_VEC_H_
