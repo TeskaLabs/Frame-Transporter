@@ -2,6 +2,10 @@
 
 ///
 
+struct ft_pool * ft_pool_default = NULL;
+
+///
+
 bool ft_pool_init(struct ft_pool * this)
 {
 	assert(this != NULL);
@@ -10,6 +14,8 @@ bool ft_pool_init(struct ft_pool * this)
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
 
 	this->alloc_fnct = ft_pool_alloc_default;
+
+	if (ft_pool_default == NULL) ft_pool_default = this;
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 
@@ -22,6 +28,8 @@ void ft_pool_fini(struct ft_pool * this)
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
+
+	if (ft_pool_default == this) ft_pool_default = NULL;
 
 	while(this->zones != NULL)
 	{
@@ -39,7 +47,16 @@ void ft_pool_fini(struct ft_pool * this)
 
 struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_type, const char * file, unsigned int line)
 {
-	assert(this != NULL);
+	if (this == NULL)
+	{
+		if (ft_pool_default == NULL)
+		{
+			FT_WARN("Default pool is not set!");
+			return false;
+		}
+		this = ft_pool_default;
+	}
+
 	struct ft_frame * frame =  NULL;
 	struct ft_poolzone ** last_zone_next = &this->zones;
 

@@ -12,6 +12,10 @@ struct ft_pool
 	ft_pool_alloc_fnct alloc_fnct;
 };
 
+// Default pool (will be set by first ft_pool_init() call ... or you can override it)
+// It removes need for complicated pool localisation in the code
+extern struct ft_pool * ft_pool_default;
+
 bool ft_pool_init(struct ft_pool *); // Context can be null
 void ft_pool_fini(struct ft_pool *);
 
@@ -22,6 +26,7 @@ size_t ft_pool_count_zones(struct ft_pool *);
 
 struct ft_frame * ft_pool_borrow_real_(struct ft_pool *, uint64_t frame_type, const char * file, unsigned int line);
 #define ft_pool_borrow(pool, frame_type) ft_pool_borrow_real_(pool, frame_type, __FILE__, __LINE__)
+#define ft_frame_borrow(frame_type) ft_pool_borrow_real_(NULL, frame_type, __FILE__, __LINE__)
 
 // Following function requires access to pool object internals
 // and for this reason it is here and not with ft_frame object

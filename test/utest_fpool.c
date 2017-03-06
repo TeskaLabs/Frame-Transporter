@@ -208,6 +208,30 @@ START_TEST(fpool_double_return)
 }
 END_TEST
 
+START_TEST(fpool_default)
+{
+	bool ok;
+
+	struct ft_frame * frame = ft_frame_borrow(FT_FRAME_TYPE_RAW_DATA);
+	ck_assert_ptr_eq(frame, NULL);
+
+	struct ft_context context;
+	ok = ft_context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	frame = ft_frame_borrow(FT_FRAME_TYPE_RAW_DATA);
+	ck_assert_ptr_ne(frame, NULL);
+
+	ft_frame_return(frame);
+
+	ft_context_fini(&context);
+
+	frame = ft_frame_borrow(FT_FRAME_TYPE_RAW_DATA);
+	ck_assert_ptr_eq(frame, NULL);
+
+}
+END_TEST
+
 ///
 
 Suite * fpool_tsuite(void)
@@ -220,6 +244,7 @@ Suite * fpool_tsuite(void)
 	tcase_add_test(tc, fpool_alloc_up_utest);
 	tcase_add_test(tc, fpool_alloc_down_utest);
 	tcase_add_test(tc, fpool_alloc_custom_advice_utest);
+	tcase_add_test(tc, fpool_default);
 
 	tc = tcase_create("fpool-exit");
 	suite_add_tcase(s, tc);
