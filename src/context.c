@@ -81,7 +81,8 @@ void ft_context_fini(struct ft_context * this)
 {
 	ft_log_finalise();
 
-	//TODO: Destroy frame pool
+	ft_pool_fini(&this->frame_pool);
+
 	//TODO: Uninstall signal handlers
 
 	ev_loop_destroy(this->ev_loop);
