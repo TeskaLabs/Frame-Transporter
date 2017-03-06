@@ -17,10 +17,6 @@ bool ft_pubsub_init(struct ft_pubsub * this)
 void ft_pubsub_fini(struct ft_pubsub * this)
 {
 	assert(this != NULL);
-	if (this->subscribers != NULL)
-	{
-		FT_WARN_P("Subscribers list is not empty");
-	}
 }
 
 bool ft_pubsub_publish(struct ft_pubsub * this, const char * topic, void * data)
