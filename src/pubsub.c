@@ -56,7 +56,7 @@ void ft_subscriber_fini(struct ft_subscriber * this)
 	assert(this->next == NULL);
 }
 
-bool ft_pubsub_subscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub, const char * topic)
+bool ft_subscriber_subscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub, const char * topic)
 {
 	assert(this != NULL);
 	assert(pubsub != NULL);
@@ -84,7 +84,7 @@ bool ft_pubsub_subscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub,
 	return true;
 }
 
-bool ft_pubsub_unsubscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub)
+bool ft_subscriber_unsubscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub)
 {
 	assert(this != NULL);
 	assert(pubsub != NULL);
