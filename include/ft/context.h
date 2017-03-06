@@ -26,9 +26,7 @@ struct ft_context
 	} flags;
 
 	struct ft_pool frame_pool;
-
-	struct ft_exit * on_exit_list;
-	struct ft_heartbeat * on_heartbeat_list;
+	struct ft_pubsub pubsub;
 };
 
 bool ft_context_init(struct ft_context * );

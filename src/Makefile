@@ -10,8 +10,6 @@ OBJS=\
 	log_file.o \
 	log_syslog.o \
 	pubsub.o \
-	exit.o \
-	heartbeat.o \
 	daemon.o \
 	sockaddr.o \
 	sock/listener.o \

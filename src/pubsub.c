@@ -2,6 +2,11 @@
 
 ///
 
+const char * FT_PUBSUB_TOPIC_EXIT = "exit";
+const char * FT_PUBSUB_TOPIC_HEARTBEAT = "heartbeat";
+
+///
+
 bool ft_pubsub_init(struct ft_pubsub * this)
 {
 	assert(this != NULL);

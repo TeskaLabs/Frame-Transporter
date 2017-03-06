@@ -20,11 +20,11 @@ bool ft_context_init(struct ft_context * this)
 
 	this->flags.running = true;
 	this->shutdown_counter = 0;
-	this->on_exit_list = NULL;
-	this->on_heartbeat_list = NULL;
 
 	// Set a logging context
 	ft_log_context(this);
+
+	ok = ft_pubsub_init(&this->pubsub);
 
 	// Install signal handlers
 	ev_signal_init(&this->sigint_w, _ft_context_on_sigexit, SIGINT);
@@ -82,7 +82,7 @@ void ft_context_fini(struct ft_context * this)
 	ft_log_finalise();
 
 	ft_pool_fini(&this->frame_pool);
-
+	ft_pubsub_fini(&this->pubsub);
 	//TODO: Uninstall signal handlers
 
 	ev_loop_destroy(this->ev_loop);
@@ -123,7 +123,8 @@ static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loo
 		this->flags.running = false;
 		this->shutdown_at = ev_now(loop);
 
-		ft_exit_invoke_all_(this->on_exit_list, this, FT_EXIT_PHASE_POLITE);
+		//TODO: FT_EXIT_PHASE_POLITE in a data
+		ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EXIT, NULL);
 
 		ev_timer_init(&this->shutdown_w, _ft_context_on_shutdown_timer, 0.0, 2.0);
 		ev_timer_start(this->ev_loop, &this->shutdown_w);
@@ -191,7 +192,8 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 
 	ft_pool_heartbeat(&this->frame_pool, now);
 
-	ft_heartbeat_invoke_all_(this->on_heartbeat_list, this, now);
+	//TODO: now in a data
+	ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT, NULL);
 
 	//Lag detector
 	if (this->heartbeat_at > 0.0)

@@ -3,6 +3,13 @@
 
 // Implementation of Publish–subscribe pattern
 
+// Well-known topics for ft_context.pubsub
+
+extern const char * FT_PUBSUB_TOPIC_EXIT;
+extern const char * FT_PUBSUB_TOPIC_HEARTBEAT;
+
+//
+
 struct ft_pubsub;
 struct ft_subscriber;
 
