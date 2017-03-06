@@ -24,6 +24,7 @@ Suite * ft_context_tsuite(void);
 Suite * ft_loadstore_tsuite(void);
 Suite * proto_socks_tsuite(void);
 Suite * iphashmap_tsuite(void);
+Suite * pubsub_tsuite(void);
 
 ///
 
@@ -57,6 +58,7 @@ int main()
 	srunner_add_suite(sr, ft_loadstore_tsuite());
 	srunner_add_suite(sr, proto_socks_tsuite());
 	srunner_add_suite(sr, iphashmap_tsuite());
+	srunner_add_suite(sr, pubsub_tsuite());
 
 	srunner_run_all(sr, CK_VERBOSE /*CK_NORMAL*/);
 	number_failed = srunner_ntests_failed(sr);
