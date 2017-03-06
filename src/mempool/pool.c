@@ -40,8 +40,6 @@ void ft_pool_fini(struct ft_pool * this)
 	}
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
-
-	//TODO: Unregister heartbeat
 }
 
 
