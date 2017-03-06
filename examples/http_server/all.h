@@ -19,7 +19,7 @@ struct config
 struct listen
 {
 	struct ft_list listeners;
-	struct ft_exit exit;
+	struct ft_subscriber exit;
 };
 
 bool listen_init(struct listen *, struct ft_context * context);
@@ -55,7 +55,8 @@ struct application
 	struct ft_context context;
 	struct listen listen;
 	struct ft_list connections;
-	struct ft_exit exit;
+	
+	struct ft_subscriber exit;
 
 	SSL_CTX * ssl_ctx;
 };

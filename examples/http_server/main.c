@@ -17,9 +17,9 @@ struct application app = {
 
 ///
 
-static void on_exit_cb(struct ft_exit * exit, struct ft_context * context, enum ft_exit_phase phase)
+static void on_exit_cb(struct ft_subscriber * subscriber, struct ft_pubsub * pubsub, const char * topic, void * data)
 {
-	struct application * app = exit->data;
+	struct application * app = subscriber->data;
 	assert(app != NULL);
 
 	FT_LIST_FOR(&app->connections, node)
@@ -72,7 +72,8 @@ int main(int argc, char const *argv[])
 		return EXIT_FAILURE;
 	}
 
-	ft_exit_init(&app.exit, &app.context, on_exit_cb);
+	ft_subscriber_init(&app.exit,on_exit_cb);
+	ft_subscriber_subscribe(&app.exit, &app.context.pubsub, FT_PUBSUB_TOPIC_EXIT);
 	app.exit.data = &app;
 
 	// Initialize a list for listening sockets
