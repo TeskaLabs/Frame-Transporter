@@ -123,8 +123,10 @@ static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loo
 		this->flags.running = false;
 		this->shutdown_at = ev_now(loop);
 
-		//TODO: FT_EXIT_PHASE_POLITE in a data
-		ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EXIT, NULL);
+		struct ft_pubsub_message_exit msg = {
+			.exit_phase = FT_EXIT_PHASE_POLITE
+		};
+		ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EXIT, &msg);
 
 		ev_timer_init(&this->shutdown_w, _ft_context_on_shutdown_timer, 0.0, 2.0);
 		ev_timer_start(this->ev_loop, &this->shutdown_w);
@@ -188,23 +190,21 @@ void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int rev
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_on_heartbeat_timer");
 
-	ev_tstamp now = ev_now(loop);
-
-	ft_pool_heartbeat(&this->frame_pool, now);
-
-	//TODO: now in a data
-	ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT, NULL);
+	struct ft_pubsub_message_heartbeat msg = {
+		.now = ev_now(loop)
+	};
+	ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT, &msg);
 
 	//Lag detector
 	if (this->heartbeat_at > 0.0)
 	{
-		double delta = (now - this->heartbeat_at) - w->repeat;
+		double delta = (msg.now - this->heartbeat_at) - w->repeat;
 		if (delta > ft_config.lag_detector_sensitivity)
 		{
 			FT_WARN("Lag (~ %.2lf sec.) detected", delta);
 		}
 	}
-	this->heartbeat_at = now;
+	this->heartbeat_at = msg.now;
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_on_heartbeat_timer");
 }

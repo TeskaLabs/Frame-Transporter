@@ -6,7 +6,25 @@
 // Well-known topics for ft_context.pubsub
 
 extern const char * FT_PUBSUB_TOPIC_EXIT;
+
+enum ft_exit_phase
+{
+	FT_EXIT_PHASE_POLITE
+	//TODO: More phases
+};
+
+struct ft_pubsub_message_exit
+{
+	enum ft_exit_phase exit_phase;
+};
+
+
 extern const char * FT_PUBSUB_TOPIC_HEARTBEAT;
+
+struct ft_pubsub_message_heartbeat
+{
+	ev_tstamp now;
+};
 
 //
 
