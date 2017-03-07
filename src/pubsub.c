@@ -2,8 +2,8 @@
 
 ///
 
-const char * FT_PUBSUB_TOPIC_EXIT = "exit";
-const char * FT_PUBSUB_TOPIC_HEARTBEAT = "heartbeat";
+const char * FT_PUBSUB_TOPIC_EXIT = "$SYS/ft/exit";
+const char * FT_PUBSUB_TOPIC_HEARTBEAT = "$SYS/ft/heartbeat";
 
 ///
 
