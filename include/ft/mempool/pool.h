@@ -10,6 +10,7 @@ struct ft_pool
 {
 	struct ft_poolzone * zones;
 	ft_pool_alloc_fnct alloc_fnct;
+	struct ft_subscriber heartbeat;
 };
 
 // Default pool (will be set by first ft_pool_init() call ... or you can override it)
@@ -74,8 +75,5 @@ static inline void ft_frame_return(struct ft_frame * frame)
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 }
-
-// Call this peridically (ft_context do that for default pool)
-void ft_pool_heartbeat(struct ft_pool *, ev_tstamp now);
 
 #endif // FT_MEMPOOL_POOL_H_

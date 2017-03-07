@@ -73,12 +73,16 @@ bool ft_context_init(struct ft_context * this)
 		}
 	}
 
+	ft_subscriber_subscribe(&this->frame_pool.heartbeat, &this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT);
+
 	return true;
 }
 
 
 void ft_context_fini(struct ft_context * this)
 {
+	ft_subscriber_unsubscribe(&this->frame_pool.heartbeat, &this->pubsub);
+
 	ft_log_finalise();
 
 	ft_pool_fini(&this->frame_pool);

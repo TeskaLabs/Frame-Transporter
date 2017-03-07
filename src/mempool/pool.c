@@ -4,6 +4,8 @@
 
 struct ft_pool * ft_pool_default = NULL;
 
+static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pubsub * pubsub, const char * topic, void * data);
+
 ///
 
 bool ft_pool_init(struct ft_pool * this)
@@ -17,6 +19,9 @@ bool ft_pool_init(struct ft_pool * this)
 
 	if (ft_pool_default == NULL) ft_pool_default = this;
 
+	ft_subscriber_init(&this->heartbeat, ft_pool_on_heartbeat);
+	this->heartbeat.data = this;
+
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 
 	return true;
@@ -28,6 +33,8 @@ void ft_pool_fini(struct ft_pool * this)
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
+
+	ft_subscriber_fini(&this->heartbeat);
 
 	if (ft_pool_default == this) ft_pool_default = NULL;
 
@@ -101,9 +108,15 @@ void ft_pool_set_alloc(struct ft_pool * this, ft_pool_alloc_fnct alloc_fnct)
 }
 
 
-void ft_pool_heartbeat(struct ft_pool * this, ev_tstamp now)
+static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pubsub * pubsub, const char * topic, void * data)
 {
+	struct ft_pool * this = subscriber->data;
 	assert(this != NULL);
+
+	struct ft_pubsub_message_heartbeat * msg = data;
+	assert(msg != NULL);
+
+	fprintf(stderr, "TICK: %f\n", msg->now);
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN fa:%zd zc:%zd", ft_pool_count_available_frames(this), ft_pool_count_zones(this));
 
@@ -121,7 +134,7 @@ void ft_pool_heartbeat(struct ft_pool * this, ev_tstamp now)
 
 		if (zone->flags.free_on_hb)
 		{
-			zone->free_at = now + ft_config.fpool_zone_free_timeout;
+			zone->free_at = msg->now + ft_config.fpool_zone_free_timeout;
 			zone->flags.free_on_hb = false;
 
 			last_zone_next = &zone->next;
@@ -129,7 +142,7 @@ void ft_pool_heartbeat(struct ft_pool * this, ev_tstamp now)
 			continue;
 		}
 
-		if (zone->free_at >= now)
+		if (zone->free_at >= msg->now)
 		{
 			last_zone_next = &zone->next;
 			zone = zone->next;
