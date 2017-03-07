@@ -80,6 +80,8 @@ bool ft_fd_nonblock(int fd, bool nonblock);
 bool ft_socket_keepalive(int fd);
 bool ft_fd_cloexec(int fd);
 
+// Can be safely called with NULL in the context
+ev_tstamp ft_safe_now(struct ft_context *);
 
 // Boolean parser
 bool ft_parse_bool(const char * value);

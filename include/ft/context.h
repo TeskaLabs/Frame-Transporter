@@ -34,7 +34,4 @@ void ft_context_fini(struct ft_context * );
 
 void ft_context_run(struct ft_context * );
 
-// Can be safely called with NULL in the context
-ev_tstamp ft_safe_now(struct ft_context *);
-
 #endif // FT_CONTEXT_H_
