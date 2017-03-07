@@ -116,8 +116,6 @@ static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pu
 	struct ft_pubsub_message_heartbeat * msg = data;
 	assert(msg != NULL);
 
-	fprintf(stderr, "TICK: %f\n", msg->now);
-
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN fa:%zd zc:%zd", ft_pool_count_available_frames(this), ft_pool_count_zones(this));
 
 	// Iterate via zones and find free-able ones with no used frames ...
