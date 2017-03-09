@@ -11,12 +11,16 @@ bool ft_pool_init(struct ft_pool * this)
 	assert(this != NULL);
 	this->zones = NULL;
 
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
+	this->frames_total = 0;
+	this->frames_used = 0;
+	this->flags.last_zone = false;
 
-	this->alloc_fnct = ft_pool_alloc_default;
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
 
 	ft_subscriber_init(&this->heartbeat, ft_pool_on_heartbeat);
 	this->heartbeat.data = this;
+
+	ft_pool_set_alloc(this, ft_pool_alloc_default);
 
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
 
@@ -44,6 +48,16 @@ void ft_pool_fini(struct ft_pool * this)
 }
 
 
+void ft_pool_lowmem_pubsub_msg_(struct ft_pool * this, int frames_available, bool inc)
+{
+	static struct ft_pubsub_message_pool_lowmem ft_pool_borrow_real_msg_;
+	ft_pool_borrow_real_msg_.pool = this;
+	ft_pool_borrow_real_msg_.inc = inc;
+	ft_pool_borrow_real_msg_.frames_available = frames_available;
+	ft_pubsub_publish(NULL, FT_PUBSUB_TOPIC_POOL_LOWMEM, &ft_pool_borrow_real_msg_);
+}
+
+
 struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_type, const char * file, unsigned int line)
 {
 	if (this == NULL)
@@ -62,7 +76,7 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 	struct ft_frame * frame =  NULL;
 	struct ft_poolzone ** last_zone_next = &this->zones;
 
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN ft:%08llx %s:%u", (unsigned long long) frame_type, file, line);
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN ft:%08llx %s:%u (%d/%d)", (unsigned long long) frame_type, file, line, this->frames_used, this->frames_total);
 
 	// Borrow from existing zone
 	for (struct ft_poolzone * zone = this->zones; zone != NULL; zone = zone->next)
@@ -71,10 +85,17 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 		if (frame != NULL)
 		{
 			FT_TRACE(FT_TRACE_ID_MEMPOOL, "END f:%p", frame);
-			return frame;
+			goto exit_with_frame;
 		}
 
 		last_zone_next = &zone->next;
+	}
+
+	if (this->flags.last_zone)
+	{
+		FT_WARN("Frame pool ran out of memory");
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN out-out-mem last-zone");
+		return NULL;
 	}
 
 	*last_zone_next = this->alloc_fnct(this);
@@ -93,7 +114,18 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 		return NULL;
 	}
 
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END f:%p", frame);
+exit_with_frame:
+	assert(this->frames_used >= 0);
+	this->frames_used += 1;
+
+	if (this->flags.last_zone)
+	{
+		int frames_available = this->frames_total - this->frames_used;
+		if (frames_available < FT_POOL_LOWMEM_LIMIT) ft_pool_lowmem_pubsub_msg_(this, frames_available, false);
+	}
+
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END f:%p (%d/%d)", frame, this->frames_used, this->frames_total);
+
 	return frame;
 }
 

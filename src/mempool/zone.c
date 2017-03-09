@@ -2,9 +2,11 @@
 
 ///
 
-bool ft_poolzone_init(struct ft_poolzone * this, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable)
+bool ft_poolzone_init(struct ft_poolzone * this, struct ft_pool * pool, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable)
 {
 	assert(this != NULL);
+	assert(pool != NULL);
+
 	assert(frame_count > 0);
 	assert((void *)this < (void *)data);
 	assert(((void *)this + alloc_size) > (void *)data);
@@ -16,9 +18,12 @@ bool ft_poolzone_init(struct ft_poolzone * this, uint8_t * data, size_t alloc_si
 	this->flags.madvice_when_used = false;
 	this->alloc_size = alloc_size;
 	this->next = NULL;
+	this->pool = pool;
 
 	this->frames_total = frame_count;
 	this->frames_used = 0;
+
+	this->pool->frames_total += this->frames_total;
 
 	this->low_frame = &this->frames[0];
 	this->high_frame = &this->frames[this->frames_total-1];
@@ -60,6 +65,8 @@ void _ft_poolzone_del(struct ft_poolzone * this)
 		abort();
 	}
 
+	this->frames_total -= this->frames_total;
+
 	FT_DEBUG("Deallocating frame pool zone of %zu bytes", this->alloc_size);
 
 	//TODO: configure actual free() call; rename _ft_poolzone_del to frame_pool_zone_fini and implement virtual frame_pool_zone_fini
@@ -67,7 +74,7 @@ void _ft_poolzone_del(struct ft_poolzone * this)
 }
 
 
-struct ft_poolzone * ft_poolzone_new_mmap(size_t frame_count, bool freeable, int mmap_flags)
+struct ft_poolzone * ft_poolzone_new_mmap(struct ft_pool * pool, size_t frame_count, bool freeable, int mmap_flags)
 {
 	size_t mmap_size_frames = frame_count * FRAME_SIZE;
 	assert((mmap_size_frames % MEMPAGE_SIZE) == 0);
@@ -89,7 +96,7 @@ struct ft_poolzone * ft_poolzone_new_mmap(size_t frame_count, bool freeable, int
 	struct ft_poolzone * this = p;
 	uint8_t * data = p + (mmap_size_zone + mmap_size_fill);
 
-	bool ok = ft_poolzone_init(this, data, alloc_size, frame_count, freeable);
+	bool ok = ft_poolzone_init(this, pool, data, alloc_size, frame_count, freeable);
 	if (!ok)
 	{
 		munmap(p, alloc_size);
@@ -147,8 +154,17 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 
 struct ft_poolzone * ft_pool_alloc_default(struct ft_pool * this)
 {
-	if (this->zones == NULL) return ft_poolzone_new_mmap(16, false,  MAP_PRIVATE | MAP_ANON); // Allocate first, low-memory zone
-	if (this->zones->next == NULL) return ft_poolzone_new_mmap(2045, true,  MAP_PRIVATE | MAP_ANON); // Allocate second, high-memory zone
+	if (this->zones == NULL)
+	{
+		return ft_poolzone_new_mmap(this, 16, false,  MAP_PRIVATE | MAP_ANON); // Allocate first, low-memory zone
+	}
+	else if (this->zones->next == NULL)
+	{
+		struct ft_poolzone *  zone = NULL;
+		zone = ft_poolzone_new_mmap(this, 2045, true,  MAP_PRIVATE | MAP_ANON); // Allocate second, high-memory zone
+		if (zone != NULL) this->flags.last_zone = true;
+		return zone;
+	}
 	return NULL;
 }
 
@@ -213,7 +229,7 @@ struct ft_poolzone * ft_pool_alloc_hugetlb(struct ft_pool * this)
 
 		FT_TRACE(FT_TRACE_ID_MEMPOOL, "Hugetlb page will be used for frame pool zone (huge table size: %ld)", hugetlb_size);
 
-		struct ft_poolzone * ret = ft_poolzone_new_mmap(frame_count, false,  MAP_PRIVATE | MAP_ANON | MAP_HUGETLB);
+		struct ft_poolzone * ret = ft_poolzone_new_mmap(this, frame_count, false,  MAP_PRIVATE | MAP_ANON | MAP_HUGETLB);
 		if (ret != NULL) return ret;
 		FT_WARN("Hugetlb support disabled");
 	}

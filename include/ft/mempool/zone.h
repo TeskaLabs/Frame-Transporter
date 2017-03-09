@@ -8,6 +8,7 @@ struct ft_pool;
 struct ft_poolzone
 {
 	struct ft_poolzone * next;
+	struct ft_pool * pool;
 
 	struct
 	{
@@ -30,9 +31,9 @@ struct ft_poolzone
 	struct ft_frame frames[];
 };
 
-bool ft_poolzone_init(struct ft_poolzone *, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable);
+bool ft_poolzone_init(struct ft_poolzone *, struct ft_pool * pool, uint8_t * data, size_t alloc_size, size_t frame_count, bool freeable);
 
-struct ft_poolzone * ft_poolzone_new_mmap(size_t frame_count, bool freeable, int mmap_flags);
+struct ft_poolzone * ft_poolzone_new_mmap(struct ft_pool * pool, size_t frame_count, bool freeable, int mmap_flags);
 
 ///
 

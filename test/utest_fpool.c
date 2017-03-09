@@ -130,7 +130,7 @@ int ft_pool_alloc_custom_counter = 0;
 static struct ft_poolzone * ft_pool_alloc_custom(struct ft_pool * frame_pool)
 {
 	ft_pool_alloc_custom_counter += 1;
-	return ft_poolzone_new_mmap(1, true, MAP_PRIVATE | MAP_ANON);
+	return ft_poolzone_new_mmap(frame_pool, 1, true, MAP_PRIVATE | MAP_ANON);
 }
 
 START_TEST(fpool_alloc_custom_advice_utest)
@@ -228,7 +228,87 @@ START_TEST(fpool_default)
 
 	frame = ft_frame_borrow(FT_FRAME_TYPE_RAW_DATA);
 	ck_assert_ptr_eq(frame, NULL);
+}
+END_TEST
 
+///
+
+struct fpool_pubsub_memory_data
+{
+	bool inc;
+	int frames_available;
+};
+
+void fpool_pubsub_memory_cb_utest(struct ft_subscriber * subscriber, struct ft_pubsub * pubsub, const char * topic, void * data)
+{
+	struct fpool_pubsub_memory_data * cnt_data = subscriber->data;
+	ck_assert_ptr_ne(cnt_data, NULL);
+
+	struct ft_pubsub_message_pool_lowmem * lowmem = data;
+	ck_assert_ptr_ne(lowmem, NULL);
+
+	cnt_data->inc = lowmem->inc;
+	cnt_data->frames_available = lowmem->frames_available;
+}
+
+
+START_TEST(fpool_pubsub_memory)
+{
+	bool ok;
+
+	struct ft_frame * frames[3000];	
+
+	struct fpool_pubsub_memory_data cnt_data;
+
+	struct ft_context context;
+	ok = ft_context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	struct ft_subscriber sub1;
+	ok = ft_subscriber_init(&sub1, fpool_pubsub_memory_cb_utest);
+	ck_assert_int_eq(ok, true);
+	sub1.data = &cnt_data;
+
+	ok = ft_subscriber_subscribe(&sub1, &context.pubsub, FT_PUBSUB_TOPIC_POOL_LOWMEM);
+	ck_assert_int_eq(ok, true);
+
+	for (int i=0; i<2061; i+=1)
+	{
+		cnt_data.frames_available = 1000000000;
+
+		frames[i] = ft_pool_borrow(&context.frame_pool, FT_FRAME_TYPE_RAW_DATA);
+		ck_assert_ptr_ne(frames[i], NULL);
+
+		if (i > 1960)
+		{
+			ck_assert_int_eq(cnt_data.frames_available, 2060-i);
+			ck_assert_int_eq(cnt_data.inc, false);
+		}
+
+		else
+		{
+			ck_assert_int_eq(cnt_data.frames_available, 1000000000);	
+		}
+	}
+
+	for (int i=0; i<2061; i+=1)
+	{
+		cnt_data.frames_available = 1000000000;
+
+		ft_frame_return(frames[i]);
+
+		if (i < 99)
+		{
+			ck_assert_int_eq(cnt_data.frames_available, i+1);
+			ck_assert_int_eq(cnt_data.inc, true);
+		}
+
+		else
+		{
+			ck_assert_int_eq(cnt_data.frames_available, 1000000000);	
+		}
+
+	}
 }
 END_TEST
 
@@ -245,6 +325,7 @@ Suite * fpool_tsuite(void)
 	tcase_add_test(tc, fpool_alloc_down_utest);
 	tcase_add_test(tc, fpool_alloc_custom_advice_utest);
 	tcase_add_test(tc, fpool_default);
+	tcase_add_test(tc, fpool_pubsub_memory);
 
 	tc = tcase_create("fpool-exit");
 	suite_add_tcase(s, tc);
