@@ -19,8 +19,8 @@ struct ft_poolzone
 	} flags;
 
 	size_t alloc_size;
-	size_t frames_total;
-	size_t frames_used;
+	int frames_total;
+	int frames_used;
 
 	ev_tstamp free_at;	
 
