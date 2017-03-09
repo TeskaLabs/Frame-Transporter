@@ -26,6 +26,16 @@ struct ft_pubsub_message_heartbeat
 	ev_tstamp now;
 };
 
+extern const char * FT_PUBSUB_TOPIC_POOL_LOWMEM;
+
+struct ft_pubsub_message_pool_lowmem
+{
+	struct ft_pool * pool;
+	bool inc;
+	int frames_available;
+};
+
+
 //
 
 struct ft_pubsub;
