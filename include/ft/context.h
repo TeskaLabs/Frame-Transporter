@@ -34,4 +34,8 @@ void ft_context_fini(struct ft_context * );
 
 void ft_context_run(struct ft_context * );
 
+// Default pool (will be set by first ft_context_init() call ... or you can override it)
+// It removes need for complicated context localisation in the code
+extern struct ft_context * ft_context_default;
+
 #endif // FT_CONTEXT_H_

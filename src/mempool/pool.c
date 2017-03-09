@@ -2,8 +2,6 @@
 
 ///
 
-struct ft_pool * ft_pool_default = NULL;
-
 static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pubsub * pubsub, const char * topic, void * data);
 
 ///
@@ -16,8 +14,6 @@ bool ft_pool_init(struct ft_pool * this)
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN");
 
 	this->alloc_fnct = ft_pool_alloc_default;
-
-	if (ft_pool_default == NULL) ft_pool_default = this;
 
 	ft_subscriber_init(&this->heartbeat, ft_pool_on_heartbeat);
 	this->heartbeat.data = this;
@@ -36,8 +32,6 @@ void ft_pool_fini(struct ft_pool * this)
 
 	ft_subscriber_fini(&this->heartbeat);
 
-	if (ft_pool_default == this) ft_pool_default = NULL;
-
 	while(this->zones != NULL)
 	{
 		struct ft_poolzone * zone = this->zones;
@@ -54,12 +48,16 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 {
 	if (this == NULL)
 	{
-		if (ft_pool_default == NULL)
+		if (ft_context_default != NULL)
+		{
+			this = &ft_context_default->frame_pool;
+		}
+		if (this == NULL)
 		{
 			FT_WARN("Default pool is not set!");
 			return false;
 		}
-		this = ft_pool_default;
+		
 	}
 
 	struct ft_frame * frame =  NULL;

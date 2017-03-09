@@ -2,6 +2,10 @@
 
 ///
 
+struct ft_context * ft_context_default = NULL;
+
+///
+
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_sighup(struct ev_loop * loop, ev_signal * w, int revents);
 static void _ft_context_on_heartbeat_timer(struct ev_loop * loop, ev_timer * w, int revents);
@@ -73,6 +77,8 @@ bool ft_context_init(struct ft_context * this)
 		}
 	}
 
+	if (ft_context_default == NULL) ft_context_default = this;
+
 	ft_subscriber_subscribe(&this->frame_pool.heartbeat, &this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT);
 
 	return true;
@@ -88,6 +94,8 @@ void ft_context_fini(struct ft_context * this)
 	ft_pool_fini(&this->frame_pool);
 	ft_pubsub_fini(&this->pubsub);
 	//TODO: Uninstall signal handlers
+
+	if (ft_context_default == this) ft_context_default = NULL;
 
 	ev_loop_destroy(this->ev_loop);
 	this->ev_loop = NULL;

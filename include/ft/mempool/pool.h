@@ -13,10 +13,6 @@ struct ft_pool
 	struct ft_subscriber heartbeat;
 };
 
-// Default pool (will be set by first ft_pool_init() call ... or you can override it)
-// It removes need for complicated pool localisation in the code
-extern struct ft_pool * ft_pool_default;
-
 bool ft_pool_init(struct ft_pool *); // Context can be null
 void ft_pool_fini(struct ft_pool *);
 
