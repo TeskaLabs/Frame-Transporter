@@ -64,6 +64,7 @@ struct ft_pubsub
 bool ft_pubsub_init(struct ft_pubsub * );
 void ft_pubsub_fini(struct ft_pubsub * );
 
+// pubsub can be NULL to submit into a pubsub of the default context
 bool ft_pubsub_publish(struct ft_pubsub * , const char * topic, void * data);
 
 #endif // FT_PUBSUB_H_

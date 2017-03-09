@@ -21,7 +21,18 @@ void ft_pubsub_fini(struct ft_pubsub * this)
 
 bool ft_pubsub_publish(struct ft_pubsub * this, const char * topic, void * data)
 {
-	assert(this != NULL);
+	if (this == NULL)
+	{
+		if (ft_context_default != NULL)
+		{
+			this = &ft_context_default->pubsub;
+		}
+		if (this == NULL)
+		{
+			FT_WARN("Default context is not set!");
+			return false;
+		}
+	}
 
 	for (struct ft_subscriber * s = this->subscribers; s != NULL; s = s->next)
 	{

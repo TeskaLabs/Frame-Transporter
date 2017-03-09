@@ -54,10 +54,9 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 		}
 		if (this == NULL)
 		{
-			FT_WARN("Default pool is not set!");
+			FT_WARN("Default context is not set!");
 			return false;
-		}
-		
+		}		
 	}
 
 	struct ft_frame * frame =  NULL;
