@@ -113,11 +113,11 @@ restart:
 			goto restart; // List has been changed during iteration
 		}
 
-		if ((throttle) && (sock->flags.read_throttle == false))
+		if ((throttle) && (sock->read_pause_level == 0))
 		{
 			ft_stream_cntl(sock, FT_STREAM_READ_PAUSE);
 		}
-		else if ((!throttle) && (sock->flags.read_throttle == true))
+		else if ((!throttle) && (sock->read_pause_level != 0))
 		{
 			ft_stream_cntl(sock, FT_STREAM_READ_RESUME);
 		}
