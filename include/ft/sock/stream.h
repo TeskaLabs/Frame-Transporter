@@ -24,7 +24,7 @@ struct ft_stream
 		struct ft_socket socket;
 	} base;
 
-	struct ft_stream_delegate * delegate;
+	struct ft_stream_delegate * delegate;	
 
 	struct
 	{
@@ -32,7 +32,6 @@ struct ft_stream
 		bool active : 1;  // Yes - we initiated connection using connect(), No - accept()
 
 		bool read_partial : 1; // When yes, read() callback is triggered for any incoming data
-		bool read_throttle : 1;
 		bool read_shutdown : 1;  // Socket is read-wise connected
 
 		bool write_shutdown : 1; // Socket is write-wise connected
@@ -43,6 +42,8 @@ struct ft_stream
 		bool ssl_hsconf: 1; // Yes - handshake direction has been configured (accept/connect)
 		unsigned int ssl_status : 2; // 0 - disconnected; 1 - in handshake; 2 - established
 	} flags;
+
+	int read_pause_level;
 
 	ev_tstamp created_at;
 	ev_tstamp connected_at;
@@ -112,7 +113,7 @@ static inline bool ft_stream_cntl(struct ft_stream * this, const int control_cod
 
 	bool _ft_stream_cntl_read_start(struct ft_stream *);
 	bool _ft_stream_cntl_read_stop(struct ft_stream *);
-	bool _ft_stream_cntl_read_throttle(struct ft_stream *, bool throttle);
+	bool _ft_stream_cntl_read_pause(struct ft_stream *, bool on);
 	
 	bool _ft_stream_cntl_write_start(struct ft_stream *);
 	bool _ft_stream_cntl_write_stop(struct ft_stream *);
@@ -121,8 +122,8 @@ static inline bool ft_stream_cntl(struct ft_stream * this, const int control_cod
 	bool ok = true;
 	if ((control_code & FT_STREAM_READ_START) != 0) ok &= _ft_stream_cntl_read_start(this);
 	if ((control_code & FT_STREAM_READ_STOP) != 0) ok &= _ft_stream_cntl_read_stop(this);
-	if ((control_code & FT_STREAM_READ_PAUSE) != 0) ok &= _ft_stream_cntl_read_throttle(this, true);
-	if ((control_code & FT_STREAM_READ_RESUME) != 0) ok &= _ft_stream_cntl_read_throttle(this, false);
+	if ((control_code & FT_STREAM_READ_PAUSE) != 0) ok &= _ft_stream_cntl_read_pause(this, true);
+	if ((control_code & FT_STREAM_READ_RESUME) != 0) ok &= _ft_stream_cntl_read_pause(this, false);
 	if ((control_code & FT_STREAM_WRITE_START) != 0) ok &= _ft_stream_cntl_write_start(this);
 	if ((control_code & FT_STREAM_WRITE_STOP) != 0) ok &= _ft_stream_cntl_write_stop(this);
 	if ((control_code & FT_STREAM_WRITE_SHUTDOWN) != 0) ok &= _ft_stream_cntl_write_shutdown(this);

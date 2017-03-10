@@ -44,12 +44,12 @@ static void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this);
 
 ///
 
-#define TRACE_FMT "fd:%d Rs:%c Rp:%c Rt:%c Re:%c%c%c%c Rw:%c Ws:%c Wo:%c Wr:%c We:%c%c%c%c%c Ww:%c c:%c a:%c ssl:%d%c E:(%d,%ld)"
+#define TRACE_FMT "fd:%d Rs:%c Rp:%c Rrl:%d Re:%c%c%c%c Rw:%c Ws:%c Wo:%c Wr:%c We:%c%c%c%c%c Ww:%c c:%c a:%c ssl:%d%c E:(%d,%ld)"
 #define TRACE_ARGS \
 	this->read_watcher.fd, \
 	(this->flags.read_shutdown) ? 'Y' : '.', \
 	(this->flags.read_partial) ? 'Y' : '.', \
-	(this->flags.read_throttle) ? 'Y' : '.', \
+	this->read_pause_level, \
 	(this->read_events & READ_WANT_READ) ? 'R' : '.', \
 	(this->read_events & SSL_HANDSHAKE_WANT_READ) ? 'H' : '.', \
 	(this->read_events & SSL_SHUTDOWN_WANT_READ) ? 'S' : '.', \
@@ -125,7 +125,7 @@ static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate *
 	this->flags.write_open = true;
 	this->flags.ssl_status = 0;
 	this->flags.ssl_hsconf = false;
-	this->flags.read_throttle = false;	
+	this->read_pause_level = 0;
 	this->ssl = NULL;
 
 	this->error.sys_errno = 0;
@@ -464,7 +464,7 @@ void _ft_stream_read_set_event(struct ft_stream * this, enum _ft_stream_read_eve
 	assert(this->base.socket.clazz == ft_stream_class);
 
 	this->read_events |= event;
-	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.read_shutdown == false))
+	if ((this->read_events != 0) && (this->read_pause_level == 0) && (this->flags.read_shutdown == false))
 		ev_io_start(this->base.socket.context->ev_loop, &this->read_watcher);
 }
 
@@ -474,7 +474,7 @@ void _ft_stream_read_unset_event(struct ft_stream * this, enum _ft_stream_read_e
 	assert(this->base.socket.clazz == ft_stream_class);
 
 	this->read_events &= ~event;
-	if ((this->read_events == 0) || (this->flags.read_shutdown == true) || (this->flags.read_throttle == true))
+	if ((this->read_events == 0) || (this->flags.read_shutdown == true) || (this->read_pause_level >= 0))
 		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
 }
 
@@ -497,13 +497,23 @@ bool _ft_stream_cntl_read_stop(struct ft_stream * this)
 	return true;
 }
 
-bool _ft_stream_cntl_read_throttle(struct ft_stream * this, bool throttle)
+bool _ft_stream_cntl_read_pause(struct ft_stream * this, bool on)
 {
 	assert(this != NULL);
-	this->flags.read_throttle = throttle;
 
-	if (throttle) _ft_stream_read_unset_event(this, 0);
-	else _ft_stream_read_set_event(this, 0);
+	if (on)
+	{
+		this->read_pause_level += 1;
+		if (this->read_pause_level == 1)
+			_ft_stream_read_unset_event(this, 0);
+	}
+	else
+	{
+		assert(this->read_pause_level > 0);
+		this->read_pause_level -= 1;
+		if (this->read_pause_level == 0)
+			_ft_stream_read_set_event(this, 0);
+	}
 
 	return true;
 }
@@ -1402,7 +1412,7 @@ static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, in
 
 	if ((revents & EV_READ) == 0) goto end;
 
-	if (this->flags.read_throttle)
+	if (this->read_pause_level > 0)
 	{
 		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);
 		goto end;
