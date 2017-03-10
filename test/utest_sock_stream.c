@@ -481,10 +481,6 @@ START_TEST(sock_stream_ssl_client_utest)
 	ok = ft_stream_write(&sock, frame);
 	ck_assert_int_eq(ok, true);
 
-
-	ok = ft_stream_cntl(&sock, FT_STREAM_WRITE_SHUTDOWN);
-	ck_assert_int_eq(ok, true);
-
 	ft_context_run(&context);
 
 	FT_INFO("Stats: Re:%u We:%u+%u Rb:%lu Wb:%lu",
