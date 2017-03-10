@@ -26,8 +26,6 @@ struct ft_dgram
 
 	struct
 	{
-		bool read_throttle : 1;
-
 		bool write_open : 1;      // Write queue is open for adding new frames
 		bool write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
 
@@ -35,6 +33,8 @@ struct ft_dgram
 		bool bind : 1;  // ft_dgram_connect was successfully called
 		bool connect : 1;  // ft_dgram_connect was successfully called
 	} flags;
+
+	int read_pause_level;
 
 	ev_tstamp created_at;
 	ev_tstamp shutdown_at;
@@ -103,7 +103,7 @@ static inline bool ft_dgram_cntl(struct ft_dgram * this, const int control_code)
 
 	bool _ft_dgram_cntl_read_start(struct ft_dgram *);
 	bool _ft_dgram_cntl_read_stop(struct ft_dgram *);
-	bool _ft_dgram_cntl_read_throttle(struct ft_dgram *, bool throttle);
+	bool _ft_dgram_cntl_read_pause(struct ft_dgram *, bool on);
 	
 	bool _ft_dgram_cntl_write_start(struct ft_dgram *);
 	bool _ft_dgram_cntl_write_stop(struct ft_dgram *);
@@ -112,8 +112,8 @@ static inline bool ft_dgram_cntl(struct ft_dgram * this, const int control_code)
 	bool ok = true;
 	if ((control_code & FT_DGRAM_READ_START) != 0) ok &= _ft_dgram_cntl_read_start(this);
 	if ((control_code & FT_DGRAM_READ_STOP) != 0) ok &= _ft_dgram_cntl_read_stop(this);
-	if ((control_code & FT_DGRAM_READ_PAUSE) != 0) ok &= _ft_dgram_cntl_read_throttle(this, true);
-	if ((control_code & FT_DGRAM_READ_RESUME) != 0) ok &= _ft_dgram_cntl_read_throttle(this, false);
+	if ((control_code & FT_DGRAM_READ_PAUSE) != 0) ok &= _ft_dgram_cntl_read_pause(this, true);
+	if ((control_code & FT_DGRAM_READ_RESUME) != 0) ok &= _ft_dgram_cntl_read_pause(this, false);
 	if ((control_code & FT_DGRAM_WRITE_START) != 0) ok &= _ft_dgram_cntl_write_start(this);
 	if ((control_code & FT_DGRAM_WRITE_STOP) != 0) ok &= _ft_dgram_cntl_write_stop(this);
 	if ((control_code & FT_DGRAM_SHUTDOWN) != 0) ok &= _ft_dgram_cntl_shutdown(this);

@@ -34,13 +34,13 @@ static void _ft_dgram_on_write_event(struct ft_dgram * this);
 
 ///
 
-#define TRACE_FMT "fd:%d B:%c C:%c S:%c Rt:%c Re:%c Rw:%c Wo:%c Wr:%c We:%c Ww:%c E:(%d)"
+#define TRACE_FMT "fd:%d B:%c C:%c S:%c Rtl:%d Re:%c Rw:%c Wo:%c Wr:%c We:%c Ww:%c E:(%d)"
 #define TRACE_ARGS \
 	this->read_watcher.fd, \
 	(this->flags.bind) ? 'Y' : '.', \
 	(this->flags.connect) ? 'Y' : '.', \
 	(this->flags.shutdown) ? 'Y' : '.', \
-	(this->flags.read_throttle) ? 'Y' : '.', \
+	this->read_pause_level, \
 	(this->read_events & READ_WANT_READ) ? 'R' : '.', \
 	(ev_is_active(&this->read_watcher)) ? 'Y' : '.', \
 	(this->flags.write_open) ? 'Y' : '.', \
@@ -99,12 +99,12 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	this->stats.write_direct = 0;
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
-	this->flags.read_throttle = false;	
 	this->flags.write_open = true;
 	this->flags.write_open = true;
 	this->flags.shutdown = false;
 	this->flags.bind = false;
 	this->flags.connect = false;
+	this->read_pause_level = 0;
 
 	this->error.sys_errno = 0;
 
@@ -372,7 +372,7 @@ void _ft_dgram_read_set_event(struct ft_dgram * this, enum _ft_dgram_read_event 
 	assert(this->base.socket.clazz == ft_dgram_class);
 
 	this->read_events |= event;
-	if ((this->read_events != 0) && (this->flags.read_throttle == false) && (this->flags.shutdown == false))
+	if ((this->read_events != 0) && (this->read_pause_level == 0) && (this->flags.shutdown == false))
 		ev_io_start(this->base.socket.context->ev_loop, &this->read_watcher);
 }
 
@@ -382,7 +382,7 @@ void _ft_dgram_read_unset_event(struct ft_dgram * this, enum _ft_dgram_read_even
 	assert(this->base.socket.clazz == ft_dgram_class);
 
 	this->read_events &= ~event;
-	if ((this->read_events == 0) || (this->flags.shutdown == true) || (this->flags.read_throttle == true))
+	if ((this->read_events == 0) || (this->flags.shutdown == true) || (this->read_pause_level > 0))
 		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);	
 }
 
@@ -409,15 +409,24 @@ bool _ft_dgram_cntl_read_stop(struct ft_dgram * this)
 	return true;
 }
 
-bool _ft_dgram_cntl_read_throttle(struct ft_dgram * this, bool throttle)
+bool _ft_dgram_cntl_read_pause(struct ft_dgram * this, bool on)
 {
 	assert(this != NULL);
 	assert(this->base.socket.clazz == ft_dgram_class);
 
-	this->flags.read_throttle = throttle;
-
-	if (throttle) _ft_dgram_read_unset_event(this, 0);
-	else _ft_dgram_read_set_event(this, 0);
+	if (on)
+	{
+		this->read_pause_level += 1;
+		if (this->read_pause_level == 1)
+			_ft_dgram_read_unset_event(this, 0);
+	}
+	else
+	{
+		assert(this->read_pause_level > 0);
+		this->read_pause_level -= 1;
+		if (this->read_pause_level == 0)
+			_ft_dgram_read_set_event(this, 0);
+	}
 
 	return true;
 }
@@ -869,7 +878,7 @@ static void _ft_dgram_on_read(struct ev_loop * loop, struct ev_io * watcher, int
 
 	if ((revents & EV_READ) == 0) goto end;
 
-	if (this->flags.read_throttle)
+	if (this->read_pause_level > 0)
 	{
 		ev_io_stop(this->base.socket.context->ev_loop, &this->read_watcher);
 		goto end;
