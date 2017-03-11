@@ -562,6 +562,7 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 	{
 		this->flags.read_paused_noframes = true;
 		ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
+		//TODO: call this->delegate->error() to indicate out-of-frames situation
 		FT_WARN("Failed to submit end-of-stream frame, paused");
 		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 		return;
@@ -607,6 +608,7 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			{
 				this->flags.read_paused_noframes = true;
 				ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
+				//TODO: call this->delegate->error() to indicate out-of-frames situation
 				FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
 			}

@@ -29,6 +29,8 @@ struct ft_dgram
 		bool write_open : 1;      // Write queue is open for adding new frames
 		bool write_ready : 1;     // We can write to the socket (no need to wait for EV_WRITE)
 
+		bool read_paused_noframes : 1; // Read has been paused because there are no frames in the memory pool, this is indicative flag only, it is set by implementation, has to be clear be an user together with ft_stream_cntl(this, FT_STREAM_READ_RESUME)
+
 		bool shutdown : 1;
 		bool bind : 1;  // ft_dgram_connect was successfully called
 		bool connect : 1;  // ft_dgram_connect was successfully called

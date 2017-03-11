@@ -333,7 +333,10 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 
 		if (frame == NULL)
 		{
+			this->flags.read_paused_noframes = true;
+			ft_dgram_cntl(this, FT_DGRAM_READ_PAUSE);
 			//TODO: call this->delegate->error() to indicate out-of-frames situation
+			FT_WARN("Failed to submit end-of-stream frame, paused");
 			FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 			return;
 		}
@@ -459,9 +462,10 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 
 			if (this->read_frame == NULL)
 			{
-				FT_WARN("Out of frames when reading, throttling");
+				this->flags.read_paused_noframes = true;
 				ft_dgram_cntl(this, FT_DGRAM_READ_PAUSE);
-				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+				//TODO: call this->delegate->error() to indicate out-of-frames situation
+				FT_WARN("Out of frames when reading, throttling");
 				FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
 			}
