@@ -11,7 +11,7 @@ function finish
 trap finish EXIT
 
 ./forward 127.0.0.1 12346 &
-nc -d -l 127.0.0.1 12346 >/tmp/sc-test-forward-01o.bin &
+nc -d -l 127.0.0.1 12346 > /tmp/sc-test-forward-01o.bin &
 NC_PID=$!
 
 dd if=/dev/urandom count=10240 bs=1024 > /tmp/sc-test-forward-01.bin

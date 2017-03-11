@@ -18,6 +18,7 @@ script:
     - (cd examples/reply/ && ./test_reply_03.sh)
     - (cd examples/reply/ && ./test_reply_04.sh)
     - (cd examples/forward/ && ./test_forward_01.sh)
+    - (cd examples/forward/ && ./test_forward_02.sh)
     - (cd examples/stun/ && ./test_stun_01.sh)
     - (cd examples/stun/ && ./test_stun_02.sh)
     - (cd examples/sreply/ && ./test_sreply_01.sh)
