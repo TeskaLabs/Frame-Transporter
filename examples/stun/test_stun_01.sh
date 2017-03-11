@@ -10,6 +10,8 @@ function finish
 }
 trap finish EXIT
 
+rm -f /tmp/sc-test-stun-01o.bin
+
 ./stun 127.0.0.1 12346 &
 socat openssl-listen:12346,bind=127.0.0.1,reuseaddr,cert=cert.pem,key=key.pem,verify=0,shut-none file:/tmp/sc-test-stun-01o.bin,create &
 SOCAT_PID=$!
