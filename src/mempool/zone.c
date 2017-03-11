@@ -43,7 +43,7 @@ bool ft_poolzone_init(struct ft_poolzone * this, struct ft_pool * pool, uint8_t 
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "Allocated frame pool zone of %zu bytes, %zd frames", this->alloc_size, this->frames_total);
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "Allocated frame pool zone of %zu bytes, %d frames", this->alloc_size, this->frames_total);
 
 	return true;
 }
@@ -54,7 +54,7 @@ void _ft_poolzone_del(struct ft_poolzone * this)
 
 	if (this->frames_used > 0)
 	{
-		FT_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %zd)", this->frames_used);
+		FT_FATAL("Not all frames are returned to the pool during frame pool zone destruction (count of unreturned frames: %d)", this->frames_used);
 		for(int i=0; i<this->frames_total; i+=1)
 		{
 			if (this->frames[i].type != FT_FRAME_TYPE_FREE)
