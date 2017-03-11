@@ -298,6 +298,7 @@ bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegat
 	this->flags.ssl_server = true;
 	this->connected_at = this->created_at;
 
+	// By default both read and write events are enabled
 	ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
 	if (!ok) FT_WARN_P("Failed to set events properly");
 
@@ -404,6 +405,8 @@ static void _ft_stream_error(struct ft_stream * this, int sys_errno, unsigned lo
 
 static void _ft_stream_on_connect_event(struct ft_stream * this)
 {
+	bool ok;
+
 	assert(this != NULL);
 	assert(this->base.socket.clazz == ft_stream_class);
 	assert(this->flags.connecting == true);
@@ -444,7 +447,8 @@ static void _ft_stream_on_connect_event(struct ft_stream * this)
 		return;
 	}
 
-	ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
+	ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
+	if (!ok) FT_WARN_P("Failed to set events properly");
 
 	this->connected_at = ev_now(this->base.socket.context->ev_loop);
 	this->flags.connecting = false;
@@ -1184,6 +1188,7 @@ bool ft_stream_enable_ssl(struct ft_stream * this, SSL_CTX *ctx)
 
 static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 {
+	bool ok;
 	int rc;
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
@@ -1220,7 +1225,8 @@ static void _ft_stream_on_ssl_handshake_event(struct ft_stream * this)
 		_ft_stream_write_unset_event(this, SSL_HANDSHAKE_WANT_WRITE);
 		_ft_stream_read_unset_event(this, SSL_HANDSHAKE_WANT_READ);
 
-		ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
+		ok = ft_stream_cntl(this, FT_STREAM_READ_START | FT_STREAM_WRITE_START);
+		if (!ok) FT_WARN_P("Failed to set events properly");
 
 		this->connected_at = ev_now(this->base.socket.context->ev_loop);
 		this->flags.connecting = false;
@@ -1305,7 +1311,6 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
 
-
 	int ssl_shutdown_status = SSL_get_shutdown(this->ssl);
 	if ((ssl_shutdown_status & SSL_SENT_SHUTDOWN) == SSL_SENT_SHUTDOWN)
 	{
@@ -1330,7 +1335,7 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 		this->flags.write_shutdown = true;
 
 		_ft_stream_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
-		_ft_stream_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
+		_ft_stream_read_set_event(this, SSL_SHUTDOWN_WANT_READ); // We are expecting some reaction from other side
 		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " sent", TRACE_ARGS);
 		return;
 	}
@@ -1340,7 +1345,7 @@ void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this)
 		this->flags.ssl_status = 0;
 
 		_ft_stream_write_unset_event(this, SSL_SHUTDOWN_WANT_WRITE);
-		_ft_stream_read_unset_event(this, SSL_SHUTDOWN_WANT_READ);
+		_ft_stream_read_set_event(this, SSL_SHUTDOWN_WANT_READ); // We are expecting some reaction from other side
 
 		FT_DEBUG("SSL connection has been shutdown");
 
@@ -1430,7 +1435,8 @@ static void _ft_stream_on_read(struct ev_loop * loop, struct ev_io * watcher, in
 
 		if (this->read_events & SSL_SHUTDOWN_WANT_READ)
 		{
-			_ft_stream_on_ssl_sent_shutdown_event(this);
+			if (this->flags.write_shutdown == false)
+				_ft_stream_on_ssl_sent_shutdown_event(this);
 		}
 
 		if (this->read_events & SSL_WRITE_WANT_READ)
