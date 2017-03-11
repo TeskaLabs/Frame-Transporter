@@ -119,6 +119,7 @@ static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate *
 	this->stats.write_bytes = 0;
 	this->flags.read_partial = false;
 	this->flags.read_shutdown = false;
+	this->flags.read_paused_noframes = false;
 	this->read_shutdown_at = NAN;
 	this->flags.write_shutdown = false;
 	this->write_shutdown_at = NAN;
@@ -559,9 +560,9 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 
 	if (frame == NULL)
 	{
-		FT_WARN("Failed to submit end-of-stream frame, throttling");
+		this->flags.read_paused_noframes = true;
 		ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
-		//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
+		FT_WARN("Failed to submit end-of-stream frame, paused");
 		FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 		return;
 	}
@@ -604,9 +605,8 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 
 			if (this->read_frame == NULL)
 			{
-				FT_WARN("Out of frames when reading, throttling");
+				this->flags.read_paused_noframes = true;
 				ft_stream_cntl(this, FT_STREAM_READ_PAUSE);
-				//TODO: Re-enable reading when frames are available again -> this is trottling mechanism
 				FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
 			}

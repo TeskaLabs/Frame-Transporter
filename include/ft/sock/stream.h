@@ -33,6 +33,7 @@ struct ft_stream
 
 		bool read_partial : 1; // When yes, read() callback is triggered for any incoming data
 		bool read_shutdown : 1;  // Socket is read-wise connected
+		bool read_paused_noframes : 1; // Read has been paused because there are no frames in the memory pool, this is indicative flag only, it is set by implementation, has to be clear be an user together with ft_stream_cntl(this, FT_STREAM_READ_RESUME)
 
 		bool write_shutdown : 1; // Socket is write-wise connected
 		bool write_open : 1;      // Write queue is open for adding new frames
