@@ -151,13 +151,13 @@ retry:
 	int pri = ft_config.log_syslog.facility << 3;
 	switch (le->level)
 	{
-		case 'F': pri |= 2; level = "FATAL"; break;
-		case 'E': pri |= 3; level = "ERROR"; break;
-		case 'W': pri |= 4; level = "WARN"; break;
-		case 'A': pri |= 5; level = "AUDIT"; break;
-		case 'I': pri |= 5; level = "INFO"; break;
-		case 'D': pri |= 7; level = "DEBUG"; break;
-		case 'T': pri |= 7; level = "TRACE"; break;
+		case 'F': pri |= 2; level = "FATAL"; break; // Syslog level: crit
+		case 'E': pri |= 3; level = "ERROR"; break; // Syslog level: err
+		case 'W': pri |= 4; level = "WARN"; break; // Syslog level: warning
+		case 'A': pri |= 5; level = "AUDIT"; break; // Syslog level: notice
+		case 'I': pri |= 6; level = "INFO"; break; // Syslog level: info
+		case 'D': pri |= 7; level = "DEBUG"; break; // Syslog level: debug
+		case 'T': pri |= 7; level = "TRACE"; break; // Syslog level: debug
 		default:  pri |= 7; level = "?"; break;
 	}
 
@@ -297,6 +297,7 @@ static bool ft_log_syslog_connect()
 {
 	bool ok;
 
+	// TODO: Support also IPv4, IPv6 and hostnames
 	struct sockaddr_un addr;
 	addr.sun_family = AF_LOCAL;
 	strncpy(addr.sun_path, ft_config.log_syslog.address, sizeof (addr.sun_path));
