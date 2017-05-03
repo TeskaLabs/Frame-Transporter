@@ -46,7 +46,7 @@ static const char * ft_log_file_expand_sd(struct ft_logrecord * le)
 	size_t len = 3;
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		len += strlen(sd->name) + 1 + strlen(sd->value) + 1;
+		len += strlen(sd->name) + 1 + strlen(sd->value) + 2 + 1;
 	}
 
 	if (ft_log_file_expand_sdbuf_size < len)
@@ -73,8 +73,32 @@ static const char * ft_log_file_expand_sd(struct ft_logrecord * le)
 
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		rc = sprintf(c, "%s=%s ", sd->name, sd->value);
-		c += rc;
+		if (strchr(sd->value, ' ') == NULL)
+		{
+			// No need to escape the value
+			rc = sprintf(c, "%s=%s ", sd->name, sd->value);
+			c += rc;
+		}
+		else
+		{
+			rc = sprintf(c, "%s=\"", sd->name);
+			c += rc;
+			for (const char * s = sd->value;  *s != '\0'; s += 1)
+			{
+				if (*s != '"')
+				{
+					*c = *s;
+					c += 1;
+				}
+				else
+				{
+					*c = '`';
+					c += 1;
+				}
+			}
+			rc = sprintf(c, "\" ");
+			c += rc;
+		}
 		assert(c < (ft_log_file_expand_sdbuf + ft_log_file_expand_sdbuf_size));
 	}
 
