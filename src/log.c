@@ -59,8 +59,8 @@ void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], 
 			{NULL}
 		};
 		sd = sdi;
-
 	}
+
 	else {
 		//TODO: Expand sd by error codes
 	}
