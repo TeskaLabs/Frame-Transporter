@@ -106,6 +106,11 @@ bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, 
 	this->flags.connect = false;
 	this->read_pause_level = 0;
 
+	if (this->base.socket.ai_family == AF_UNIX)
+	{
+		this->flags.unix_unlink = true;
+	}
+
 	this->error.sys_errno = 0;
 
 	assert(this->base.socket.context->ev_loop != NULL);
@@ -146,7 +151,7 @@ void ft_dgram_fini(struct ft_dgram * this)
 	int rc = close(this->read_watcher.fd);
 	if (rc != 0) FT_WARN_ERRNO_P(errno, "close()");
 
-	if ((this->base.socket.ai_family == AF_UNIX) && (this->base.socket.addrlen > 0))
+	if ((this->base.socket.ai_family == AF_UNIX) && (this->base.socket.addrlen > 0) && (this->flags.unix_unlink == true))
 	{
 		struct sockaddr_un * un = (struct sockaddr_un *)&this->base.socket.addr;
 		
