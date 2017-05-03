@@ -72,6 +72,30 @@ void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], 
 void _ft_log_openssl_err_v(const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
 	static struct ft_logrecord le;
+
+	unsigned long code = ERR_peek_error();
+
+	char errnum_str[16];
+	snprintf(errnum_str, sizeof(errnum_str)-1, "%lu", code);
+
+	char errtxt_str[1024];
+	ERR_error_string_n(code, errtxt_str, sizeof(errtxt_str));
+
+	if (sd == NULL)
+	{
+		struct ft_log_sd sdi[] = {
+			{"es", "O"},
+			{"e", errnum_str},
+			{"E", errtxt_str},
+			{NULL}
+		};
+		sd = sdi;
+	}
+
+	else {
+		//TODO: Expand sd by error codes
+	}
+
 	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
@@ -81,7 +105,7 @@ void _ft_log_openssl_err_v(const char level, const struct ft_log_sd sd[], const 
 		int line;
 		const char * data;
 		int flags;
-		unsigned long code = ERR_get_error_line_data(&file, &line, &data, &flags);
+		code = ERR_get_error_line_data(&file, &line, &data, &flags);
 		if (code == 0) break;
 
 		char buf[256];
