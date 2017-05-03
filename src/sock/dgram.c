@@ -141,8 +141,6 @@ void ft_dgram_fini(struct ft_dgram * this)
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
 
-	ft_dgram_flush(this);
-
 	ft_dgram_cntl(this, FT_DGRAM_READ_STOP | FT_DGRAM_WRITE_STOP);
 
 	int rc = close(this->read_watcher.fd);
