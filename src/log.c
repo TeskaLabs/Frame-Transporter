@@ -42,30 +42,30 @@ void _ft_log_v(const char level, const struct ft_log_sd sd[], const char * forma
 
 void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
-	static struct ft_logrecord le;
-	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
+	struct ft_logrecord le;
 
-	if (le_message_length > 0)
+	char errnum_str[16];
+	snprintf(errnum_str, sizeof(errnum_str)-1, "%d", errnum);
+
+	char errtxt_str[1024];
+	strerror_r(errnum, errtxt_str, sizeof(errtxt_str));
+
+	if (sd == NULL)
 	{
-		le.message[le_message_length++] = ':';
-		le.message[le_message_length++] = ' ';
+		struct ft_log_sd sdi[] = {
+			{"es", "s"},
+			{"e", errnum_str},
+			{"E", errtxt_str},
+			{NULL}
+		};
+		sd = sdi;
+
 	}
-	le.message[le_message_length] = '\0';
+	else {
+		//TODO: Expand sd by error codes
+	}
 
-#ifdef _GNU_SOURCE
-	// The GNU-specific strerror_r() is in use ...
-	char * im = strerror_r(errnum, le.message + le_message_length, sizeof(le.message)-le_message_length);
-	int len = strlen(im);
-	if (len > sizeof(le.message)-le_message_length) len = sizeof(le.message)-le_message_length;
-	if (im != (le.message + le_message_length)) strncpy(le.message + le_message_length, im, len);
-	le_message_length += len;
-#else
-	strerror_r(errnum, le.message + le_message_length, sizeof(le.message)-le_message_length);
-	le_message_length += strlen(le.message + le_message_length);
-#endif
-
-	le_message_length += snprintf(le.message + le_message_length, sizeof(le.message)-le_message_length, " (%d)", errnum);
-
+	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
 	ft_logrecord_process(&le, le_message_length);
 }
 
