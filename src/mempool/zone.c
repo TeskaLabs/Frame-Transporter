@@ -60,6 +60,7 @@ void _ft_poolzone_del(struct ft_poolzone * this)
 			if (this->frames[i].type != FT_FRAME_TYPE_FREE)
 			{
 				FT_FATAL("Unreturned frame #%d allocated at %s:%d", i+1, this->frames[i].borrowed_by_file, this->frames[i].borrowed_by_line);
+				ft_frame_debug(&this->frames[i]);
 			}
 		}
 		abort();
