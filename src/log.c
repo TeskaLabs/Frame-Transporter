@@ -228,7 +228,7 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 	size_t len = 3;
 	for (const struct ft_log_sd * sd = le->sd; sd->name != NULL; sd += 1)
 	{
-		len += strlen(sd->name) + 2 + strlen(sd->value);
+		len += strlen(sd->name) + 2 + strlen(sd->value) + 2;
 	}
 
 	if (ft_logrecord_expand_sdbuf_size < len)
