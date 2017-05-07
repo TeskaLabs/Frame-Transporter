@@ -1,6 +1,6 @@
 # Frame transporter
 
-The high-performance networking library for C and POSIX.
+The high-performance networking library for C and POSIX aka libft.
 
 ## Features
 
