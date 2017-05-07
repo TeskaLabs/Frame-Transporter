@@ -4,8 +4,8 @@ The high-performance networking library for C and POSIX aka libft.
 
 ## Features
 
-* High-speed event loop ([libev](http://software.schmorp.de/pkg/libev.html))
-* Event driven [Network socket](https://en.wikipedia.org/wiki/Network_socket) abstraction
+* High-speed event loop provided by [libev](http://software.schmorp.de/pkg/libev.html)
+* Event driven [network socket](https://en.wikipedia.org/wiki/Network_socket) abstraction
 * Non-blocking I/O or [asynchronous I/O](https://en.wikipedia.org/wiki/Asynchronous_I/O)
 * SSL/TLS encryption by [OpenSSL](https://www.openssl.org)
 * Fixed-size block memory pool
