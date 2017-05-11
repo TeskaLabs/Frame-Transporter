@@ -51,6 +51,7 @@ bool ft_pubsub_publish(struct ft_pubsub * this, const char * topic, void * data)
 bool ft_subscriber_init(struct ft_subscriber * this, ft_subscriber_cb callback)
 {
 	assert(this != NULL);
+	this->pubsub = NULL;
 	this->next = NULL;
 	this->callback = callback;
 	this->topic = NULL;
@@ -61,6 +62,11 @@ bool ft_subscriber_init(struct ft_subscriber * this, ft_subscriber_cb callback)
 void ft_subscriber_fini(struct ft_subscriber * this)
 {
 	assert(this != NULL);
+
+	if (this->pubsub != NULL)
+		ft_subscriber_unsubscribe(this);
+
+	assert(this->pubsub == NULL);
 	assert(this->next == NULL);
 }
 
@@ -70,7 +76,7 @@ bool ft_subscriber_subscribe(struct ft_subscriber * this, struct ft_pubsub * pub
 	assert(pubsub != NULL);
 	assert(topic != NULL);
 
-	if (this->topic != NULL)
+	if ((this->topic != NULL) || (this->pubsub != NULL))
 	{
 		FT_WARN("Already subscribed to topic '%s'", this->topic);
 		return false;
@@ -89,21 +95,22 @@ bool ft_subscriber_subscribe(struct ft_subscriber * this, struct ft_pubsub * pub
 	}
 	assert(this->topic != NULL);
 
+	this->pubsub = pubsub;
+
 	return true;
 }
 
-bool ft_subscriber_unsubscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub)
+bool ft_subscriber_unsubscribe(struct ft_subscriber * this)
 {
 	assert(this != NULL);
-	assert(pubsub != NULL);
 
-	if (this->topic == NULL)
+	if ((this->topic == NULL) || (this->pubsub == NULL))
 	{
 		FT_WARN("Not subscribed");
 		return false;
 	}
 
-	for(struct ft_subscriber ** p = &pubsub->subscribers; *p != NULL; p = &(*p)->next)
+	for(struct ft_subscriber ** p = &this->pubsub->subscribers; *p != NULL; p = &(*p)->next)
 	{
 		if (*p != this) continue;
 
@@ -117,6 +124,7 @@ bool ft_subscriber_unsubscribe(struct ft_subscriber * this, struct ft_pubsub * p
 good:
 	this->next = NULL;
 	this->topic = NULL;
+	this->pubsub = NULL;
 
 	return true;
 }

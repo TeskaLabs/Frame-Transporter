@@ -87,7 +87,7 @@ bool ft_context_init(struct ft_context * this)
 
 void ft_context_fini(struct ft_context * this)
 {
-	ft_subscriber_unsubscribe(&this->frame_pool.heartbeat, &this->pubsub);
+	ft_subscriber_unsubscribe(&this->frame_pool.heartbeat);
 
 	ft_log_finalise();
 

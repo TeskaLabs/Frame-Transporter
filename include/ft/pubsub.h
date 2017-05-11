@@ -45,6 +45,7 @@ typedef void (*ft_subscriber_cb)(struct ft_subscriber *, struct ft_pubsub * pubs
 
 struct ft_subscriber
 {
+	struct ft_pubsub * pubsub;
 	struct ft_subscriber * next; // Allows S-link chaining
 
 	const char * topic;
@@ -62,7 +63,7 @@ bool ft_subscriber_init(struct ft_subscriber * , ft_subscriber_cb callback);
 void ft_subscriber_fini(struct ft_subscriber *);
 
 bool ft_subscriber_subscribe(struct ft_subscriber * , struct ft_pubsub * pubsub, const char * topic);
-bool ft_subscriber_unsubscribe(struct ft_subscriber * , struct ft_pubsub * pubsub);
+bool ft_subscriber_unsubscribe(struct ft_subscriber * );
 
 ///
 
