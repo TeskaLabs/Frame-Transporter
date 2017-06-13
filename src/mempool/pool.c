@@ -93,16 +93,16 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 
 	if (this->flags.last_zone)
 	{
-		FT_WARN("Frame pool ran out of memory");
-		FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN out-out-mem last-zone");
+		FT_WARN("Frame pool ran out of memory (1)");
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "END out-out-mem last-zone");
 		return NULL;
 	}
 
 	*last_zone_next = this->alloc_fnct(this);
 	if (*last_zone_next == NULL)
 	{
-		FT_WARN("Frame pool ran out of memory");
-		FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN out-out-mem");
+		FT_WARN("Frame pool ran out of memory (3)");
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "END out-out-mem");
 		return NULL;
 	}
 
@@ -110,7 +110,7 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool * this, uint64_t frame_typ
 	if (frame == NULL)
 	{
 		FT_WARN("Frame pool ran out of memory (2)");
-		FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN out-out-mem 2");
+		FT_TRACE(FT_TRACE_ID_MEMPOOL, "END out-out-mem 2");
 		return NULL;
 	}
 
