@@ -6,7 +6,7 @@ The high-performance networking library for C and POSIX aka libft.
 
 * High-speed event loop provided by [libev](http://software.schmorp.de/pkg/libev.html)
 * Event-driven [network socket](https://en.wikipedia.org/wiki/Network_socket) abstraction
-* Non-blocking I/O or [asynchronous I/O](https://en.wikipedia.org/wiki/Asynchronous_I/O)
+* Non-blocking I/O, [asynchronous I/O](https://en.wikipedia.org/wiki/Asynchronous_I/O)
 * SSL/TLS encryption by [OpenSSL](https://www.openssl.org)
 * [Reactor pattern](https://en.wikipedia.org/wiki/Reactor_pattern)
 * Fixed-size block memory pool
