@@ -713,11 +713,12 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 		rc = sendmsg(this->write_watcher.fd, &msghdr, 0);
 		if (rc < 0) // Handle error situation
 		{
+			this->flags.write_ready = false;
+
 			int lerrno = errno;
-			if ((lerrno == EAGAIN) || (lerrno == ENOBUFS))
+			if ((lerrno == EAGAIN) || (lerrno == ENOBUFS) || (lerrno == ENOMEM))
 			{
-				// OS buffer is full, wait for next write event
-				this->flags.write_ready = false;
+				// OS buffer is full, wait for next write event				
 				_ft_dgram_write_set_event(this, WRITE_WANT_WRITE);
 				FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " EAGAIN", TRACE_ARGS);
 				return;
@@ -730,7 +731,7 @@ static void _ft_dgram_write_real(struct ft_dgram * this)
 			}
 			else
 			{
-				FT_WARN_ERRNO(lerrno, "System error on datagram socket when writting, the frame is lost");
+				FT_WARN_ERRNO(lerrno, "System error on datagram socket when writing, the frame is lost");
 				_ft_dgram_return_write_frame(this);
 			}
 
