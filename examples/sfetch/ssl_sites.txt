@@ -52,7 +52,6 @@ nih.gov 443
 issuu.com 443
 www.macromedia.com 443
 www.e-recht24.de 443
-go.com 443
 theguardian.com 443
 mozilla.org 443
 slideshare.net 443
@@ -190,7 +189,7 @@ wikia.com 443
 phpbb.com 443
 www.economist.com 443
 weather.com 443
-fda.gov 443
+www.fda.gov 443
 cbslocal.com 443
 www.usnews.com 443
 www.ustream.tv 443
@@ -252,7 +251,6 @@ xiti.com 443
 istockphoto.com 443
 register.it 443
 www.yellowbook.com 443
-www.exblog.jp 443
 t-online.de 443
 www.samsung.com 443
 ovh.com 443
@@ -266,7 +264,7 @@ paginegialle.it 443
 prweb.com 443
 www.fastcompany.com 443
 nypost.com 443
-businesswire.com 443
+www.businesswire.com 443
 quantcast.com 443
 people.com.cn 443
 behance.net 443
@@ -353,7 +351,7 @@ ieee.org 443
 www.japanpost.jp 443
 symantec.com 443
 venturebeat.com 443
-adweek.com 443
+www.adweek.com 443
 thenextweb.com 443
 blackberry.com 443
 gpo.gov 443
@@ -399,7 +397,6 @@ www.bigcommerce.com 443
 iso.org 443
 moodle.org 443
 www.starwoodhotels.com 443
-www.mlit.go.jp 443
 jquery.com 443
 www.deloitte.com 443
 j.mp 443
