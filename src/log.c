@@ -47,15 +47,21 @@ void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], 
 	char errnum_str[16];
 	snprintf(errnum_str, sizeof(errnum_str)-1, "%d", errnum);
 
-	char errtxt_str[1024];
-	strerror_r(errnum, errtxt_str, sizeof(errtxt_str));
+	char errtxt_buf[1024];	
+
+#ifdef _GNU_SOURCE
+	char * errtxt_pstr = strerror_r(errnum, errtxt_buf, sizeof(errtxt_buf));
+#else
+	strerror_r(errnum, errtxt_buf, sizeof(errtxt_buf));
+	char * errtxt_pstr = errtxt_buf;
+#endif
 
 	if (sd == NULL)
 	{
 		struct ft_log_sd sdi[] = {
 			{"es", "s"},
 			{"e", errnum_str},
-			{"E", errtxt_str},
+			{"E", errtxt_pstr},
 			{NULL}
 		};
 		sd = sdi;
