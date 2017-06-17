@@ -958,7 +958,7 @@ START_TEST(log_structured_data_fprint)
 		.message = ""
 	};
 
-	ft_logrecord_fprint(&le1, 0, stdout);
+	ft_logrecord_emergency_fprint(&le1, 0, stdout);
 
 ///
 
@@ -992,7 +992,7 @@ START_TEST(log_structured_data_fprint)
 		.message = ""
 	};
 
-	ft_logrecord_fprint(&le2, 0, stdout);
+	ft_logrecord_emergency_fprint(&le2, 0, stdout);
 
 ///
 
@@ -1101,7 +1101,7 @@ START_TEST(log_structured_data_fprint)
 		.message = ""
 	};
 
-	ft_logrecord_fprint(&le3, 0, stdout);
+	ft_logrecord_emergency_fprint(&le3, 0, stdout);
 }
 END_TEST
 

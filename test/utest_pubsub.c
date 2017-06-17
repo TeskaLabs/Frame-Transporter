@@ -22,16 +22,16 @@ START_TEST(ft_pubsub_1_utest)
 	ok = ft_subscriber_subscribe(&sub1, &pubsub, ft_pubsub_utest_TOPIC1);
 	ck_assert_int_eq(ok, false);
 
-	ok = ft_subscriber_unsubscribe(&sub1, &pubsub);
+	ok = ft_subscriber_unsubscribe(&sub1);
 	ck_assert_int_eq(ok, true);
 
-	ok = ft_subscriber_unsubscribe(&sub1, &pubsub);
+	ok = ft_subscriber_unsubscribe(&sub1);
 	ck_assert_int_eq(ok, false);
 
 	ok = ft_subscriber_subscribe(&sub1, &pubsub, ft_pubsub_utest_TOPIC1);
 	ck_assert_int_eq(ok, true);
 
-	ok = ft_subscriber_unsubscribe(&sub1, &pubsub);
+	ok = ft_subscriber_unsubscribe(&sub1);
 	ck_assert_int_eq(ok, true);
 
 	ft_pubsub_fini(&pubsub);
@@ -58,7 +58,7 @@ START_TEST(ft_pubsub_2_utest)
 	ok = ft_pubsub_publish(&pubsub, ft_pubsub_utest_TOPIC1, NULL);
 	ck_assert_int_eq(ok, true);
 
-	ok = ft_subscriber_unsubscribe(&sub1, &pubsub);
+	ok = ft_subscriber_unsubscribe(&sub1);
 	ck_assert_int_eq(ok, true);
 
 	ok = ft_pubsub_publish(&pubsub, ft_pubsub_utest_TOPIC1, NULL);
@@ -119,7 +119,7 @@ START_TEST(ft_pubsub_3_utest)
 		ck_assert_int_eq(data.counter, i*2);
 	}
 
-	ok = ft_subscriber_unsubscribe(&sub2, &pubsub);
+	ok = ft_subscriber_unsubscribe(&sub2);
 	ck_assert_int_eq(ok, true);
 
 	for (int i=1; i<1001; i++)
@@ -130,7 +130,7 @@ START_TEST(ft_pubsub_3_utest)
 	}
 
 
-	ok = ft_subscriber_unsubscribe(&sub1, &pubsub);
+	ok = ft_subscriber_unsubscribe(&sub1);
 	ck_assert_int_eq(ok, true);
 
 	ok = ft_pubsub_publish(&pubsub, ft_pubsub_utest_TOPIC1, &data);
