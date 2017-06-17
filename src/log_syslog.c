@@ -123,10 +123,7 @@ retry:
 		ok = ft_log_syslog_frame_alloc();
 		if (!ok)
 		{
-			//TODO: Swap this for 'emergency log function'
-			ft_logrecord_fprint(le, le_message_length, stderr);
-
-			FT_WARN("No memory for syslog frame");
+			ft_logrecord_emergency_fprint(le, le_message_length, stderr);
 			return;
 		}
 	}
@@ -222,10 +219,7 @@ retry:
 	if (!ok)
 	{
 		ft_frame_remove_last_vec(ft_log_syslog_frame);
-
-		FT_WARN("Failed to dump log entry into syslog format");
-		//TODO: Swap this for 'emergency log function'
-		ft_logrecord_fprint(le, le_message_length, stderr);
+		ft_logrecord_emergency_fprint(le, le_message_length, stderr);
 		return;
 	}
 

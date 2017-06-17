@@ -226,7 +226,8 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 
 	if ((ft_config.log_backend == NULL) || (ft_config.log_backend->process == NULL))
 	{
-		ft_logrecord_fprint(le, le_message_length, stderr);
+		// No log backend configured
+		ft_logrecord_emergency_fprint(le, le_message_length, stderr);
 		return;
 	}
 
@@ -235,7 +236,7 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length)
 	{
 		ft_log_stats.reentry_fails += 1;
 		// Log record re-entry ... that's an emergency situation
-		ft_logrecord_fprint(le, le_message_length, stderr);
+		ft_logrecord_emergency_fprint(le, le_message_length, stderr);
 		return;
 	}
 	ft_logrecord_process_reentry = true;
@@ -326,7 +327,7 @@ static const char * ft_logrecord_expand_sd(struct ft_logrecord * le)
 	return ft_logrecord_expand_sdbuf;
 }
 
-void ft_logrecord_fprint(struct ft_logrecord * le, int le_message_length, FILE * f)
+void ft_logrecord_emergency_fprint(struct ft_logrecord * le, int le_message_length, FILE * f)
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
