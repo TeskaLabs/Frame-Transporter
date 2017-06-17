@@ -87,20 +87,24 @@ bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * d
 	}
 
 	// Set reuse address option
-	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (rc == -1)
+	if ((ai->ai_family == AF_INET) || (ai->ai_family == AF_INET6))
 	{
-		FT_ERROR_ERRNO(errno, "Failed when setting option SO_REUSEADDR to listen socket");
-		goto error_exit;
+		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+		if (rc == -1)
+		{
+			FT_WARN_ERRNO(errno, "Failed when setting option SO_REUSEADDR to listen socket");
+		}
 	}
 
 #ifdef SO_REUSEPORT
-	// Set reuse port option
-	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, (const char *) &on, sizeof(on));
-	if (rc == -1)
+	if ((ai->ai_family == AF_INET) || (ai->ai_family == AF_INET6))
 	{
-		FT_ERROR_ERRNO(errno, "Failed when setting option SO_REUSEPORT to listen socket");
-		goto error_exit;
+		// Set reuse port option
+		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, (const char *) &on, sizeof(on));
+		if (rc == -1)
+		{
+			FT_WARN_ERRNO(errno, "Failed when setting option SO_REUSEPORT to listen socket");
+		}
 	}
 #endif
 
