@@ -160,7 +160,7 @@ retry:
 
 	time_t t = le->timestamp;
 	struct tm tmp;
-	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
+	unsigned int frac100 = ((uint64_t)(le->timestamp * 1000.0)) % 1000;
 
 	switch (ft_config.log_syslog.format)
 	{
@@ -181,7 +181,7 @@ retry:
 		case '3':
 			// RFC3164
 			localtime_r(&t, &tmp);
-			ok = ft_vec_sprintf(vec, "<%d>%s %d %02d:%02d:%02d %s %s[%d]: [t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ\"%s] %s: %s\n",
+			ok = ft_vec_sprintf(vec, "<%d>%s %d %02d:%02d:%02d %s %s[%d]: [t=\"%04d-%02d-%02dT%02d:%02d:%02d.%03uZ\"%s] %s: %s\n",
 				pri,
 				ft_log_months[tmp.tm_mon], tmp.tm_mday,
 				tmp.tm_hour, tmp.tm_min, tmp.tm_sec,
@@ -202,7 +202,7 @@ retry:
 			gmtime_r(&t, &tmp);
 			// l@47278 is from http://oidref.com/1.3.6.1.4.1.47278 -> TeskaLabs 'SMI Network Management Private Enterprise Code', maintained by IANA,
 			// whose prefix is iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
-			ok = ft_vec_sprintf(vec, "<%d>1 %04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s %s %d - [l@47278 l=\"%s\"%s] %s\n",
+			ok = ft_vec_sprintf(vec, "<%d>1 %04d-%02d-%02dT%02d:%02d:%02d.%03uZ %s %s %d - [l@47278 l=\"%s\"%s] %s\n",
 				pri,
 				1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 				tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,

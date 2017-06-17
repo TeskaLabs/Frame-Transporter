@@ -132,13 +132,13 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	{
 		gmtime_r(&t, &tmp);
 	}
-	unsigned int frac100 = (le->timestamp * 1000) - (t * 1000);
+	unsigned int frac100 = ((uint64_t)(le->timestamp * 1000.0)) % 1000;
 
 	if (ft_config.log_file.datetime_style == 'I')
 	{
 		// ISO 8601
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-			"%04d-%02d-%02dT%02d:%02d:%02d.%03dZ %s[%5d] %s: %s%.*s\n",
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03uZ %s[%5d] %s: %s%.*s\n",
 			1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 			le->appname, le->pid,
@@ -148,7 +148,7 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 		);
 	} else {
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-			"%s %02d %04d %02d:%02d:%02d.%03d %s %s[%5d] %s: %s%.*s\n",
+			"%s %02d %04d %02d:%02d:%02d.%03u %s %s[%5d] %s: %s%.*s\n",
 			ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
 			tmp.tm_zone,
