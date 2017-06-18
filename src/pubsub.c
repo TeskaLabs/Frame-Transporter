@@ -73,8 +73,20 @@ void ft_subscriber_fini(struct ft_subscriber * this)
 bool ft_subscriber_subscribe(struct ft_subscriber * this, struct ft_pubsub * pubsub, const char * topic)
 {
 	assert(this != NULL);
-	assert(pubsub != NULL);
 	assert(topic != NULL);
+
+	if (pubsub == NULL)
+	{
+		if (ft_context_default != NULL)
+		{
+			pubsub = &ft_context_default->pubsub;
+		}
+		if (pubsub == NULL)
+		{
+			FT_WARN("Default context is not set!");
+			return false;
+		}
+	}
 
 	if ((this->topic != NULL) || (this->pubsub != NULL))
 	{

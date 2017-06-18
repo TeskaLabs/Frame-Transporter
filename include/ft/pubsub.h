@@ -62,6 +62,7 @@ struct ft_subscriber
 bool ft_subscriber_init(struct ft_subscriber * , ft_subscriber_cb callback);
 void ft_subscriber_fini(struct ft_subscriber *);
 
+// pubsub can be NULL to submit into a pubsub of the default context
 bool ft_subscriber_subscribe(struct ft_subscriber * , struct ft_pubsub * pubsub, const char * topic);
 bool ft_subscriber_unsubscribe(struct ft_subscriber * );
 

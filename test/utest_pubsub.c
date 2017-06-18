@@ -180,6 +180,44 @@ END_TEST
 
 ///
 
+START_TEST(ft_pubsub_default_utest)
+{
+	bool ok;
+
+	struct ft_context context;
+	ok = ft_context_init(&context);
+	ck_assert_int_eq(ok, true);
+
+	struct ft_pubsub_3_data data = {
+		.counter = 0
+	};
+
+	struct ft_subscriber sub1;
+	ok = ft_subscriber_init(&sub1, ft_pubsub_3_cb_utest);
+	ck_assert_int_eq(ok, true);
+
+	ok = ft_subscriber_subscribe(&sub1, NULL, ft_pubsub_utest_TOPIC1);
+	ck_assert_int_eq(ok, true);
+
+	for (int i=1; i<1001; i++)
+	{
+		ok = ft_pubsub_publish(NULL, ft_pubsub_utest_TOPIC1, &data);
+		ck_assert_int_eq(ok, true);
+		ck_assert_int_eq(data.counter, i);
+	}
+
+
+	ft_context_fini(&context);
+
+	ck_assert_int_eq(ft_log_stats.warn_count, 0);
+	ck_assert_int_eq(ft_log_stats.error_count, 0);
+	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
+
+}
+END_TEST
+
+///
+
 Suite * pubsub_tsuite(void)
 {
 	TCase *tc;
@@ -191,6 +229,7 @@ Suite * pubsub_tsuite(void)
 	tcase_add_test(tc, ft_pubsub_2_utest);
 	tcase_add_test(tc, ft_pubsub_3_utest);
 	tcase_add_test(tc, ft_pubsub_4_utest);
+	tcase_add_test(tc, ft_pubsub_default_utest);
 
 	return s;
 }
