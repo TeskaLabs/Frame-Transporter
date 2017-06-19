@@ -73,7 +73,7 @@ static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const st
 	if (!ok) return EXIT_FAILURE;
 
 
-	ft_list_add(&streams, new_node);
+	ft_list_append(&streams, new_node);
 
 	return true;
 }

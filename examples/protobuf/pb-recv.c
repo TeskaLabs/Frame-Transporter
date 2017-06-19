@@ -74,7 +74,7 @@ static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const st
 	// Start read on the socket
 	ft_stream_set_partial(stream, true);
 
-	ft_list_add(&streams, new_node);
+	ft_list_append(&streams, new_node);
 
 	return true;
 }

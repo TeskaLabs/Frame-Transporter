@@ -48,12 +48,18 @@ void ft_list_fini(struct ft_list *);
 
 void ft_list_on_remove(struct ft_list * this, ft_list_on_remove_callback callback);
 
-void ft_list_add(struct ft_list *, struct ft_list_node * node);
+// Add an item to the end of the list
+void ft_list_append(struct ft_list *, struct ft_list_node * node);
 
+// Remove the the item from the list
 bool ft_list_remove(struct ft_list * , struct ft_list_node * node);
+
+
 bool ft_list_remove_first(struct ft_list * );
 bool ft_list_remove_last(struct ft_list * );
-void ft_list_remove_all(struct ft_list *);
+
+// Removes all items
+void ft_list_clear(struct ft_list *);
 
 #define FT_LIST_FOR(LIST, NODE) for (struct ft_list_node * NODE = (LIST)->head; NODE != NULL; NODE = NODE->next)
 

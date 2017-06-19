@@ -421,7 +421,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 			continue;
 		}
 
-		ft_list_add(list, new_node);
+		ft_list_append(list, new_node);
 
 		rc += 1;
 	}

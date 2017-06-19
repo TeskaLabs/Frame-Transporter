@@ -123,7 +123,7 @@ static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const st
 	pair->stream_out.base.socket.data = pair;
 	ft_stream_set_partial(&pair->stream_out, true);
 
-	ft_list_add(&stream_pairs, new_node);
+	ft_list_append(&stream_pairs, new_node);
 
 	return true;
 }

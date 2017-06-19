@@ -18,7 +18,7 @@ static bool listen_on_accept(struct ft_listener * listening_socket, int fd, cons
 		return false;
 	}
 
-	ft_list_add(&app.connections, new_node);
+	ft_list_append(&app.connections, new_node);
 
 	return true;
 }

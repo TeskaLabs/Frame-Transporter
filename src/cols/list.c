@@ -16,7 +16,7 @@ bool ft_list_init(struct ft_list * this, ft_list_on_remove_callback on_remove_ca
 
 void ft_list_fini(struct ft_list * this)
 {
-	ft_list_remove_all(this);
+	ft_list_clear(this);
 }
 
 
@@ -27,7 +27,7 @@ void ft_list_on_remove(struct ft_list * this, ft_list_on_remove_callback callbac
 }
 
 
-void ft_list_add(struct ft_list * this, struct ft_list_node * node)
+void ft_list_append(struct ft_list * this, struct ft_list_node * node)
 {
 	if (this->size == 0)
 	{
@@ -92,7 +92,7 @@ bool ft_list_remove_last(struct ft_list * this)
 	return true;
 }
 
-void ft_list_remove_all(struct ft_list * this)
+void ft_list_clear(struct ft_list * this)
 {
 	while (this->head != NULL)
 	{

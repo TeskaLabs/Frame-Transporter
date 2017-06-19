@@ -219,7 +219,7 @@ static bool on_accept_cb(struct ft_listener * listening_socket, int fd, const st
 		return false;
 	}
 
-	ft_list_add(&sock_relays, new_node);
+	ft_list_append(&sock_relays, new_node);
 
 	FT_INFO("New SOCKS relay");
 

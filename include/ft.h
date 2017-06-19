@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
