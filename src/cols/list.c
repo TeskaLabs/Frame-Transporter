@@ -3,6 +3,8 @@
 
 bool ft_list_init(struct ft_list * this, ft_list_on_remove_callback on_remove_callback)
 {
+	assert(this != NULL);
+
 	this->size = 0;
 
 	this->head = NULL;
@@ -16,6 +18,7 @@ bool ft_list_init(struct ft_list * this, ft_list_on_remove_callback on_remove_ca
 
 void ft_list_fini(struct ft_list * this)
 {
+	assert(this != NULL);
 	ft_list_clear(this);
 }
 
