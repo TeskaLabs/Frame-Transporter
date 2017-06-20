@@ -128,18 +128,17 @@ START_TEST(sock_stream_1_utest)
 	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_START);
 	ck_assert_int_eq(ok, true);
 
-	FILE * p = popen("nc localhost 12345", "w");
+	FILE * p = popen("socat -d -v STDIN tcp-connect:127.0.0.1:12345", "w");
 	ck_assert_ptr_ne(p, NULL);
 
 	fprintf(p, "1234\nABCDE\n");
 	fflush(p);
 
-	ft_context_run(&context);
-
 	rc = pclose(p);
 	if ((rc == -1) && (errno == ECHILD)) rc = 0; // Override too quick execution error
 	ck_assert_int_eq(rc, 0);
 
+	ft_context_run(&context);
 	ok = ft_listener_cntl(&listen_sock, FT_LISTENER_STOP);
 	ck_assert_int_eq(ok, true);
 
