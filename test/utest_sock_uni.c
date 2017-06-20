@@ -43,6 +43,7 @@ START_TEST(sock_uni_1_utest)
 
 	int socket_vector[2];
 	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, socket_vector);
+	ck_assert_int_eq(rc, 0);
 
 
 	ok = ft_stream_init(&unisock.stream, &sock_uni_1_ft_stream_delegate, &context, socket_vector[0]);
