@@ -21,6 +21,7 @@ OBJS=\
 	context.o \
 	cols/list.o \
 	cols/iphashmap.o \
+	cols/stack.o \
 	proto/socks.o \
 
 all: $(LIB)

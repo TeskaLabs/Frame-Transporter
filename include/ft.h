@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
@@ -44,6 +45,7 @@ struct ft_context;
 
 #include <ft/cols/list.h>
 #include <ft/cols/iphashmap.h>
+#include <ft/cols/stack.h>
 
 #include <ft/config.h>
 #include <ft/log.h>
