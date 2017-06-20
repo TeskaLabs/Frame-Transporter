@@ -332,7 +332,8 @@ START_TEST(sock_dgram_2_utest)
 
 	ck_assert_int_eq(sock_dgram_1_result_counter, 1);
 
-	ck_assert_int_eq(ft_log_stats.warn_count, 4);
+	ck_assert_int_gt(ft_log_stats.warn_count, 2);
+	ck_assert_int_lt(ft_log_stats.warn_count, 5);
 	ck_assert_int_eq(ft_log_stats.error_count, 1);
 	ck_assert_int_eq(ft_log_stats.fatal_count, 0);
 }
