@@ -8,7 +8,12 @@ all: $(BIN)
 	@echo " [UT]" $(BIN)
 	@./$(BIN)
 
-LDLIBS+=-lcheck -L$(ROOTDIR)/src -lft
+LDLIBS+=-lcheck -L$(ROOTDIR)/src -lft -lpthread
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    LDLIBS += -lrt
+endif
 
 ROOTDIR=..
 include $(ROOTDIR)/rules.make
