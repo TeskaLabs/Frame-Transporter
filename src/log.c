@@ -56,22 +56,16 @@ void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], 
 	char * errtxt_pstr = errtxt_buf;
 #endif
 
-	if (sd == NULL)
-	{
-		struct ft_log_sd sdi[] = {
-			{"es", "s"},
-			{"e", errnum_str},
-			{"E", errtxt_pstr},
-			{NULL}
-		};
-		sd = sdi;
-	}
+	int sd_n = 4;
+	//TODO: Expand sd_combined by error codes
+	struct ft_log_sd sd_combined[sd_n];
 
-	else {
-		//TODO: Expand sd by error codes
-	}
+	sd_combined[0] = (struct ft_log_sd){"es", "s"};
+	sd_combined[1] = (struct ft_log_sd){"e", errnum_str};
+	sd_combined[2] = (struct ft_log_sd){"E", errtxt_pstr};
+	sd_combined[sd_n-1] = (struct ft_log_sd){NULL, NULL};
 
-	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, sd_combined, format, args);
 	ft_logrecord_process(&le, le_message_length);
 }
 
@@ -87,22 +81,16 @@ void _ft_log_openssl_err_v(const char level, const struct ft_log_sd sd[], const 
 	char errtxt_str[1024];
 	ERR_error_string_n(code, errtxt_str, sizeof(errtxt_str));
 
-	if (sd == NULL)
-	{
-		struct ft_log_sd sdi[] = {
-			{"es", "O"},
-			{"e", errnum_str},
-			{"E", errtxt_str},
-			{NULL}
-		};
-		sd = sdi;
-	}
+	int sd_n = 4;
+	//TODO: Expand sd_combined by error codes
+	struct ft_log_sd sd_combined[sd_n];
 
-	else {
-		//TODO: Expand sd by error codes
-	}
+	sd_combined[0] = (struct ft_log_sd){"es", "O"};
+	sd_combined[1] = (struct ft_log_sd){"e", errnum_str};
+	sd_combined[2] = (struct ft_log_sd){"E", errtxt_str};
+	sd_combined[sd_n-1] = (struct ft_log_sd){NULL, NULL};
 
-	int le_message_length = _ft_logrecord_build(&le, level, sd, format, args);
+	int le_message_length = _ft_logrecord_build(&le, level, sd_combined, format, args);
 
 	unsigned long es = CRYPTO_thread_id();
 	while (true)
