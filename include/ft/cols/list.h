@@ -1,6 +1,8 @@
 #ifndef FT_COLS_LIST_H_
 #define FT_COLS_LIST_H_
 
+// Double-linked list
+
 struct ft_list_node
 {
 	struct ft_list_node * next;
