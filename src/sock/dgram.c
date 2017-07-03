@@ -472,6 +472,9 @@ void _ft_dgram_on_read_event(struct ft_dgram * this)
 				FT_TRACE(FT_TRACE_ID_DGRAM, "END " TRACE_FMT " out of frames", TRACE_ARGS);
 				return;
 			}
+
+			// Wipe a memory for an incoming frame address
+			memset(&this->read_frame->addr, 0, sizeof(this->read_frame->addr));
 		}
 
 		struct ft_vec * frame_dvec = ft_frame_get_vec(this->read_frame);
