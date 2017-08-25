@@ -45,7 +45,6 @@ ovh.net 443
 www.imdb.com 443
 msn.com 443
 tinyurl.com 443
-secureserver.net 443
 creativecommons.org 443
 wp.com 443
 nih.gov 443
@@ -249,7 +248,6 @@ xing.com 443
 oracle.com 443
 xiti.com 443
 istockphoto.com 443
-register.it 443
 www.yellowbook.com 443
 t-online.de 443
 www.samsung.com 443
@@ -278,7 +276,6 @@ ewebdevelopment.com 443
 google.nl 443
 doi.org 443
 amazon.fr 443
-telnic.org 443
 shareasale.com 443
 www.elpais.com 443
 usgs.gov 443
@@ -320,7 +317,6 @@ oxfordjournals.org 443
 www.mtv.com 443
 woothemes.com 443
 cmu.edu 443
-sitemeter.com 443
 icann.org 443
 ebay.de 443
 tripadvisor.co.uk 443
@@ -351,7 +347,6 @@ ieee.org 443
 www.japanpost.jp 443
 symantec.com 443
 venturebeat.com 443
-www.adweek.com 443
 thenextweb.com 443
 blackberry.com 443
 gpo.gov 443
