@@ -59,7 +59,7 @@ void _ft_poolzone_del(struct ft_poolzone * this)
 		{
 			if (this->frames[i].type != FT_FRAME_TYPE_FREE)
 			{
-				FT_FATAL("Unreturned frame #%d allocated at %s:%d", i+1, this->frames[i].borrowed_by_file, this->frames[i].borrowed_by_line);
+				FT_FATAL("Unreturned frame #%d last seen at %s:%d", i+1, this->frames[i].last_seen_by_file, this->frames[i].last_seen_by_line);
 				ft_frame_debug(&this->frames[i]);
 			}
 		}
@@ -122,9 +122,10 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 	// Reset frame
 	frame->next = NULL;
 	frame->type = frame_type;
-	frame->borrowed_by_file = file;
-	frame->borrowed_by_line = line;
+	frame->last_seen_by_file = file;
+	frame->last_seen_by_line = line;
 	frame->zone->frames_used += 1;
+	ft_frame_checkpoint_(frame, file, line);
 
 	frame->addrlen = 0;
 	frame->addr.ss_family = AF_UNSPEC;

@@ -46,11 +46,11 @@ static inline void ft_frame_return(struct ft_frame * frame)
 
 	assert(frame != NULL);
 
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN f:%p ft:%x fb:%s:%u", frame, frame->type, frame->borrowed_by_file, frame->borrowed_by_line);
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN f:%p ft:%x fls:%s:%u", frame, frame->type, frame->last_seen_by_file, frame->last_seen_by_line);
 
 	assert(frame->type != FT_FRAME_TYPE_FREE);
-	assert(frame->borrowed_by_file != NULL);
-	assert(frame->borrowed_by_line > 0);
+	assert(frame->last_seen_by_file != NULL);
+	assert(frame->last_seen_by_line > 0);
 
 	struct ft_poolzone * zone = frame->zone;
 	frame->type = FT_FRAME_TYPE_FREE;
@@ -58,8 +58,8 @@ static inline void ft_frame_return(struct ft_frame * frame)
 	frame->next = zone->available_frames;
 	zone->available_frames = frame;
 
-	frame->borrowed_by_file = NULL;
-	frame->borrowed_by_line = 0;
+	frame->last_seen_by_file = NULL;
+	frame->last_seen_by_line = 0;
 
 	zone->frames_used -= 1;
 	zone->flags.free_on_hb = (frame->zone->frames_used == 0);

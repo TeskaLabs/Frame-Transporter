@@ -31,8 +31,8 @@ struct ft_frame
 	socklen_t addrlen;
 
 	// Those two are used for tracing and debugging 
-	const char * borrowed_by_file;
-	unsigned int borrowed_by_line;
+	const char * last_seen_by_file;
+	unsigned int last_seen_by_line;
 
 	uint8_t * data;
 	size_t capacity;
@@ -48,6 +48,14 @@ bool ft_frame_fwrite(struct ft_frame *, FILE * f);
 bool ft_frame_fread(struct ft_frame * , FILE * f);
 
 bool ft_frame_save(struct ft_frame *, const char * filename);
+
+#define ft_frame_checkpoint(frame) ft_frame_checkpoint_(frame, __FILE__, __LINE__)
+static inline void ft_frame_checkpoint_(struct ft_frame * this, const char * file, unsigned int line)
+{
+	assert(this != NULL);
+	this->last_seen_by_file = file;
+	this->last_seen_by_line = line;
+}
 
 void ft_frame_debug(struct ft_frame *);
 

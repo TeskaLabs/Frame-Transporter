@@ -13,8 +13,8 @@ void _ft_frame_init(struct ft_frame * this, uint8_t * data, size_t capacity, str
 	this->addrlen = 0;
 	this->addr.ss_family = AF_UNSPEC;
 
-	this->borrowed_by_file = NULL;
-	this->borrowed_by_line = 0;
+	this->last_seen_by_file = NULL;
+	this->last_seen_by_line = 0;
 
 	this->vec_position = 0;
 	this->vec_limit = 0;

@@ -77,11 +77,16 @@ START_TEST(fpool_alloc_down_utest)
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
 		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_RAW_DATA);
-		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
-		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
+		ck_assert_ptr_ne(frames[i]->last_seen_by_file, NULL);
+		ck_assert_int_ne(frames[i]->last_seen_by_line, 0);
 
 		for (int j = 0; j < i; j += 1)
 			ck_assert_ptr_ne(frames[j], frames[i]);
+	}
+
+	for (int i = frame_count-1; i>=0; i -= 1)
+	{
+		ft_frame_checkpoint(frames[i]);
 	}
 
 	for (int i = frame_count-1; i>=0; i -= 1)
@@ -98,8 +103,8 @@ START_TEST(fpool_alloc_down_utest)
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
 		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_RAW_DATA);
-		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
-		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
+		ck_assert_ptr_ne(frames[i]->last_seen_by_file, NULL);
+		ck_assert_int_ne(frames[i]->last_seen_by_line, 0);
 
 		for (int j = 0; j < i; j += 1)
 			ck_assert_ptr_ne(frames[j], frames[i]);
@@ -156,8 +161,8 @@ START_TEST(fpool_alloc_custom_advice_utest)
 
 		ck_assert_ptr_eq(frames[i]->next, NULL);
 		ck_assert_int_eq(frames[i]->type, FT_FRAME_TYPE_END_OF_STREAM);
-		ck_assert_ptr_ne(frames[i]->borrowed_by_file, NULL);
-		ck_assert_int_ne(frames[i]->borrowed_by_line, 0);
+		ck_assert_ptr_ne(frames[i]->last_seen_by_file, NULL);
+		ck_assert_int_ne(frames[i]->last_seen_by_line, 0);
 
 		for (int j = 0; j < i; j += 1)
 			ck_assert_ptr_ne(frames[j], frames[i]);
