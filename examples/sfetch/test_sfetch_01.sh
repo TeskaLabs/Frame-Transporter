@@ -20,7 +20,7 @@ if [ "$COUNTER_FAILED" -gt "5" ]; then
     exit 1
 fi
 
-if [ "$COUNTER_OK" -lt "410" ]; then
+if [ "$COUNTER_OK" -lt "400" ]; then
     echo "TEST $0 FAILED $COUNTER_OK vs $COUNTER_FAILED"
     exit 1
 fi
