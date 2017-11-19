@@ -105,6 +105,8 @@ enum ft_stream_cntl_codes
 	FT_STREAM_WRITE_START    = 0x0010,
 	FT_STREAM_WRITE_STOP     = 0x0020,
 	FT_STREAM_WRITE_SHUTDOWN = 0x0040,  // Submit write shutdown
+
+	FT_STREAM_ABORT          = 0x0080,  // Immediatelly shutdown read and writea (aka reaction to non-recoverable error)
 };
 
 
@@ -120,6 +122,8 @@ static inline bool ft_stream_cntl(struct ft_stream * this, const int control_cod
 	bool _ft_stream_cntl_write_stop(struct ft_stream *);
 	bool _ft_stream_cntl_write_shutdown(struct ft_stream *);
 
+	bool _ft_stream_cntl_abort(struct ft_stream *);
+
 	bool ok = true;
 	if ((control_code & FT_STREAM_READ_START) != 0) ok &= _ft_stream_cntl_read_start(this);
 	if ((control_code & FT_STREAM_READ_STOP) != 0) ok &= _ft_stream_cntl_read_stop(this);
@@ -128,6 +132,7 @@ static inline bool ft_stream_cntl(struct ft_stream * this, const int control_cod
 	if ((control_code & FT_STREAM_WRITE_START) != 0) ok &= _ft_stream_cntl_write_start(this);
 	if ((control_code & FT_STREAM_WRITE_STOP) != 0) ok &= _ft_stream_cntl_write_stop(this);
 	if ((control_code & FT_STREAM_WRITE_SHUTDOWN) != 0) ok &= _ft_stream_cntl_write_shutdown(this);
+	if ((control_code & FT_STREAM_ABORT) != 0) ok &= _ft_stream_cntl_abort(this);
 	return ok;
 }
 

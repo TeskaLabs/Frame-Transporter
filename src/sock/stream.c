@@ -581,7 +581,6 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 	bool upstreamed = this->delegate->read(this, frame);
 	if (!upstreamed) ft_frame_return(frame);
 
-
 	FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
 
@@ -1165,6 +1164,32 @@ bool _ft_stream_cntl_write_shutdown(struct ft_stream * this)
 	FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 
 	return ret;
+}
+
+bool _ft_stream_cntl_abort(struct ft_stream * this)
+{
+	assert(this != NULL);
+	assert(this->base.socket.clazz == ft_stream_class);
+	
+	FT_TRACE(FT_TRACE_ID_STREAM, "BEGIN " TRACE_FMT, TRACE_ARGS);
+
+	_ft_stream_read_shutdown(this);
+
+	_ft_stream_write_unset_event(this, WRITE_WANT_WRITE);
+	this->write_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+	this->flags.write_shutdown = true;
+
+	int rc = shutdown(this->write_watcher.fd, SHUT_WR);
+	if (rc != 0)
+	{
+		if (errno == ENOTCONN) { /* NO-OP ... this can happen when connection is closed quickly after connecting */ }
+		else
+			FT_WARN_ERRNO_P(errno, "shutdown()");
+	}
+
+	FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT, TRACE_ARGS);
+
+	return true;
 }
 
 ///
