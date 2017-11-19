@@ -529,16 +529,26 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 
 	// Stop futher reads on the socket
 	ft_stream_cntl(this, FT_STREAM_READ_STOP);
-	this->read_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+
+	if (this->read_shutdown_at == NAN)
+	{
+		this->read_shutdown_at = ev_now(this->base.socket.context->ev_loop);
+	}
 	this->flags.read_shutdown = true;
 
-	// Uplink read frame, if there is one (this can result in a partial frame but that's ok)
-	if (ft_frame_pos(this->read_frame) > 0)
+	if (this->read_frame != NULL)
 	{
-		FT_WARN("Partial read due to read shutdown (%zd bytes)", ft_frame_pos(this->read_frame));
-		bool upstreamed = this->delegate->read(this, this->read_frame);
-		if (!upstreamed) ft_frame_return(this->read_frame);
-		this->read_frame = NULL;
+		// Uplink read frame, if there is one (this can result in a partial frame but that's ok)
+		if (ft_frame_pos(this->read_frame) > 0)
+		{
+			FT_WARN("Partial read due to read shutdown (%zd bytes)", ft_frame_pos(this->read_frame));
+	 
+			struct ft_frame * frame = this->read_frame;
+			this->read_frame = NULL;
+
+			bool upstreamed = this->delegate->read(this, frame);
+			if (!upstreamed) ft_frame_return(frame);
+		}
 	}
 
 	// Uplink (to delegate) end-of-stream
