@@ -770,14 +770,14 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 
 		if (frame_dvec->position < frame_dvec->limit)
 		{
-			// Not all expected data arrived
+			// Not all expected data arrived (or partial read has been enabled)
 			if (this->flags.read_partial == true)
 			{
 				bool upstreamed = this->delegate->read(this, this->read_frame);
 				if (upstreamed) this->read_frame = NULL;
 			}
 			_ft_stream_read_set_event(this, READ_WANT_READ);
-			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " incomplete read (%zd)", TRACE_ARGS, rc);
+			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " partial read (%zd)", TRACE_ARGS, rc);
 			return;
 		}
 		assert(frame_dvec->position == frame_dvec->limit);
@@ -877,7 +877,7 @@ static void _ft_stream_write_real(struct ft_stream * this)
 	{
 		FT_TRACE(FT_TRACE_ID_STREAM, "FRAME " TRACE_FMT " ft:%llx", TRACE_ARGS, (unsigned long long)this->write_frames->type);
 
-		if (write_loop > ft_config.sock_est_max_read_loops)
+		if (write_loop > ft_config.sock_est_max_write_loops)
 		{
 			// Maximum write loops per event loop iteration reached
 			this->flags.write_ready = false;
