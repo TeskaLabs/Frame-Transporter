@@ -783,8 +783,15 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 			// Not all expected data arrived (or partial read has been enabled)
 			if (this->flags.read_partial == true)
 			{
-				bool upstreamed = this->delegate->read(this, this->read_frame);
-				if (upstreamed) this->read_frame = NULL;
+				struct ft_frame * read_frame = this->read_frame;
+				this->read_frame = NULL;
+
+				bool upstreamed = this->delegate->read(this, read_frame);
+				if (!upstreamed)
+				{
+					assert(this->read_frame == NULL);
+					this->read_frame = read_frame;
+				}
 			}
 			_ft_stream_read_set_event(this, READ_WANT_READ);
 			FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT " partial read (%zd)", TRACE_ARGS, rc);
@@ -796,9 +803,13 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 		ok = ft_frame_next_vec(this->read_frame);
 		if (!ok)
 		{
+			struct ft_frame * read_frame = this->read_frame;
+			this->read_frame = NULL;
+
 			// All dvecs in the frame are filled with data
-			bool upstreamed = this->delegate->read(this, this->read_frame);
-			if (upstreamed) this->read_frame = NULL;
+			bool upstreamed = this->delegate->read(this, read_frame);
+			if (!upstreamed) this->read_frame = read_frame;
+
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
 				// If watcher is stopped, break reading	
@@ -808,8 +819,11 @@ void _ft_stream_on_read_event(struct ft_stream * this)
 		}
 		else if (this->flags.read_partial == true)
 		{
-			bool upstreamed = this->delegate->read(this, this->read_frame);
-			if (upstreamed) this->read_frame = NULL;
+			struct ft_frame * read_frame = this->read_frame;
+			this->read_frame = NULL;
+
+			bool upstreamed = this->delegate->read(this, read_frame);
+			if (!upstreamed) this->read_frame = read_frame;
 			if ((this->read_events & READ_WANT_READ) == 0)
 			{
 				// If watcher is stopped, break reading	
