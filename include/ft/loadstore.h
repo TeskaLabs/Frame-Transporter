@@ -33,12 +33,14 @@ static inline uint8_t * ft_skip_u64(uint8_t * cursor)
 	return cursor+8;
 }
 
-
 static inline uint8_t * ft_load_u8(uint8_t * cursor, uint8_t * value)
 {
 	*value = *cursor;
 	return ft_skip_u8(cursor);
 }
+
+
+//TODO: These are big endian function (or network order)
 
 static inline uint8_t * ft_load_u16(uint8_t * cursor, uint16_t * value)
 {
