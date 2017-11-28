@@ -12,7 +12,6 @@ The high-performance networking library for C and POSIX aka libft.
 * Fixed-size block memory pool
 * Tracing, logging and auditing
 
-
 ## The concept
 
 ![image](./doc/images/stream_socket.png)  
