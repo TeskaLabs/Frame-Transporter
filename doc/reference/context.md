@@ -1,8 +1,36 @@
 # libft reference - Context
 
-## `struct ft_context` - Context class
+## Context class
 
-Example:
+#### `struct ft_context`;
+
+#### `bool ft_context_init(struct ft_context * );`
+
+Construct a new context object. Returns true for success or false for error.
+
+
+#### `void ft_context_fini(struct ft_context * );`
+
+Destructor of a context object.
+
+
+### Event loop
+
+
+#### `void ft_context_run(struct ft_context * );`
+
+Start an event loop (see libev).
+The method will return when the event loop exits.
+
+
+### Default context
+
+#### `extern struct ft_context * ft_context_default;`
+
+Global pointer to a first context object created within the application.
+
+
+### The example of use
 
 	#include <ft.h>
 	
@@ -28,24 +56,3 @@ Example:
 		return EXIT_SUCCESS;
 	}
 
-
-
-### `bool ft_context_init(struct ft_context * );`
-
-Construct a new context object.  
-Returns `true` for success or `false` for error.
-
-
-### `void ft_context_fini(struct ft_context * );`
-
-Destructor of a context object.
-
-
-### `void ft_context_run(struct ft_context * );`
-
-Start an event loop.
-
-
-### `extern struct ft_context * ft_context_default;`
-
-Default context.
