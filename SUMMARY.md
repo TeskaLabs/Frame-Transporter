@@ -1,7 +1,5 @@
 # Summary
 
-## libft
-
 * [Introduction](/README.md)
 
 ## Documentation

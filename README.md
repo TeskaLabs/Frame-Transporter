@@ -1,6 +1,6 @@
-# Frame transporter
+# Frame transporter aka libft
 
-The high-performance networking library for C and POSIX aka libft.
+The high-performance networking library for C and POSIX.
 
 ## Features
 
@@ -15,9 +15,6 @@ The high-performance networking library for C and POSIX aka libft.
 ## The concept
 
 ![image](./doc/images/stream_socket.png)  
-
-Stay tuned, more (e.g. the proper documentation) to come in a near future.
-
 
 ## Copyright and License
 
