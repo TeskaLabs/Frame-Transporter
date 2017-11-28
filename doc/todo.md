@@ -1,3 +1,5 @@
+# libft
+
 \[TODO\] Object-oriented approach - similar to [CLASS](https://rfc.zeromq.org/spec:21/CLASS/)
 
 \[TODO\] Event-driven architecture
@@ -6,15 +8,40 @@
   * Synchronous Event Demultiplexer
   * Dispatcher
 
-\[TODO\] Main components
 
-* Memory management
-* PubSub
-* Load/Store
-* Log management
-* Context
-* Config
-* Sockets
+## Components
 
+ - Context
 
+### Frames & memory pool
 
+ - Frames
+ - Memory pool and zones
+ - Vectoring
+
+### Collections
+
+ - List
+ - Stack
+ - IP Hash map
+ - Frame Ring Buffer
+
+### Sockets
+
+ - Stream
+ - Datagram
+
+### Messaging
+ 
+  - Publish/Subscribe
+
+### Utilities
+
+  - Config
+  - Logging
+  - Load/Store
+  - Base32
+  - Boolean
+  - Daemon
+  - Various
+ 

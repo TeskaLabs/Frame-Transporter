@@ -2,6 +2,6 @@
 
 * [Introduction](/README.md)
 
-## Documentation
+## Reference
 
- * [Reference](/doc/reference.md)
+ * [Context](/doc/reference/context.md)
