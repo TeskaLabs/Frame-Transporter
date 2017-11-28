@@ -1,8 +1,6 @@
 # libft reference - Context
 
-## Context class
-
-`struct ft_context`
+## `struct ft_context` - Context class
 
 Example:
 
@@ -32,24 +30,23 @@ Example:
 
 
 
-### Constructor
-
-`bool ft_context_init(struct ft_context * );`
-
-Construct a new context object.
-
-Returns `true` for success or `false` for error.
-
-### Destructor
-
-`void ft_context_fini(struct ft_context * );`
-
-
 ### Methods
 
-`void ft_context_run(struct ft_context * );`
+#### `bool ft_context_init(struct ft_context * );`
+
+Construct a new context object.  
+Returns `true` for success or `false` for error.
 
 
-### Default context
+#### `void ft_context_fini(struct ft_context * );`
 
-`extern struct ft_context * ft_context_default;`
+
+
+#### `void ft_context_run(struct ft_context * );`
+
+
+### Globals
+
+#### `extern struct ft_context * ft_context_default;`
+
+Default context.
