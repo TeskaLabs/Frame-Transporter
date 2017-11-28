@@ -30,23 +30,22 @@ Example:
 
 
 
-### Methods
-
-#### `bool ft_context_init(struct ft_context * );`
+### `bool ft_context_init(struct ft_context * );`
 
 Construct a new context object.  
 Returns `true` for success or `false` for error.
 
 
-#### `void ft_context_fini(struct ft_context * );`
+### `void ft_context_fini(struct ft_context * );`
+
+Destructor of a context object.
 
 
+### `void ft_context_run(struct ft_context * );`
 
-#### `void ft_context_run(struct ft_context * );`
+Start an event loop.
 
 
-### Globals
-
-#### `extern struct ft_context * ft_context_default;`
+### `extern struct ft_context * ft_context_default;`
 
 Default context.
