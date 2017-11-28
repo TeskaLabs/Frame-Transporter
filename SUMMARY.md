@@ -1,4 +1,9 @@
 # Summary
 
-* [Introduction](doc/intro.md)
+## libft
 
+* [Introduction](/README.md)
+
+## Documentation
+
+ * [Reference](/doc/reference.md)
