@@ -1,5 +1,14 @@
 # libft reference - Context
 
+libft objects operate within a libft context. The application typically has a one global context (more than one context is supported). The context operates within a single thread.
+
+A libft context consists of:
+
+ - an event loop
+ - signal handlers
+ - a frame memory pool
+ - a shutdown counter
+
 ## Context class
 
 `struct ft_context;`
@@ -12,13 +21,6 @@ Construct a new context object. Returns true for success or false for error.
 `void ft_context_fini(struct ft_context * );`
 
 Destructor of a context object.
-
-
-### Default context
-
-`extern struct ft_context * ft_context_default;`
-
-Global pointer to a first context object created within the application.
 
 
 
@@ -41,17 +43,17 @@ The method will return when the event loop exits.
 	{
 		bool ok;
 		
-		// Initialize 
+		// Initialize libft
 		ft_initialise();
 	
-		// Initialize context
+		// Initialize the context
 		ok = ft_context_init(&context);
 		if (!ok) return EXIT_FAILURE;
 		
-		// Enter event loop
+		// Start the event loop
 		ft_context_run(&context);
 
-		// Clean-up
+		// Clean up
 		ft_context_fini(&context);
 
 		return EXIT_SUCCESS;
