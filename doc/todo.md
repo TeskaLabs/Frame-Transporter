@@ -7,6 +7,7 @@
 * Reactor
   * Synchronous Event Demultiplexer
   * Dispatcher
+  * Single-threaded
 
 
 ## Components
