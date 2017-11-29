@@ -15,6 +15,8 @@ struct ft_stream_delegate
 	void (*fini)(struct ft_stream *);
 
 	void (*error)(struct ft_stream *); // Don't use this for close() or shutdown, it will be done automatically and it can lead to wierd results
+
+	void (*frame_return)(struct ft_stream *, struct ft_frame * frame, char frame_type); // If set, called instead of ft_frame_return, frame_type is 'R' or 'W'
 };
 
 struct ft_stream
@@ -77,6 +79,7 @@ struct ft_stream
 		unsigned int read_events;
 		unsigned int write_events;
 		unsigned int write_direct; //Writes without need of wait for EV_WRITE
+		unsigned int write_queue_length;
 		unsigned long read_bytes;
 		unsigned long write_bytes;
 	} stats;

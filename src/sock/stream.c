@@ -115,6 +115,7 @@ static bool ft_stream_init_(struct ft_stream * this, const struct ft_stream_dele
 	this->stats.read_events = 0;
 	this->stats.write_events = 0;
 	this->stats.write_direct = 0;
+	this->stats.write_queue_length = 0;
 	this->stats.read_bytes = 0;
 	this->stats.write_bytes = 0;
 	this->flags.read_partial = false;
@@ -316,8 +317,6 @@ void ft_stream_fini(struct ft_stream * this)
 	assert(this->read_watcher.fd >= 0);
 	assert(this->write_watcher.fd == this->read_watcher.fd);
 
-	if(this->delegate->fini != NULL) this->delegate->fini(this);	
-
 	ft_stream_cntl(this, FT_STREAM_READ_STOP | FT_STREAM_WRITE_STOP);
 
 	int rc = close(this->read_watcher.fd);
@@ -336,7 +335,10 @@ void ft_stream_fini(struct ft_stream * this)
 	if (this->read_frame != NULL)
 	{
 		cap = ft_frame_pos(this->read_frame);
-		ft_frame_return(this->read_frame);
+		if(this->delegate->frame_return != NULL)
+			this->delegate->frame_return(this, this->read_frame, 'R');
+		else
+			ft_frame_return(this->read_frame);
 		this->read_frame = NULL;
 
 		if (cap > 0) FT_WARN("Lost %zu bytes in read buffer of the socket", cap);
@@ -349,7 +351,10 @@ void ft_stream_fini(struct ft_stream * this)
 		this->write_frames = frame->next;
 
 		cap += ft_frame_len(frame);
-		ft_frame_return(frame);
+		if(this->delegate->frame_return != NULL)
+			this->delegate->frame_return(this, frame, 'W');
+		else
+			ft_frame_return(frame);
 	}
 	if (cap > 0) FT_WARN("Lost %zu bytes in write buffer of the socket", cap);
 
@@ -358,6 +363,9 @@ void ft_stream_fini(struct ft_stream * this)
 		SSL_free(this->ssl);
 		this->ssl = NULL;
 	}
+
+	if(this->delegate->fini != NULL) this->delegate->fini(this);
+
 }
 
 ///
@@ -547,7 +555,14 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 			this->read_frame = NULL;
 
 			bool upstreamed = this->delegate->read(this, frame);
-			if (!upstreamed) ft_frame_return(frame);
+			if (!upstreamed)
+			{
+				if(this->delegate->frame_return != NULL)
+					this->delegate->frame_return(this, frame, 'R');
+				else
+					ft_frame_return(frame);
+
+			}
 		}
 	}
 
@@ -579,7 +594,13 @@ static void _ft_stream_read_shutdown(struct ft_stream * this)
 	}
 
 	bool upstreamed = this->delegate->read(this, frame);
-	if (!upstreamed) ft_frame_return(frame);
+	if (!upstreamed)
+	{
+		if(this->delegate->frame_return != NULL)
+			this->delegate->frame_return(this, frame, 'R');
+		else
+			ft_frame_return(frame);
+	}
 
 	FT_TRACE(FT_TRACE_ID_STREAM, "END " TRACE_FMT, TRACE_ARGS);
 }
@@ -914,7 +935,12 @@ static void _ft_stream_write_real(struct ft_stream * this)
 		{
 			struct ft_frame * frame = this->write_frames;
 			this->write_frames = frame->next;
-			ft_frame_return(frame);
+
+			if(this->delegate->frame_return != NULL)
+				this->delegate->frame_return(this, frame, 'W');
+			else
+				ft_frame_return(frame);
+
 
 			if (this->write_frames != NULL) FT_ERROR("There are data frames in the write queue after end-of-stream.");
 
@@ -1063,6 +1089,8 @@ static void _ft_stream_write_real(struct ft_stream * this)
 			// All dvecs in the frame have been written
 			struct ft_frame * frame = this->write_frames;
 
+			assert(this->stats.write_queue_length > 0);
+			this->stats.write_queue_length -= 1;
 			this->write_frames = frame->next;
 			if (this->write_frames == NULL)
 			{
@@ -1070,7 +1098,11 @@ static void _ft_stream_write_real(struct ft_stream * this)
 				this->write_frame_last = &this->write_frames;
 			}
 
-			ft_frame_return(frame);
+			if(this->delegate->frame_return != NULL)
+				this->delegate->frame_return(this, frame, 'W');
+			else
+				ft_frame_return(frame);
+
 		}
 	}
 
@@ -1127,6 +1159,7 @@ bool ft_stream_write(struct ft_stream * this, struct ft_frame * frame)
 	*this->write_frame_last = frame;
 	frame->next = NULL;
 	this->write_frame_last = &frame->next;
+	this->stats.write_queue_length += 1;
 
 	if (this->flags.write_ready == false)
 	{
