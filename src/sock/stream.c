@@ -71,7 +71,7 @@ static void _ft_stream_on_ssl_sent_shutdown_event(struct ft_stream * this);
 
 ///
 
-static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
+static bool ft_stream_init_(struct ft_stream * this, const struct ft_stream_delegate * delegate, struct ft_context * context, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len, int ai_family, int ai_socktype, int ai_protocol)
 {
 	bool ok;
 
@@ -149,7 +149,7 @@ static bool ft_stream_init_(struct ft_stream * this, struct ft_stream_delegate *
 	return true;
 }
 
-bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
+bool ft_stream_accept(struct ft_stream * this, const struct ft_stream_delegate * delegate, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len)
 {
 	assert(listening_socket != NULL);
 
@@ -189,7 +189,7 @@ bool ft_stream_accept(struct ft_stream * this, struct ft_stream_delegate * deleg
 }
 
 
-bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
+bool ft_stream_connect(struct ft_stream * this, const struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr)
 {
 	if (addr->ai_socktype != SOCK_STREAM)
 	{
@@ -247,7 +247,7 @@ bool ft_stream_connect(struct ft_stream * this, struct ft_stream_delegate * dele
 	return true;
 }
 
-bool ft_stream_init(struct ft_stream * this, struct ft_stream_delegate * delegate, struct ft_context * context, int fd)
+bool ft_stream_init(struct ft_stream * this, const struct ft_stream_delegate * delegate, struct ft_context * context, int fd)
 {
 	int rc;
 	bool ok;

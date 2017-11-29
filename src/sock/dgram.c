@@ -51,7 +51,7 @@ static void _ft_dgram_on_write_event(struct ft_dgram * this);
 
 ///
 
-bool ft_dgram_init(struct ft_dgram * this, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol)
+bool ft_dgram_init(struct ft_dgram * this, const struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol)
 {
 	bool ok;
 	int i, rc;

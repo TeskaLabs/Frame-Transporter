@@ -23,7 +23,7 @@ struct ft_proto_socks_delegate
 struct ft_proto_socks
 {
 	// Common fields
-	struct ft_proto_socks_delegate * delegate;
+	const struct ft_proto_socks_delegate * delegate;
 
 	//SOCKS4 headers
 	uint8_t VN;
@@ -39,7 +39,7 @@ struct ft_proto_socks
 	void * data;
 };
 
-bool ft_proto_socks_init(struct ft_proto_socks *, struct ft_proto_socks_delegate * delegate, struct ft_stream * stream);
+bool ft_proto_socks_init(struct ft_proto_socks *, const struct ft_proto_socks_delegate * delegate, struct ft_stream * stream);
 void ft_proto_socks_fini(struct ft_proto_socks *);
 
 // It is advised to switch to new protocol delegate on the stream after this one is called

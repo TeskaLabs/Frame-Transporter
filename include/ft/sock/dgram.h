@@ -22,7 +22,7 @@ struct ft_dgram
 		struct ft_socket socket;
 	} base;
 
-	struct ft_dgram_delegate * delegate;
+	const struct ft_dgram_delegate * delegate;
 
 	struct
 	{
@@ -70,7 +70,7 @@ struct ft_dgram
 	} stats;
 };
 
-bool ft_dgram_init(struct ft_dgram *, struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol);
+bool ft_dgram_init(struct ft_dgram *, const struct ft_dgram_delegate * delegate, struct ft_context * context, int family, int socktype, int protocol);
 bool ft_dgram_bind(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
 bool ft_dgram_connect(struct ft_dgram *, const struct sockaddr * addr, socklen_t addrlen);
 

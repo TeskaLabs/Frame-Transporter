@@ -8,7 +8,7 @@ const char * ft_listener_class = "ft_listener";
 
 ///
 
-bool ft_listener_init(struct ft_listener * this, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * ai)
+bool ft_listener_init(struct ft_listener * this, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * ai)
 {
 	int rc;
 	int fd = -1;
@@ -339,7 +339,7 @@ bool ft_listener_list_cntl(struct ft_list * list, const int control_code)
 }
 
 
-int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port)
+int ft_listener_list_extend(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -394,7 +394,7 @@ int ft_listener_list_extend(struct ft_list * list, struct ft_listener_delegate *
 	return rc;
 }
 
-int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list)
+int ft_listener_list_extend_by_addrinfo(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -432,7 +432,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, struct ft_listene
 }
 
 
-int ft_listener_list_extend_auto(struct ft_list * list, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value)
+int ft_listener_list_extend_auto(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -545,7 +545,7 @@ fin_getaddrinfo:
 }
 
 
-int ft_listener_list_extend_autov(struct ft_list * list, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values)
+int ft_listener_list_extend_autov(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);

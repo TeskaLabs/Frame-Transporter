@@ -18,7 +18,7 @@ struct ft_listener
 		struct ft_socket socket;
 	} base;
 
-	struct ft_listener_delegate * delegate;
+	const struct ft_listener_delegate * delegate;
 
 	struct ev_io watcher;
 
@@ -31,7 +31,7 @@ struct ft_listener
 	} stats;
 };
 
-bool ft_listener_init(struct ft_listener * , struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp);
+bool ft_listener_init(struct ft_listener * , const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp);
 void ft_listener_fini(struct ft_listener *);
 
 ///
@@ -60,10 +60,10 @@ static inline bool ft_listener_cntl(struct ft_listener * this, const int control
 
 bool ft_listener_list_init(struct ft_list *);
 
-int ft_listener_list_extend(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port);
-int ft_listener_list_extend_by_addrinfo(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list);
-int ft_listener_list_extend_auto(struct ft_list *, struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value);
-int ft_listener_list_extend_autov(struct ft_list * , struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values);
+int ft_listener_list_extend(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port);
+int ft_listener_list_extend_by_addrinfo(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list);
+int ft_listener_list_extend_auto(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value);
+int ft_listener_list_extend_autov(struct ft_list * , const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values);
 
 bool ft_listener_list_cntl(struct ft_list *, const int control_code);
 

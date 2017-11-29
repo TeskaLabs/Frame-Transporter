@@ -14,7 +14,7 @@ static bool ft_proto_socks_5_on_read(struct ft_proto_socks * this, struct ft_str
 
 ///
 
-bool ft_proto_socks_init(struct ft_proto_socks * this, struct ft_proto_socks_delegate * delegate, struct ft_stream * stream)
+bool ft_proto_socks_init(struct ft_proto_socks * this, const struct ft_proto_socks_delegate * delegate, struct ft_stream * stream)
 {
 	assert(this != NULL);
 	assert(delegate != NULL);

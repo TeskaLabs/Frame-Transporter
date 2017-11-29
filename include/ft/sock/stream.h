@@ -24,7 +24,7 @@ struct ft_stream
 		struct ft_socket socket;
 	} base;
 
-	struct ft_stream_delegate * delegate;	
+	const struct ft_stream_delegate * delegate;	
 
 	struct
 	{
@@ -82,9 +82,9 @@ struct ft_stream
 	} stats;
 };
 
-bool ft_stream_init(struct ft_stream *, struct ft_stream_delegate * delegate, struct ft_context * context, int fd);
-bool ft_stream_accept(struct ft_stream *, struct ft_stream_delegate * delegate, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
-bool ft_stream_connect(struct ft_stream *, struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
+bool ft_stream_init(struct ft_stream *, const struct ft_stream_delegate * delegate, struct ft_context * context, int fd);
+bool ft_stream_accept(struct ft_stream *, const struct ft_stream_delegate * delegate, struct ft_listener * listening_socket, int fd, const struct sockaddr * peer_addr, socklen_t peer_addr_len);
+bool ft_stream_connect(struct ft_stream *, const struct ft_stream_delegate * delegate, struct ft_context * context, const struct addrinfo * addr);
 void ft_stream_fini(struct ft_stream *);
 
 bool ft_stream_write(struct ft_stream *, struct ft_frame * frame);
