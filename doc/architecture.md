@@ -1,3 +1,5 @@
 # Architecture of libft
 
-TODO: This ...
+## Socket concept
+
+![image](./doc/images/stream_socket.png) 

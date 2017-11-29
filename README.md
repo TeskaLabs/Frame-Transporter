@@ -2,19 +2,19 @@
 
 The high-performance networking library for C and POSIX.
 
+It is designed for implementation of various communication protocols on a client and server side in a event-driven programming paradigm. It means that you can quickly build for example a high-performance web server or MQTT client.
+
 ## Features
 
-* High-speed event loop provided by [libev](http://software.schmorp.de/pkg/libev.html)
-* Event-driven [network socket](https://en.wikipedia.org/wiki/Network_socket) abstraction
+* [Event-driven](https://en.wikipedia.org/wiki/Event-driven) with the event loop provided by [libev](http://software.schmorp.de/pkg/libev.html)
+* [Network socket](https://en.wikipedia.org/wiki/Network_socket) abstraction (IPv4, IPv6, Unix sockets)
 * Non-blocking I/O, [asynchronous I/O](https://en.wikipedia.org/wiki/Asynchronous_I/O)
 * SSL/TLS encryption by [OpenSSL](https://www.openssl.org)
 * [Reactor pattern](https://en.wikipedia.org/wiki/Reactor_pattern)
 * Fixed-size block memory pool
+* Procedural wire protocol parsing and constructing
 * Tracing, logging and auditing
 
-## The concept
-
-![image](./doc/images/stream_socket.png)  
 
 ## Copyright and License
 
