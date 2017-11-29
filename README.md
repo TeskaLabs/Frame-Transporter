@@ -2,7 +2,7 @@
 
 The high-performance networking library for C and POSIX.
 
-It is designed for implementation of various communication protocols on a client and server side in a event-driven programming paradigm. It means that you can quickly build for example a high-performance web server or MQTT client.
+It is designed for implementation of various communication protocols on a client and server side in a event-driven programming paradigm. It means that you can quickly build for example a high-performance web server, MQTT client and so on.
 
 libft is a workhorse behind several enterprise products that see a large-scale production deployments e.g. in a telco segment.
 
