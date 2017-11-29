@@ -53,7 +53,7 @@ struct ft_class
 };
 ```
 
-Attributes are direct members of the class.
+Attributes are members of the class.
 
 The name shall be a _noun_.
 
@@ -126,10 +126,57 @@ The name of the destructor shall be `fini` (e.g. `ft_class_fini()`).
 The destructor return value must be defined as `void`.
 
 
+## Getters
+
+```
+static inline int ft_class_get_attribute1(struct ft_class * this)
+{
+	return this->attribute1;
+}
+
+struct ft_class my_instance;
+
+int value = ft_class_get_attribute1(&my_instance);
+
+```
+
+A getter is a method of a given class that provides read access for an attribute of the class instance. Alternatively getter method can provide a value of non-existing virtual attribute e.g. based on a computation from internal instance state.
+
+`get` verb is reserved for _getter_ type of methods and must not be used in a different means.
+
+The name of the getter is `get` with a postfix that specify an attribute in question.
+
+The value is returned via return type.
+
+It is recommended to implement getter methods as `static inline` for the compiler can optimize them out.
+
+## Setters
+
+```
+static inline void ft_class_set_attribute1(struct ft_class * this, int new_value)
+{
+	this->attribute1 = new_value;
+}
+
+struct ft_class my_instance;
+
+ft_class_set_attribute1(&my_instance, 42);
+
+```
+
+A setter is a method of a given class that allows to write new values to attributes of the class instance.
+
+`set` verb is reserved for _setter_ type of methods and must not be used in a different means.
+
+The name of the setter is `set` with a postfix that specify an attribute in question.
+
+Return type of a setter has to be `void`.
+
+It is recommended to implement setter methods as `static inline` for the compiler can optimize them out.
+
+
 ##TODO:
 
-- getters and setters
-- constructors, destructors
 - allocators, deallocators
 - delegates
 - strings (char * vs const char *)
