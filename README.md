@@ -4,6 +4,8 @@ The high-performance networking library for C and POSIX.
 
 It is designed for implementation of various communication protocols on a client and server side in a event-driven programming paradigm. It means that you can quickly build for example a high-performance web server or MQTT client.
 
+libft is a workhorse behind several enterprise products that see a large-scale production deployments e.g. in a telco segment.
+
 ## Features
 
 * [Event-driven](https://en.wikipedia.org/wiki/Event-driven) with the event loop provided by [libev](http://software.schmorp.de/pkg/libev.html)
