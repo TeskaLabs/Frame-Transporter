@@ -12,7 +12,7 @@
 
 ## In-depth
 
-* [Concept](/doc/concept.md)
+* [Object-oriented programming](/doc/oop.md)
 * [Architecture](/doc/architecture.md)
 
 ## External links
