@@ -16,7 +16,7 @@ Capacity is read-only value that is provided during frame construction time.
 
 #### uint8\_t \* data \[read-only attribute\]
 
-A pointer to a frame memory as an array of  bytes.
+A pointer to a frame memory space as an array of bytes.
 
 ### Type
 
