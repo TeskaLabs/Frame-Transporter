@@ -79,7 +79,7 @@ The memory frame can be received of the network from a peer. The peer address is
 
 Vector objects are stored at the end of the frame so that available capacity of a given frame is a bit smaller if vectors are used.
 
-### Vector coordinates
+### Vector attributes
 
 #### `uint16_t offset` \[read-only attribute\]
 
@@ -96,8 +96,4 @@ The position is the index of the next byte to be read or written.
 #### `uint16_t limit` \[read-only attribute\]
 
 The limit is the index of the first byte that should not be read or written.
-
-
-
-
 
