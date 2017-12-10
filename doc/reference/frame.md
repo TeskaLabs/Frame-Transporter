@@ -120,7 +120,7 @@ The protocol header is received e.g. by libft sockets. The Position is equal Lim
 
 The _flip_ set Position to 0 \(Limit stays the same because previous value of Position was 8\).
 
-#### Step \#4: Parse header
+#### Step \#4: Parse a header
 
 ```
 +---------------------------------
@@ -161,7 +161,7 @@ Add a second vector with capacity 32 bytes \(the value received from parser of t
                 ^ Limit = 8
                 ^ Position = 8
                 ^ Capacity = 8
-                
+
                 | ----------------- vector -------------------|
                 ^ Offset = 8
                                                               ^ Limit = 32
@@ -171,7 +171,7 @@ Add a second vector with capacity 32 bytes \(the value received from parser of t
 
 The protocol header is received e.g. by libft sockets. The Position is equal Limit. Now the length of the body needs to be parsed from data.
 
-#### Step \#7: The frame is flipped and read is completed
+#### Step \#7: The frame is flipped and read is complete
 
 ```
 +---------------------------------
@@ -180,7 +180,7 @@ The protocol header is received e.g. by libft sockets. The Position is equal Lim
                 ^ Limit = 8
 ^ Position = 0
                 ^ Capacity = 8
-                
+
                 | ----------------- vector -------------------|
                 ^ Offset = 8
                                                               ^ Limit = 32
@@ -190,9 +190,26 @@ The protocol header is received e.g. by libft sockets. The Position is equal Lim
 
 The frame is flipped again and the read cycle is over. The frame is prepared for any upstream processing e.g. by application layer  or by an higher level protocol such as HTTP or TLS. Equally it is ready for being send over the network. The later will be demonstrated in the next steps of this example.
 
+#### Step \#8: Send the frame over the network
 
+```
++---------------------------------
+|---- vector ---|
+^ Offset = 0
+                ^ Limit = 8
+                ^ Position = 8
+                ^ Capacity = 8
 
-#### Vector attributes
+                | ----------------- vector -------------------|
+                ^ Offset = 8
+                                                              ^ Limit = 32
+                                                              ^ Position = 32
+                                                              ^ Capacity = 32
+```
+
+Because the frame has been correctly prepared, libft sent the frame at once. libft iterated over all vectors and sent data from each vector based on its _Position_ and _Limit_.
+
+### Vector attributes
 
 #### `uint16_t offset` \[read-only attribute\]
 
