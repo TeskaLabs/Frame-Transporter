@@ -233,6 +233,12 @@ Flip function is used to flip the vector from "writing" to "reading" and vice ve
 
 Set _Limit_ and _Capacity_ to a current _Position_.
 
+#### `bool ft_vec_extend(struct ft_vec *, size_t size)`
+
+Add a value of `size` to a currect Capacity of the vector. It means that the vector will be extended by a provided value.
+
+Returns `true` if _Position_ has been changed correctly, `false` for error such as exceeding capacity of the frame.
+
 #### `bool ft_vec_sprintf(struct ft_vec *, const char * format, ...)`
 
 Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector.
@@ -257,13 +263,13 @@ Copy bytes from `data` \(length is defined by`data_len` \) into the a vector and
 
 Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
+#### `void ft_frame_memset(struct ft_frame *, uint8_t byte)`
+
+...
+
 #### `size_t ft_vec_remaining(struct ft_vec *)`
 
 Returns a difference between _Position_ and _Limit_. It means how many more data can fit into a vector or how many data can be still read from a vector.
-
-#### `bool ft_vec_extend(struct ft_vec *, size_t size)`
-
-...
 
 #### `void * ft_vec_ptr(struct ft_vec *)`
 
@@ -281,9 +287,7 @@ Returns a difference between _Position_ and _Limit_. It means how many more data
 
 ...
 
-#### `void ft_frame_memset(struct ft_frame *, uint8_t byte)`
 
-...
 
 ### Vector attributes
 
