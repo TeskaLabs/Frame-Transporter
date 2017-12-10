@@ -225,9 +225,13 @@ Returns `true` if _Position_ has been changed correctly, `false` for error such 
 
 #### `void ft_vec_flip(struct ft_vec *)`
 
-Se _Limit_ to a current value of _Position_ and reset _Position_ to 0.
+Set _Limit_ to a current value of _Position_ and reset _Position_ to 0.
 
 Flip function is used to flip the vector from "writing" to "reading" and vice verse. After a sequence of writes is used to fill the vector, flip will set the limit of the vector to the current position and reset the position to zero. This has the effect of making a future read from the vector read all of what was written into the vector and no more.
+
+#### `void ft_vec_trim(struct ft_vec *)`
+
+Set _Limit_ and _Capacity_ to a current _Position_.
 
 #### `bool ft_vec_sprintf(struct ft_vec *, const char * format, ...)`
 
@@ -253,9 +257,9 @@ Copy bytes from `data` \(length is defined by`data_len` \) into the a vector and
 
 Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
-#### `size_t ft_vec_len(struct ft_vec *)`
+#### `size_t ft_vec_remaining(struct ft_vec *)`
 
-...
+Returns a difference between _Position_ and _Limit_. It means how many more data can fit into a vector or how many data can be still read from a vector.
 
 #### `bool ft_vec_extend(struct ft_vec *, size_t size)`
 
