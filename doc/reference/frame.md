@@ -14,29 +14,25 @@ Memory frame
 |                                           |-- 3rd Vector --|
 |- 4th Vector -|                                             |
 +------------------------------------------------------------+
-^ Frame data                                                 ^ Frame data + capacity
+^ Frame data                                                 ^ Frame data + Frame capacity
 ```
 
 ### Schema: Vector
 
 ```asciidoc
 Vector
-|-------+-------+-------|
-O       P       L       C
-^       ^       ^       ^
-|       |       |       Capacity
-|       |       Limit (cursor)
-|       Position (cursor)
-Offset
+|-------------+-------------+-------------|
+^             ^             ^             ^ 
+Offset        Position      Limit         Capacity
 ```
 
-The location of the vector within a frame is defined by vector's **O**ffset and **C**apacity. Vector cannot cross low and high boundary of the frame. Vector defines also its cursor **P**osition and **L**imit. Read/write operations happen at the cursor **P**osition, which is increased as the operation finishes.
+The location of the vector within a frame is defined by vector's O_ffset_ and _Capacity_. Vector cannot cross low and high boundary of the frame. Vector defines also its _Position_ and _Limit_. Read/write operations happen at the _Position_, which is increased as the operation finishes.
 
-It is postulated that: 0 &lt;= **P** &lt;= **L** &lt;= **C**. It means that:
+It is postulated that: 0 &lt;= _Position_ &lt;= _Limit_ &lt;= _Capacity_. It means that:
 
-* **P**osition can be in range of 0 to **C**apacity but lower or equal to **L**imit.
-* **L**imit can be in range of 0 to **C**apacity but higher of equal to **P**osition.
-* If **P**osition equals to **L**imit, no futher read/write operations are possible because the cursor is at the end of a vector.
+* _Position_ can be in range of 0 to _Capacity_ but lower or equal to _Limit_.
+* _Limit_ can be in range of 0 to _Capacity_ but higher of equal to _Position_.
+* If _Position_ equals to _Limit_, no futher read/write operations are possible because we hit the end of a vector.
 
 ## `struct ft_frame`- Memory frame class
 
@@ -103,7 +99,7 @@ The frame is prepared so that it contains a one vector, that points at the begin
                 ^ Position = 8
 ```
 
-The protocol header is reived 
+The protocol header is received 
 
 ### Vector attributes
 
@@ -126,6 +122,4 @@ The limit is the index of the first byte that should not be read or written.
 #### `struct ft_frame * frame` \[read-only attribute\]
 
 A pointer to a frame that owns a vector.
-
-
 
