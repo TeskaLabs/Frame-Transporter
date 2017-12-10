@@ -105,7 +105,7 @@ The frame is prepared so that it contains a one vector, that points at the begin
 
 The protocol header is received because Position is equal Limit. Now the length of the body needs to be parsed from data.
 
-#### Step \#3: Flip of the vector and start reading
+#### Step \#3: Flip of the vector to prepare for reading
 
 ```
 +---------------------------------
@@ -116,6 +116,8 @@ Position = 0
 ```
 
 The _flip_ set Position to 0 \(Limit stays the same because previous value of Position was 8\).
+
+
 
 ### Vector attributes
 
