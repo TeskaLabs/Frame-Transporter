@@ -209,6 +209,64 @@ The frame is flipped again and the read cycle is over. The frame is prepared for
 
 Because the frame has been correctly prepared, libft sent the frame at once. libft iterated over all vectors and sent data from each vector based on its _Position_ and _Limit_.
 
+### Vector methods
+
+#### `bool ft_vec_forward(struct ft_vec *, size_t position_delta)`
+
+...
+
+#### `void ft_vec_pos(struct ft_vec *, size_t position)`
+
+...
+
+#### `void ft_vec_flip(struct ft_vec *)`
+
+...
+
+#### `bool ft_vec_sprintf(struct ft_vec *, const char * format, ...)`
+
+...
+
+#### `bool ft_vec_vsprintf(struct ft_vec *, const char * format, va_list ap)`
+
+...
+
+#### `bool ft_vec_strcat(struct ft_vec *, const char * text)`
+
+...
+
+#### `bool ft_vec_cat(struct ft_vec *, const void * data, size_t data_len)`
+
+...
+
+#### `size_t ft_vec_len(struct ft_vec *)`
+
+...
+
+#### `bool ft_vec_extend(struct ft_vec *, size_t size)`
+
+...
+
+#### `void * ft_vec_ptr(struct ft_vec *)`
+
+...
+
+#### `void * ft_vec_begin_ptr(struct ft_vec *)`
+
+...
+
+#### `void * ft_vec_end_ptr(struct ft_vec *)`
+
+...
+
+#### `void ft_vec_advance_ptr(struct ft_vec *, void * ptr)`
+
+...
+
+#### `void ft_frame_memset(struct ft_frame *, uint8_t byte)`
+
+...
+
 ### Vector attributes
 
 #### `uint16_t offset` \[read-only attribute\]
