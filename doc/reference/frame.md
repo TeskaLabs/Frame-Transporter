@@ -8,12 +8,13 @@ The content of a memory frame _can_ be organized using _vectors_. Vectors provid
 
 ```asciiart
 Memory frame
-+---------------------------------------------------------------+
-| |- Vector -|                                                  |
-|       |----- Vector ----------|                               |
-|                                         |--- Vector ---|      |
-+---------------------------------------------------------------+
-^ Frame data                                                    ^ Frame data + capacity
++-----------------------------------------------------------------+
+|         |- 1st Vector -|                                        |
+|               |----- 2nd Vector ----------|                     |
+|                                              |--- 3rd Vector ---|
+|- 4th Vector -|                                                  |
++-----------------------------------------------------------------+
+^ Frame data                                                      ^ Frame data + capacity
 ```
 
 ## `struct ft_frame`- Memory frame class
