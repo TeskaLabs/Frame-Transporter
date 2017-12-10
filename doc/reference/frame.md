@@ -237,15 +237,21 @@ Returns `true` if successful, `false` when error has been observed \(e.g. result
 
 #### `bool ft_vec_vsprintf(struct ft_vec *, const char * format, va_list ap)`
 
-...
+Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector \(variable argument style\).
+
+Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
 #### `bool ft_vec_strcat(struct ft_vec *, const char * text)`
 
-...
+Append a `text` to a NUL-terminated string in the a vector in a `strcat()` way and move _Position_ at the end of the resulting string.
+
+Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
 #### `bool ft_vec_cat(struct ft_vec *, const void * data, size_t data_len)`
 
-...
+Copy bytes from `data` \(length is defined by`data_len` \) into the a vector and move _Position_ by `data_len`.
+
+Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
 #### `size_t ft_vec_len(struct ft_vec *)`
 
