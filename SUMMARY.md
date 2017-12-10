@@ -4,11 +4,11 @@
 
 ## Reference
 
- * [Context](/doc/reference/context.md)
-
- * [Memory pool and zones](/doc/reference/mempool.md)
- * [Frame](/doc/reference/frame.md)
- * [Vector](/doc/reference/vector.md)
+* [Synopsis](doc/reference/synopsis.md)
+* [Context](/doc/reference/context.md)
+* [Memory pool and zones](/doc/reference/mempool.md)
+* [Frame](/doc/reference/frame.md)
+* [Vector](/doc/reference/vector.md)
 
 ## In-depth
 
@@ -17,4 +17,5 @@
 
 ## External links
 
- * [libev](http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod)
+* [libev](http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod)
+
