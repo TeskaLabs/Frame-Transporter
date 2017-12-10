@@ -1,7 +1,11 @@
-"pluginsConfig": {
-        // ...,
+{
+    "plugins": [
+        "analytics"
+    ],
+    "pluginsConfig": {
+
         "analytics": {
-            "google": "TOKEN-1",
-            "baidu": "TOKEN-2"
+            "google": "TOKEN-1"
         }
     }
+}
