@@ -8,19 +8,21 @@ The content of a memory frame _can_ be organized using _vectors_. Vectors provid
 
 ```asciidoc
 Memory frame
+
 +------------------------------------------------------------+
 |          |- 1st Vector -|                                  |
 |               |---- 2nd Vector ----|                       |
 |                                           |-- 3rd Vector --|
 |- 4th Vector -|                                             |
 +------------------------------------------------------------+
-^ Frame data                                                 ^ Frame data + Frame capacity
+^ Frame data                                                 ^ Frame data + capacity
 ```
 
 ### Schema: Vector
 
 ```asciidoc
 Vector
+
 |-------------+-------------+-------------|
 ^             ^             ^             ^ 
 Offset        Position      Limit         Capacity
@@ -85,7 +87,8 @@ Here we present a typical lifecycle of the memory frames with vectors on the net
 +---------------------------------
 |---- vector ---|
 ^               ^ Limit = 8
-Position = 0
+Position = 0    |
+                ^ Capacity = 8
 ```
 
 The frame is prepared so that it contains a one vector, that points at the begin of the frame. The capacity of vector is set to a known size of the protocol header \(in this example it is 8 bytes\).
@@ -97,9 +100,22 @@ The frame is prepared so that it contains a one vector, that points at the begin
 |---- vector ---|
                 ^ Limit = 8
                 ^ Position = 8
+                ^ Capacity = 8
 ```
 
-The protocol header is received 
+The protocol header is received because Position is equal Limit. Now the length of the body needs to be parsed from data.
+
+#### Step \#3: Flip of the vector and start reading
+
+```
++---------------------------------
+|---- vector ---|
+^               ^ Limit = 8
+Position = 0
+                 ^ Capacity = 8
+```
+
+The _flip_ set Position to 0 \(Limit stays the same because previous value of Position was 8\).
 
 ### Vector attributes
 
