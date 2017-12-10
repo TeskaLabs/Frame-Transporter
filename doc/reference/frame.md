@@ -4,7 +4,9 @@ The memory frame is a fixed-length memory space managed by a libft \(see memory 
 
 ## `struct ft_frame`- Memory frame class
 
-#### `enum ft_frame_type type` \[read-write attribute\] - Type of the memory frame
+### Type of a memory frame
+
+#### `enum ft_frame_type type` \[read-write attribute\]
 
 Each memory frame carries information about its type. This information can be used for faster dispatching of the frame. The type is a number and can be changed by an application.
 
@@ -15,7 +17,15 @@ Known memory frame types:
 * `FT_FRAME_TYPE_RAW_DATA` - unspecified \(raw\) data are present in the frame.
 * `FT_FRAME_TYPE_LOG` - the frame carries logging information
 
+### A peer address
 
+#### `struct sockaddr_storage addr` \[read-write attribute\]
+
+#### `socklen_t addrlen` \[read-write attribute\]
+
+The memory frame can be received from a network peer. The address is stored in `addr` and `addrlen` attributes.
+
+**WARNING:** This is obsolete part and will be removed in a future releases of libft.
 
 
 
