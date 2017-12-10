@@ -213,17 +213,19 @@ Because the frame has been correctly prepared, libft sent the frame at once. lib
 
 #### `bool ft_vec_forward(struct ft_vec *, size_t position_delta)`
 
-Move a _Position_ forward by _`position_delta`_ bytes. _`position_delta`can be a negative value, in that case, a Position_ will be moved backward.
+Move a _Position_ forward by `position_delta` bytes. `position_delta`_can be a negative value, in that case, a Position_ will be moved backward.
 
-Returns true if _Position_ has been changed correctly, false for error such as exceeding vector _Limit_ or _Capacity_.
+Returns `true` if _Position_ has been changed correctly, `false` for error such as exceeding vector _Limit_ or _Capacity_.
 
-#### `void ft_vec_pos(struct ft_vec *, size_t position)`
+#### bool` ft_vec_set_position(struct ft_vec *, size_t position)`
 
-...
+Set a _Position_ value. Negative values are not accepted.
+
+Returns `true` if _Position_ has been changed correctly, `false` for error such as exceeding vector _Limit_ or _Capacity_.
 
 #### `void ft_vec_flip(struct ft_vec *)`
 
-...
+Se _Limit_ to a current value of _Position_ and reset _Position_ to 0.
 
 #### `bool ft_vec_sprintf(struct ft_vec *, const char * format, ...)`
 
