@@ -23,7 +23,7 @@ Known memory frame types:
 
 #### `socklen_t addrlen` \[read-write attribute\]
 
-The memory frame can be received from a network peer. The address is stored in `addr` and `addrlen` attributes.
+The memory frame can be received of the network from a peer. The peer address is stored in `addr` and `addrlen` attributes.
 
 **WARNING:** This is obsolete part and will be removed in future releases of libft.
 
