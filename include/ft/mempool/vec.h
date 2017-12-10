@@ -67,6 +67,7 @@ static inline bool ft_vec_forward(struct ft_vec * this, size_t position_delta)
 	return true;	
 }
 
+//TODO: Sunset this function in favour of ft_vec_set_position()
 static inline void ft_vec_pos(struct ft_vec * this, size_t position)
 {
 	assert(this != NULL);
@@ -74,6 +75,19 @@ static inline void ft_vec_pos(struct ft_vec * this, size_t position)
 	assert(this->position <= this->capacity);
 	this->position = position;
 }
+
+static inline bool ft_vec_set_position(struct ft_vec * this, size_t position)
+{
+	assert(this != NULL);
+	if (position < 0) return false;
+	if (position > this->limit) return false;
+	if (position > this->capacity) return false;
+
+	this->position = position;
+	return true;
+}
+
+
 
 static inline void ft_vec_flip(struct ft_vec * this)
 {
@@ -87,11 +101,19 @@ bool ft_vec_vsprintf(struct ft_vec * , const char * format, va_list ap);
 bool ft_vec_strcat(struct ft_vec * , const char * text);
 bool ft_vec_cat(struct ft_vec * , const void * data, size_t data_len);
 
-static inline size_t ft_vec_len(struct ft_vec * this)
+
+static inline size_t ft_vec_remaining(struct ft_vec * this)
 {
 	assert(this != NULL);
 	return this->limit - this->position;
 }
+
+//TODO: Sunset this function in favour of ft_vec_remaining()
+static inline size_t ft_vec_len(struct ft_vec * this)
+{
+	return ft_vec_remaining(this);
+}
+
 
 // Adjust position of capacity and limit to on the position
 static inline void ft_vec_trim(struct ft_vec * this)

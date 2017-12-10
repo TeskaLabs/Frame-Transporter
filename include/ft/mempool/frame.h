@@ -170,10 +170,17 @@ static inline void * ft_vec_end_ptr(struct ft_vec * this)
 	return this->frame->data + this->offset + this->limit;
 }
 
-static inline void ft_vec_advance_ptr(struct ft_vec * this, void * ptr)
+static inline bool ft_vec_set_position_ptr(struct ft_vec * this, void * ptr)
 {
 	size_t position_delta = (uint8_t *)ptr - (this->frame->data + this->offset + this->position);
-	ft_vec_advance(this, position_delta);
+	return ft_vec_forward(this, position_delta);
+}
+
+//TODO: Sunset following function and introduce ft_vec_set_position_ptr
+static inline void ft_vec_advance_ptr(struct ft_vec * this, void * ptr)
+{
+	bool ok = ft_vec_set_position_ptr(this, ptr);
+	assert(ok == true);
 }
 
 ///
