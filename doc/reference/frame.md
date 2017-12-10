@@ -79,6 +79,32 @@ The memory frame can be received of the network from a peer. The peer address is
 
 Vector objects are stored at the end of the frame so that available capacity of a given frame is a bit smaller if vectors are used.
 
+### Read/modify/write lifecycle
+
+Here we present a typical lifecycle of the memory frames with vectors on the network protocol, that utilizes a concept of fixed headers and variable-length bodies \(such as HTTP/2 or SPDY\).
+
+#### Step \#1: Prepare a frame for reading fixed-length header from network
+
+```
++---------------------------------
+|---- vector ---|
+^               ^ Limit = 8
+Position = 0
+```
+
+The frame is prepared so that it contains a one vector, that points at the begin of the frame. The capacity of vector is set to a known size of the protocol header \(in this example it is 8 bytes\).
+
+#### Step \#2: A fixed-length header is received
+
+```
++---------------------------------
+|---- vector ---|
+                ^ Limit = 8
+                ^ Position = 8
+```
+
+The protocol header is reived 
+
 ### Vector attributes
 
 #### `uint16_t offset` \[read-only attribute\]
@@ -96,4 +122,10 @@ The position is the index of the next byte to be read or written.
 #### `uint16_t limit` \[read-only attribute\]
 
 The limit is the index of the first byte that should not be read or written.
+
+#### `struct ft_frame * frame` \[read-only attribute\]
+
+A pointer to a frame that owns a vector.
+
+
 
