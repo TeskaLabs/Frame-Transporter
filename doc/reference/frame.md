@@ -6,30 +6,39 @@ The content of a memory frame _can_ be organized using _vectors_. Vectors provid
 
 ### Schema: Memory frame with vectors
 
-```asciiart
+```asciidoc
 Memory frame
 +-----------------------------------------------------------------+
-|         O- 1st Vector -C                                        |
-|               O----- 2nd Vector ----------C                     |
-|                                              O--- 3rd Vector ---C
-O- 4th Vector -C                                                  |
+|          |- 1st Vector -|                                       |
+|               |---- 2nd Vector ---------|                       |
+|                                                |-- 3rd Vector --|
+|- 4th Vector -|                                                  |
 +-----------------------------------------------------------------+
 ^ Frame data                                                      ^ Frame data + capacity
 ```
 
-Position of each vector within the frame is defined by vector **O**ffset and **C**apacity. Vector cannot cross low and high boundary of the frame.
-
 ### Schema: Vector
 
-```
+```asciidoc
 Vector
-O-------P-------L-------C
+|-------+-------+-------|
+O       P       L       C
 ^       ^       ^       ^
 |       |       |       Capacity
 |       |       Limit for read/write cursor
 |       Position of read/write cursor
 Offset
 ```
+
+Position of each vector within the frame is defined by vector **O**ffset and **C**apacity. Vector cannot cross low and high boundary of the frame.
+
+Vector defines also its cursor **P**osition and **L**imit. Read/write operations happen at the cursor **P**osition, which is increased as the operation finishes.
+
+It is postulated that: 0 &lt;= **P** &lt;= **L** &lt;= **C**. It means that:
+
+* **P**osition can be in range of 0 to **C**apacity but lower or equal to **L**imit.
+* **L**imit can be in range of 0 to **C**apacity but higher of equal to **P**osition.
+* If **P**osition equal to **L**imit, so futher read/write operation is possible because cursor is at the end of the vector.
 
 ## `struct ft_frame`- Memory frame class
 
