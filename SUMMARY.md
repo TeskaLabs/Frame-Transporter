@@ -4,7 +4,7 @@
 
 ## Reference
 
-* [Synopsis](doc/reference/synopsis.md)
+* [Global functions](doc/reference/synopsis.md)
 * [Context](/doc/reference/context.md)
 * [Memory pool and zones](/doc/reference/mempool.md)
 * [Frame](/doc/reference/frame.md)
