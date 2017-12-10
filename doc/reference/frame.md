@@ -1,10 +1,16 @@
 # libft reference - Memory Frames and Vectors
 
-The memory frame is a fixed-length memory space managed by a libft \(see memory pool\). It is typically aligned with underlying [system memory pages](https://en.wikipedia.org/wiki/Page_%28computer_memory%29) and the size is an integer multiple of the memory page size. The default size of the memory frame is 20KiB respectively five 4KiB memory pages.Memory frames are used for storing data that are send to and received from network.
+The memory frame is a fixed-length memory space managed by a libft \(see memory pool\). It is typically aligned with underlying [system memory pages](https://en.wikipedia.org/wiki/Page_%28computer_memory%29) and the capacity \(aka size\) is an integer multiple of the memory page size. The default capacity of the memory frame is 20KiB respectively five 4KiB memory pages.Memory frames are used for storing data that are send to and received from network.
 
 ## `struct ft_frame`- Memory frame class
 
-### Type of a memory frame
+### Capacity
+
+#### size\_t capacity \[read-only attribute\]
+
+Specify how much data can fit into a frame in bytes. Typically 20KiB.
+
+### Type
 
 #### `enum ft_frame_type type` \[read-write attribute\]
 
@@ -17,7 +23,7 @@ Known memory frame types:
 * `FT_FRAME_TYPE_RAW_DATA` - unspecified \(raw\) data are present in the frame.
 * `FT_FRAME_TYPE_LOG` - the frame carries logging information
 
-### A peer address
+### Peer address
 
 #### `struct sockaddr_storage addr` \[read-write attribute\]
 
