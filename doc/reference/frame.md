@@ -30,15 +30,13 @@ O       P       L       C
 Offset
 ```
 
-Position of each vector within the frame is defined by vector **O**ffset and **C**apacity. Vector cannot cross low and high boundary of the frame.
-
-Vector defines also its cursor **P**osition and **L**imit. Read/write operations happen at the cursor **P**osition, which is increased as the operation finishes.
+The location of the vector within a frame is defined by vector's **O**ffset and **C**apacity. Vector cannot cross low and high boundary of the frame. Vector defines also its cursor **P**osition and **L**imit. Read/write operations happen at the cursor **P**osition, which is increased as the operation finishes.
 
 It is postulated that: 0 &lt;= **P** &lt;= **L** &lt;= **C**. It means that:
 
 * **P**osition can be in range of 0 to **C**apacity but lower or equal to **L**imit.
 * **L**imit can be in range of 0 to **C**apacity but higher of equal to **P**osition.
-* If **P**osition equal to **L**imit, so futher read/write operation is possible because cursor is at the end of the vector.
+* If **P**osition equals to **L**imit, no futher read/write operations are possible because the cursor is at the end of a vector.
 
 ## `struct ft_frame`- Memory frame class
 
