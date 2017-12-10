@@ -4,7 +4,7 @@ The memory frame is a fixed-length continuos memory buffer which is managed by a
 
 The content of a memory frame _can_ be organized using _vectors_. Vectors provide [scatter/gather mechanism](https://en.wikipedia.org/wiki/Vectored_I/O) which means that vectors divide a memory space of the assigned frame into smaller pieces. Each memory frame can contain series of vectors. Vectors can overlaps each other, have gaps between each others and/or be organised in random non-continuos manner. Vector provide a convinient functionality for effective parsing and building data from/to wire protocols.
 
-### Schema: Memory frame and its vectors
+### Schema: Memory frame with vectors
 
 ```asciiart
 Memory frame
@@ -15,6 +15,18 @@ Memory frame
 |- 4th Vector -|                                                  |
 +-----------------------------------------------------------------+
 ^ Frame data                                                      ^ Frame data + capacity
+```
+
+### Schema: Vector
+
+```
+Vector
++-------+-------+-------|
+^       ^       ^       ^
+|       |       |       Capacity of the vector
+|       |       Limit for read/write cursor
+|       Position of read/write cursor
+Offset from a frame start
 ```
 
 ## `struct ft_frame`- Memory frame class
