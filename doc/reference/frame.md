@@ -283,7 +283,7 @@ Get pointer to a memory as specified by vector _Offset_.
 
 #### `void * ft_vec_end_ptr(struct ft_vec *)`
 
-Get pointer to a memory as specified by vector _Offset _and_ Limit._
+Get pointer to a memory as specified by vector _Offset_ and _Limit_.
 
 ### Vector attributes
 
