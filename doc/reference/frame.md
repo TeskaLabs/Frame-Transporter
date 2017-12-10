@@ -136,7 +136,7 @@ Iterate thru a vector and use load/store family of functions to parse the header
 #### Step \#5: Prepare a frame for reading variable-length body from network
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
@@ -155,7 +155,7 @@ Add a second vector with capacity 32 bytes \(the value received from parser of t
 #### Step \#6: A body is received
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
@@ -174,7 +174,7 @@ The protocol header is received e.g. by libft sockets. The Position is equal Lim
 #### Step \#7: The frame is flipped and read is complete
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
@@ -193,7 +193,7 @@ The frame is flipped again and the read cycle is over. The frame is prepared for
 #### Step \#8: Send the frame over the network
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
