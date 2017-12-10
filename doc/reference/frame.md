@@ -8,13 +8,13 @@ The content of a memory frame _can_ be organized using _vectors_. Vectors provid
 
 ```asciidoc
 Memory frame
-+-----------------------------------------------------------------+
-|          |- 1st Vector -|                                       |
-|               |---- 2nd Vector ---------|                       |
-|                                                |-- 3rd Vector --|
-|- 4th Vector -|                                                  |
-+-----------------------------------------------------------------+
-^ Frame data                                                      ^ Frame data + capacity
++------------------------------------------------------------+
+|          |- 1st Vector -|                                  |
+|               |---- 2nd Vector ----|                       |
+|                                           |-- 3rd Vector --|
+|- 4th Vector -|                                             |
++------------------------------------------------------------+
+^ Frame data                                                 ^ Frame data + capacity
 ```
 
 ### Schema: Vector
@@ -25,8 +25,8 @@ Vector
 O       P       L       C
 ^       ^       ^       ^
 |       |       |       Capacity
-|       |       Limit for read/write cursor
-|       Position of read/write cursor
+|       |       Limit (cursor)
+|       Position (cursor)
 Offset
 ```
 
