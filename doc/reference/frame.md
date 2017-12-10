@@ -9,24 +9,26 @@ The content of a memory frame _can_ be organized using _vectors_. Vectors provid
 ```asciiart
 Memory frame
 +-----------------------------------------------------------------+
-|         |- 1st Vector -|                                        |
-|               |----- 2nd Vector ----------|                     |
-|                                              |--- 3rd Vector ---|
-|- 4th Vector -|                                                  |
+|         O- 1st Vector -C                                        |
+|               O----- 2nd Vector ----------C                     |
+|                                              O--- 3rd Vector ---C
+O- 4th Vector -C                                                  |
 +-----------------------------------------------------------------+
 ^ Frame data                                                      ^ Frame data + capacity
 ```
+
+Position of each vector within the frame is defined by vector **O**ffset and **C**apacity. Vector cannot cross low and high boundary of the frame.
 
 ### Schema: Vector
 
 ```
 Vector
-+-------+-------+-------|
+O-------P-------L-------C
 ^       ^       ^       ^
-|       |       |       Capacity of the vector
+|       |       |       Capacity
 |       |       Limit for read/write cursor
 |       Position of read/write cursor
-Offset from a frame start
+Offset
 ```
 
 ## `struct ft_frame`- Memory frame class
