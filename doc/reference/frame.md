@@ -42,13 +42,13 @@ It is postulated that: 0 &lt;= **P** &lt;= **L** &lt;= **C**. It means that:
 
 ### Memory coordinates
 
-#### size\_t capacity \[read-only attribute\]
+#### `size_t capacity` \[read-only attribute\]
 
 Specify how much data can fit into a frame in bytes. Typically 20KiB.
 
 Capacity is read-only value that is provided during frame construction time.
 
-#### uint8\_t \* data \[read-only attribute\]
+#### `uint8_t * data` \[read-only attribute\]
 
 A pointer to a frame memory space as an array of bytes.
 
@@ -74,4 +74,30 @@ Known memory frame types:
 The memory frame can be received of the network from a peer. The peer address is stored in `addr` and `addrlen` attributes.
 
 **WARNING:** This is obsolete part and will be removed in future releases of libft.
+
+## `struct ft_vec`- Memory frame vector class
+
+Vector objects are stored at the end of the frame so that available capacity of a given frame is a bit smaller if vectors are used.
+
+### Vector coordinates
+
+#### `uint16_t offset` \[read-only attribute\]
+
+A location of the vector within the frame.
+
+#### `uint16_t capacity` \[read-only attribute\]
+
+A size of the vector.
+
+#### `uint16_t position` \[read-only attribute\]
+
+The position is the index of the next byte to be read or written.
+
+#### `uint16_t limit` \[read-only attribute\]
+
+The limit is the index of the first byte that should not be read or written.
+
+
+
+
 
