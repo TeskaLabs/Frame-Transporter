@@ -263,10 +263,6 @@ Copy bytes from `data` \(length is defined by`data_len` \) into the a vector and
 
 Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
-#### `void ft_frame_memset(struct ft_frame *, uint8_t byte)`
-
-...
-
 #### `size_t ft_vec_remaining(struct ft_vec *)`
 
 Returns a difference between _Position_ and _Limit_. It means how many more data can fit into a vector or how many data can be still read from a vector.
@@ -286,8 +282,6 @@ Returns a difference between _Position_ and _Limit_. It means how many more data
 #### `void ft_vec_advance_ptr(struct ft_vec *, void * ptr)`
 
 ...
-
-
 
 ### Vector attributes
 
