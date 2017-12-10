@@ -217,11 +217,17 @@ Move a _Position_ forward by `position_delta` bytes. `position_delta`_can be a n
 
 Returns `true` if _Position_ has been changed correctly, `false` for error such as exceeding vector _Limit_ or _Capacity_.
 
-#### bool`ft_vec_set_position(struct ft_vec *, size_t position)`
+#### `bool ft_vec_set_position(struct ft_vec *, size_t position)`
 
 Set a _Position_ value. Negative values are not accepted.
 
 Returns `true` if _Position_ has been changed correctly, `false` for error such as exceeding vector _Limit_ or _Capacity_.
+
+#### `bool ft_vec_set_position_ptr(struct ft_vec *, void * ptr)`
+
+Set a _Position_ value from a `prt`.
+
+Returns `true` if _Position_ has been changed correctly, `false` for error such as `ptr` is not within the vector.
 
 #### `void ft_vec_flip(struct ft_vec *)`
 
@@ -269,19 +275,15 @@ Returns a difference between _Position_ and _Limit_. It means how many more data
 
 #### `void * ft_vec_ptr(struct ft_vec *)`
 
-...
+Get pointer to a memory as specified by vector _Offset_ and _Position_.
 
 #### `void * ft_vec_begin_ptr(struct ft_vec *)`
 
-...
+Get pointer to a memory as specified by vector _Offset_.
 
 #### `void * ft_vec_end_ptr(struct ft_vec *)`
 
-...
-
-#### `void ft_vec_advance_ptr(struct ft_vec *, void * ptr)`
-
-...
+Get pointer to a memory as specified by vector _Offset _and_ Limit._
 
 ### Vector attributes
 
