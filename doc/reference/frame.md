@@ -12,6 +12,12 @@ Specify how much data can fit into a frame in bytes. Typically 20KiB.
 
 Capacity is read-only value that is provided during frame construction time.
 
+### Data
+
+#### uint8\_t \* data \[read-only attribute\]
+
+A pointer to a frame memory as an array of  bytes.
+
 ### Type
 
 #### `enum ft_frame_type type` \[read-write attribute\]
