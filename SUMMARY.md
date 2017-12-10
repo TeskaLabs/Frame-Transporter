@@ -7,8 +7,7 @@
 * [Global functions](doc/reference/synopsis.md)
 * [Context](/doc/reference/context.md)
 * [Memory pool and zones](/doc/reference/mempool.md)
-* [Frame](/doc/reference/frame.md)
-* [Vector](/doc/reference/vector.md)
+* [Memory Frame and Vectors](/doc/reference/frame.md)
 
 ## In-depth
 
