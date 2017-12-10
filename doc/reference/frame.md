@@ -247,13 +247,13 @@ Returns `true` if _Position_ has been changed correctly, `false` for error such 
 
 #### `bool ft_vec_sprintf(struct ft_vec *, const char * format, ...)`
 
-Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector.
+Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector using a current _Position_ and move _Position_ at the end of the resulting string.
 
 Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
 #### `bool ft_vec_vsprintf(struct ft_vec *, const char * format, va_list ap)`
 
-Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector \(variable argument style\).
+Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector using a current _Position_ \(variable argument style\) and move _Position_ at the end of the resulting string.
 
 Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
