@@ -77,7 +77,7 @@ The memory frame can be received of the network from a peer. The peer address is
 
 Vector objects are stored at the end of the frame so that available capacity of a given frame is a bit smaller if vectors are used.
 
-### Read/modify/write lifecycle
+### Read & write lifecycle
 
 Here we present a typical lifecycle of the memory frames with vectors on the network protocol, that utilizes a concept of fixed headers and variable-length bodies \(such as HTTP/2 or SPDY\).
 
@@ -86,8 +86,9 @@ Here we present a typical lifecycle of the memory frames with vectors on the net
 ```
 +---------------------------------
 |---- vector ---|
-^               ^ Limit = 8
-Position = 0    |
+^ Offset = 0
+                ^ Limit = 8
+^ Position = 0  
                 ^ Capacity = 8
 ```
 
@@ -98,28 +99,100 @@ The frame is prepared so that it contains a one vector, that points at the begin
 ```
 +---------------------------------
 |---- vector ---|
+^ Offset = 0
                 ^ Limit = 8
                 ^ Position = 8
                 ^ Capacity = 8
 ```
 
-The protocol header is received because Position is equal Limit. Now the length of the body needs to be parsed from data.
+The protocol header is received e.g. by libft sockets. The Position is equal Limit. Now the length of the body needs to be parsed from data.
 
 #### Step \#3: Flip of the vector to prepare for reading
 
 ```
 +---------------------------------
 |---- vector ---|
-^               ^ Limit = 8
-Position = 0
-                 ^ Capacity = 8
+^ Offset = 0
+                ^ Limit = 8
+^ Position = 0
+                ^ Capacity = 8
 ```
 
 The _flip_ set Position to 0 \(Limit stays the same because previous value of Position was 8\).
 
+#### Step \#4: Parse header
+
+```
++---------------------------------
+|---- vector ---|
+^ Offset = 0
+                ^ Limit = 8
+............ >> ^ Position = 8
+                ^ Capacity = 8
+```
+
+Iterate thru a vector and use load/store family of functions to parse the header data from the frame. For this example let's assume, that we extracted length of the body to be 32 bytes.
+
+#### Step \#5: Prepare a frame for reading variable-length body from network
+
+```
++---------------------------------
+|---- vector ---|
+^ Offset = 0
+                ^ Limit = 8
+                ^ Position = 8
+                ^ Capacity = 8
+
+                | ----------------- vector -------------------|
+                ^ Offset = 8
+                                                              ^ Limit = 32
+                ^ Position = 0
+                                                              ^ Capacity = 32
+```
+
+Add a second vector with capacity 32 bytes \(the value received from parser of the header data\).
+
+#### Step \#6: A body is received
+
+```
++---------------------------------
+|---- vector ---|
+^ Offset = 0
+                ^ Limit = 8
+                ^ Position = 8
+                ^ Capacity = 8
+                
+                | ----------------- vector -------------------|
+                ^ Offset = 8
+                                                              ^ Limit = 32
+                                                              ^ Position = 32
+                                                              ^ Capacity = 32
+```
+
+The protocol header is received e.g. by libft sockets. The Position is equal Limit. Now the length of the body needs to be parsed from data.
+
+#### Step \#7: The frame is flipped and read is completed
+
+```
++---------------------------------
+|---- vector ---|
+^ Offset = 0
+                ^ Limit = 8
+^ Position = 0
+                ^ Capacity = 8
+                
+                | ----------------- vector -------------------|
+                ^ Offset = 8
+                                                              ^ Limit = 32
+                ^ Position = 0
+                                                              ^ Capacity = 32
+```
+
+The frame is flipped again and the read cycle is over. The frame is prepared for any upstream processing e.g. by application layer  or by an higher level protocol such as HTTP or TLS. Equally it is ready for being send over the network. The later will be demonstrated in the next steps of this example.
 
 
-### Vector attributes
+
+#### Vector attributes
 
 #### `uint16_t offset` \[read-only attribute\]
 
