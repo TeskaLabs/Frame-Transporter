@@ -84,7 +84,7 @@ Here we present a typical lifecycle of the memory frames with vectors on the net
 #### Step \#1: Prepare a frame for reading fixed-length header from network
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
@@ -97,7 +97,7 @@ The frame is prepared so that it contains a one vector, that points at the begin
 #### Step \#2: A fixed-length header is received
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
@@ -110,7 +110,7 @@ The protocol header is received e.g. by libft sockets. The Position is equal Lim
 #### Step \#3: Flip of the vector to prepare for reading
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
@@ -123,7 +123,7 @@ The _flip_ set Position to 0 \(Limit stays the same because previous value of Po
 #### Step \#4: Parse a header
 
 ```
-+---------------------------------
++------------------------------------------------------------------------------
 |---- vector ---|
 ^ Offset = 0
                 ^ Limit = 8
