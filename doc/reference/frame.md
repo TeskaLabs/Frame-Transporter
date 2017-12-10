@@ -10,6 +10,8 @@ The memory frame is a fixed-length memory space managed by a libft \(see memory 
 
 Specify how much data can fit into a frame in bytes. Typically 20KiB.
 
+Capacity is read-only value that is provided during frame construction time.
+
 ### Type
 
 #### `enum ft_frame_type type` \[read-write attribute\]
