@@ -217,7 +217,7 @@ Move a _Position_ forward by `position_delta` bytes. `position_delta`_can be a n
 
 Returns `true` if _Position_ has been changed correctly, `false` for error such as exceeding vector _Limit_ or _Capacity_.
 
-#### bool` ft_vec_set_position(struct ft_vec *, size_t position)`
+#### bool`ft_vec_set_position(struct ft_vec *, size_t position)`
 
 Set a _Position_ value. Negative values are not accepted.
 
@@ -227,9 +227,13 @@ Returns `true` if _Position_ has been changed correctly, `false` for error such 
 
 Se _Limit_ to a current value of _Position_ and reset _Position_ to 0.
 
+Flip function is used to flip the vector from "writing" to "reading" and vice verse. After a sequence of writes is used to fill the vector, flip will set the limit of the vector to the current position and reset the position to zero. This has the effect of making a future read from the vector read all of what was written into the vector and no more.
+
 #### `bool ft_vec_sprintf(struct ft_vec *, const char * format, ...)`
 
-...
+Print a [formatted string](https://en.wikipedia.org/wiki/Printf_format_string) into a vector.
+
+Returns `true` if successful, `false` when error has been observed \(e.g. result doesn't fit into a frame\).
 
 #### `bool ft_vec_vsprintf(struct ft_vec *, const char * format, va_list ap)`
 
