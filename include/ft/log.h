@@ -174,8 +174,8 @@ void ft_logrecord_process(struct ft_logrecord * le, int le_message_length);
 void ft_logrecord_emergency_fprint(struct ft_logrecord * le, int le_message_length, FILE * f);
 
 
-const char * ft_log_months[12];
-const char * ft_log_levelname(char level);
+extern const char * ft_log_months[12];
+extern const char * ft_log_levelname(char level);
 
 ///
 
