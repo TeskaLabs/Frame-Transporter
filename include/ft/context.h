@@ -33,6 +33,7 @@ bool ft_context_init(struct ft_context * );
 void ft_context_fini(struct ft_context * );
 
 void ft_context_run(struct ft_context * );
+void ft_context_terminate(struct ft_context *);
 
 // Default pool (will be set by first ft_context_init() call ... or you can override it)
 // It removes need for complicated context localisation in the code

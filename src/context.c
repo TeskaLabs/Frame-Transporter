@@ -126,7 +126,7 @@ void ft_context_run(struct ft_context * this)
 
 // This is a polite way of termination
 // It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
-static void _ft_context_terminate(struct ft_context * this, struct ev_loop * loop)
+void ft_context_terminate(struct ft_context * this)
 {
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_terminate");
 
