@@ -60,10 +60,10 @@ static inline bool ft_listener_cntl(struct ft_listener * this, const int control
 
 bool ft_listener_list_init(struct ft_list *);
 
-int ft_listener_list_extend(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port);
-int ft_listener_list_extend_by_addrinfo(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list);
-int ft_listener_list_extend_auto(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value);
-int ft_listener_list_extend_autov(struct ft_list * , const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values);
+int ft_listener_list_extend(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port, void * data);
+int ft_listener_list_extend_by_addrinfo(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list, void * data);
+int ft_listener_list_extend_auto(struct ft_list *, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value, void * data);
+int ft_listener_list_extend_autov(struct ft_list * , const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values, void * data);
 
 bool ft_listener_list_cntl(struct ft_list *, const int control_code);
 

@@ -124,16 +124,14 @@ void ft_context_run(struct ft_context * this)
 
 ///
 
-// This is a polite way of termination
-// It doesn't guarantee that event loop is stopped, there can be a rogue watcher still running
-void ft_context_terminate(struct ft_context * this)
+void ft_context_stop(struct ft_context * this)
 {
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_terminate");
 
 	if (this->flags.running)
 	{
 		this->flags.running = false;
-		this->shutdown_at = ev_now(loop);
+		this->shutdown_at = ev_now(this->ev_loop);
 
 		struct ft_pubsub_message_exit msg = {
 			.exit_phase = FT_EXIT_PHASE_POLITE
@@ -157,7 +155,7 @@ static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int rev
 
 	if (w->signum == SIGINT) putchar('\n');
 
-	_ft_context_terminate(this, loop);
+	ft_context_stop(this);
 }
 
 void _ft_context_on_shutdown_timer(struct ev_loop * loop, ev_timer * w, int revents)

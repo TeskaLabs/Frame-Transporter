@@ -339,7 +339,7 @@ bool ft_listener_list_cntl(struct ft_list * list, const int control_code)
 }
 
 
-int ft_listener_list_extend(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port)
+int ft_listener_list_extend(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_family, int ai_socktype, const char * host, const char * port, void * data)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -368,7 +368,7 @@ int ft_listener_list_extend(struct ft_list * list, const struct ft_listener_dele
 		hints.ai_addr = (struct sockaddr *)&un;
 		hints.ai_addrlen = sizeof(un);
 
-		rc = ft_listener_list_extend_by_addrinfo(list, delegate, context, &hints);
+		rc = ft_listener_list_extend_by_addrinfo(list, delegate, context, &hints, data);
 	}
 
 	else
@@ -384,7 +384,7 @@ int ft_listener_list_extend(struct ft_list * list, const struct ft_listener_dele
 			return -1;
 		}
 
-		rc = ft_listener_list_extend_by_addrinfo(list, delegate, context, res);
+		rc = ft_listener_list_extend_by_addrinfo(list, delegate, context, res, data);
 
 		freeaddrinfo(res);
 	}
@@ -394,7 +394,7 @@ int ft_listener_list_extend(struct ft_list * list, const struct ft_listener_dele
 	return rc;
 }
 
-int ft_listener_list_extend_by_addrinfo(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list)
+int ft_listener_list_extend_by_addrinfo(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, struct addrinfo * rp_list, void * data)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -422,6 +422,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, const struct ft_l
 		}
 
 		ft_list_append(list, new_node);
+        ((struct ft_listener *)new_node->data)->base.socket.data = data;
 
 		rc += 1;
 	}
@@ -432,7 +433,7 @@ int ft_listener_list_extend_by_addrinfo(struct ft_list * list, const struct ft_l
 }
 
 
-int ft_listener_list_extend_auto(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value)
+int ft_listener_list_extend_auto(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char * value, void * data)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -533,7 +534,7 @@ fin_getaddrinfo:
 	assert(addr != NULL);
 	assert(port != NULL);
 
-	int ret = ft_listener_list_extend(list, delegate, context, ai_family, ai_socktype, addr, port);
+	int ret = ft_listener_list_extend(list, delegate, context, ai_family, ai_socktype, addr, port, data);
 
 	free(addr);
 	free(port);
@@ -545,7 +546,7 @@ fin_getaddrinfo:
 }
 
 
-int ft_listener_list_extend_autov(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values)
+int ft_listener_list_extend_autov(struct ft_list * list, const struct ft_listener_delegate * delegate, struct ft_context * context, int ai_socktype, const char ** values, void * data)
 {
 	assert(list != NULL);
 	assert(delegate != NULL);
@@ -562,7 +563,7 @@ int ft_listener_list_extend_autov(struct ft_list * list, const struct ft_listene
 		const char * addr = values[i];
 		if (addr == NULL) break;
 
-		rc = ft_listener_list_extend_auto(list, delegate, context, ai_socktype, addr);
+		rc = ft_listener_list_extend_auto(list, delegate, context, ai_socktype, addr, data);
 		if (rc == 0) FT_WARN("Failed to open '%s' socket", addr);
 		count += rc;
 	}
