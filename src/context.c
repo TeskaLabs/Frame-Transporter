@@ -126,7 +126,7 @@ void ft_context_run(struct ft_context * this)
 
 void ft_context_stop(struct ft_context * this)
 {
-	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_terminate");
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN ft_context_stop");
 
 	if (this->flags.running)
 	{
@@ -145,7 +145,7 @@ void ft_context_stop(struct ft_context * this)
 
 	}
 
-	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_terminate");
+	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END ft_context_stop");
 }
 
 static void _ft_context_on_sigexit(struct ev_loop * loop, ev_signal * w, int revents)
