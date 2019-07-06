@@ -66,7 +66,7 @@ static inline void ft_frame_return(struct ft_frame * frame)
 
 	// Erase a page
 	if (zone->flags.erase_on_return)
-		bzero(frame->data, frame->capacity);
+		memset(frame->data, '\0', frame->capacity);
 
 	// Unlock pages from the memory
 	if (zone->flags.mlock_when_used)

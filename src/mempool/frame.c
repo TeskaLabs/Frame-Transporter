@@ -21,7 +21,7 @@ void _ft_frame_init(struct ft_frame * this, uint8_t * data, size_t capacity, str
 
 	this->flags.msg_control = false;
 
-	bzero(this->data, FRAME_SIZE);
+	memset(this->data, '\0', FRAME_SIZE);
 }
 
 size_t ft_frame_pos(struct ft_frame * this)
