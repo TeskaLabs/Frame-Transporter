@@ -114,7 +114,7 @@ bool ft_dgram_init(struct ft_dgram * this, const struct ft_dgram_delegate * dele
 	this->error.sys_errno = 0;
 
 	assert(this->base.socket.context->ev_loop != NULL);
-	this->created_at = ev_now(this->base.socket.context->ev_loop);
+	this->created_at = ft_now(this->base.socket.context->ev_loop);
 	this->shutdown_at = NAN;
 
 	ev_io_init(&this->read_watcher, _ft_dgram_on_read, fd, EV_READ);
@@ -167,7 +167,7 @@ void ft_dgram_fini(struct ft_dgram * this)
 	if (this->flags.shutdown == false)
 	{
 		this->flags.shutdown = true;
-		this->shutdown_at = ev_now(this->base.socket.context->ev_loop);
+		this->shutdown_at = ft_now(this->base.socket.context->ev_loop);
 	}
 
 	this->flags.write_open = false;
@@ -303,7 +303,7 @@ static void _ft_dgram_shutdown_real(struct ft_dgram * this, bool uplink_eos)
 	// Stop futher reads on the socket
 	ft_dgram_cntl(this, FT_DGRAM_READ_STOP | FT_DGRAM_READ_STOP);
 
-	this->shutdown_at = ev_now(this->base.socket.context->ev_loop);
+	this->shutdown_at = ft_now(this->base.socket.context->ev_loop);
 	this->flags.shutdown = true;
 	this->flags.write_open = false;
 

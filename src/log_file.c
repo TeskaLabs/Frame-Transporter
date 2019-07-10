@@ -126,11 +126,11 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	struct tm tmp;
 	if (ft_config.log_file.datetime_style == 'L')
 	{
-		localtime_r(&t, &tmp);
+		localtime_s(&tmp, &t);
 	}
 	else
 	{
-		gmtime_r(&t, &tmp);
+		gmtime_s(&tmp, &t);
 	}
 	unsigned int frac100 = ((uint64_t)(le->timestamp * 1000.0)) % 1000;
 
@@ -138,21 +138,21 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	{
 		// ISO 8601
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-			"%04d-%02d-%02dT%02d:%02d:%02d.%03uZ %s[%5d] %s: %s%.*s\n",
+			"%04d-%02d-%02dT%02d:%02d:%02d.%03uZ %s[%5ld] %s: %s%.*s\n",
 			1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-			le->appname, le->pid,
+			le->appname, (long int)le->pid,
 			ft_log_levelname(le->level),
 			ft_log_file_expand_sd(le),
 			le_message_length, le->message
 		);
 	} else {
 		fprintf(ft_config.log_file.file != NULL ? ft_config.log_file.file : stderr, 
-			"%s %02d %04d %02d:%02d:%02d.%03u %s %s[%5d] %s: %s%.*s\n",
+			"%s %02d %04d %02d:%02d:%02d.%03u %s %s[%5ld] %s: %s%.*s\n",
 			ft_log_months[tmp.tm_mon], tmp.tm_mday, 1900+tmp.tm_year,
 			tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-			tmp.tm_zone,
-			le->appname, le->pid,
+			"???", // Doesn't exists on Windows (?)
+			le->appname, (long int)le->pid,
 			ft_log_levelname(le->level),
 			ft_log_file_expand_sd(le),
 			le_message_length, le->message

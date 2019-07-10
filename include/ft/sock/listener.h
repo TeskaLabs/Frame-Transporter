@@ -20,7 +20,7 @@ struct ft_listener
 
 	const struct ft_listener_delegate * delegate;
 
-	struct ev_io watcher;
+	//struct ev_io watcher;
 
 	bool listening;
 	int backlog;

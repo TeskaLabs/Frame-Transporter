@@ -12,26 +12,38 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <limits.h>
 #include <time.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <errno.h>
-#include <regex.h>
+
+//#include <regex.h>
 #include <math.h>
 #include <ctype.h>
 
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <sys/un.h>
-#include <netdb.h>
+
+//#include <sys/socket.h>
+//#include <sys/un.h>
+//#include <sys/uio.h>
+//#include <sys/wait.h>
+//#include <sys/mman.h>
+//#include <netdb.h>
+
+
 
 // Include libev
-#include <ev.h>
+//#include <ev.h>
+
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#include <in6addr.h>
+
+typedef float ev_tstamp;
 
 // Include OpenSSL
 #include <openssl/ssl.h>
@@ -44,7 +56,8 @@ struct ft_context;
 
 #include <ft/cols/list.h>
 #include <ft/cols/iphashmap.h>
-
+#include <ft/watchers/watcher.h>
+#include <ft/watchers/timer.h>
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
@@ -62,7 +75,10 @@ struct ft_context;
 #include <ft/sock/dgram.h>
 #include <ft/sock/uni.h>
 
+#include <ft/winpipes/named_dgram.h>
+
 #include <ft/proto/socks.h>
+
 
 // Global init function
 void ft_initialise(void); // Call this at very beginning
@@ -80,8 +96,12 @@ bool ft_fd_nonblock(int fd, bool nonblock);
 bool ft_socket_keepalive(int fd);
 bool ft_fd_cloexec(int fd);
 
+ev_tstamp ft_time(void);
+ev_tstamp ft_now(struct ft_context *);
+
 // Can be safely called with NULL in the context
 ev_tstamp ft_safe_now(struct ft_context *);
+
 
 // Boolean parser
 bool ft_parse_bool(const char * value);

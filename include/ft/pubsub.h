@@ -36,6 +36,14 @@ struct ft_pubsub_message_pool_lowmem
 };
 
 
+extern const char * FT_PUBSUB_TOPIC_EVENT_LOOP;
+
+struct ft_pubsub_message_event_loop
+{
+	struct ft_context * context;
+	char type; // Can be 'P' for prepare, 'C' for check, 'I' for idle
+};
+
 //
 
 struct ft_pubsub;

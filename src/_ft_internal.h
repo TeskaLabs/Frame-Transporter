@@ -1,11 +1,15 @@
 #include <ft.h>
 #include <openssl/rand.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 
 // Frame size should be above 16kb, which is a maximum record size of 16kB for SSLv3/TLSv1
 // See https://www.openssl.org/docs/manmaster/ssl/SSL_read.html
 #define FRAME_SIZE (5*4096)
 #define MEMPAGE_SIZE (4096)
+
+// Fake mmap parameters on Windows
+#define MAP_PRIVATE 0
+#define MAP_ANON 0
 
 void ft_log_initialise_(void);
 

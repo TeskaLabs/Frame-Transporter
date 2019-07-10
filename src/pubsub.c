@@ -5,6 +5,7 @@
 const char * FT_PUBSUB_TOPIC_EXIT = "$SYS/ft/exit";
 const char * FT_PUBSUB_TOPIC_HEARTBEAT = "$SYS/ft/heartbeat";
 const char * FT_PUBSUB_TOPIC_POOL_LOWMEM = "$SYS/ft/pool/lowmem";
+const char * FT_PUBSUB_TOPIC_EVENT_LOOP = "$SYS/ft/event_loop";
 
 ///
 

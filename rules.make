@@ -20,7 +20,7 @@ LDLIBS+=-Wall
 
 ifdef USE_COVERAGE
 CFLAGS+=-coverage
-LDLIBS+=-coverage
+LOADLIBES+=-coverage
 endif
 
 .PHONY: clean all subdirs ${CLEANSUBDIRS} ${SUBDIRS}
@@ -36,20 +36,6 @@ ifdef OPENSSLDYNAMIC
 LDLIBS+=-L${OPENSSLLIBPATH} -lssl -lcrypto
 else
 LDLIBS+=${OPENSSLLIBPATH}/libssl.a ${OPENSSLLIBPATH}/libcrypto.a
-endif
-
-
-# LibEv
-
-EVINCPATH?=/usr/local/include
-EVLIBPATH?=/usr/local/lib
-
-CPPFLAGS+=-I${EVINCPATH}
-
-ifdef EVDYNAMIC
-LDLIBS+=-L${EVLIBPATH} -lev
-else
-LDLIBS+=${EVLIBPATH}/libev.a
 endif
 
 
@@ -76,9 +62,9 @@ clean:
 
 # Link commands
 
-${BIN}: ${OBJS}
+${BIN}: ${OBJS} ${BINEXTRADEPS}
 	@echo " [LD]" $@
-	@$(LINK.o) $^ ${UTOBJS} $(LOADLIBES) -ldl $(LDLIBS) -ldl -o $@
+	@$(LINK.o) $^ ${UTOBJS} $(LOADLIBES) $(LDLIBS) -lws2_32 -lgdi32 -o $@
 ifdef RELEASE
 	@echo " [ST]" $@
 	@strip $@
@@ -88,7 +74,7 @@ ifdef RELEASE
 	fi"
 endif
 
-${LIB}: ${OBJS}
+${LIB}: ${OBJS} ${LIBEXTRADEPS}
 	@echo " [AR]" $@
 	@$(AR) -cr $@ $^
 

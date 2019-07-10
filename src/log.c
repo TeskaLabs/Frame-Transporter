@@ -47,14 +47,14 @@ void _ft_log_errno_v(int errnum, const char level, const struct ft_log_sd sd[], 
 	char errnum_str[16];
 	snprintf(errnum_str, sizeof(errnum_str)-1, "%d", errnum);
 
-	char errtxt_buf[1024];	
-
-#ifdef _GNU_SOURCE
-	char * errtxt_pstr = strerror_r(errnum, errtxt_buf, sizeof(errtxt_buf));
-#else
-	strerror_r(errnum, errtxt_buf, sizeof(errtxt_buf));
-	char * errtxt_pstr = errtxt_buf;
-#endif
+	char * errtxt_pstr = strerror(errnum);
+// 	char errtxt_buf[1024];	
+// #ifdef _GNU_SOURCE
+// 	char * errtxt_pstr = strerror_r(errnum, errtxt_buf, sizeof(errtxt_buf));
+// #else
+// 	strerror_r(errnum, errtxt_buf, sizeof(errtxt_buf));
+// 	char * errtxt_pstr = errtxt_buf;
+// #endif
 
 	int sd_n = 4;
 	//TODO: Expand sd_combined by error codes
@@ -116,12 +116,56 @@ void _ft_log_openssl_err_v(const char level, const struct ft_log_sd sd[], const 
 }
 
 
-static void _ft_log_libev_on_syserr(const char * msg)
+void _ft_log_winerror_err_v(char const level, const struct ft_log_sd sd[], const char * format, va_list args)
 {
-	// See ERROR HANDLING in libev
-	FT_FATAL("%s", msg);
-	abort();
+	struct ft_logrecord le;
+
+	DWORD dw = GetLastError();
+
+	char errnum_str[16];
+	snprintf(errnum_str, sizeof(errnum_str)-1, "%ld", (long int)dw);
+
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		dw,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &lpMsgBuf,
+		0, NULL
+	);
+
+	size_t s = strlen(lpMsgBuf);
+	char buffer[s];
+	strcpy(buffer, lpMsgBuf);
+	for (int i=s-2; i>=0; i -= 1) {
+		if ((buffer[i] == '\n') || (buffer[i] == '\r')) {
+			buffer[i] = '\0';
+		} else break;
+	}
+
+	int sd_n = 4;
+	struct ft_log_sd sd_combined[sd_n];
+
+	sd_combined[0] = (struct ft_log_sd){"es", "s"};
+	sd_combined[1] = (struct ft_log_sd){"e", errnum_str};
+	sd_combined[2] = (struct ft_log_sd){"E", buffer};
+	sd_combined[sd_n-1] = (struct ft_log_sd){NULL, NULL};
+
+	LocalFree(lpMsgBuf);
+
+	int le_message_length = _ft_logrecord_build(&le, level, sd_combined, format, args);
+	ft_logrecord_process(&le, le_message_length);	
 }
+
+// static void _ft_log_libev_on_syserr(const char * msg)
+// {
+// 	// See ERROR HANDLING in libev
+// 	FT_FATAL("%s", msg);
+// 	abort();
+// }
 
 ///
 
@@ -142,7 +186,7 @@ void ft_log_initialise_()
 	strncpy(ft_config.appname, p, sizeof(ft_config.appname)-1);
 	ft_config.appname[sizeof(ft_config.appname)-1] = '\0';
 
-	ev_set_syserr_cb(_ft_log_libev_on_syserr);
+//	ev_set_syserr_cb(_ft_log_libev_on_syserr);
 }
 
 void ft_log_finalise()
@@ -164,13 +208,7 @@ void ft_log_finalise()
 
 void ft_log_flush(bool force)
 {
-	ev_tstamp now;
-	if (force) now = 1e77;
-	else
-	{
-		if (ft_log_context_ == NULL) now = 1e77;
-		else now = ev_now(ft_log_context_->ev_loop);
-	}
+	ev_tstamp now= force ? 1e77 : ft_safe_now(ft_log_context_);
 
 	if ((ft_config.log_backend != NULL) && (ft_config.log_backend->flush != NULL))
 		ft_config.log_backend->flush(now);
@@ -319,14 +357,14 @@ void ft_logrecord_emergency_fprint(struct ft_logrecord * le, int le_message_leng
 {
 	time_t t = le->timestamp;
 	struct tm tmp;
-	gmtime_r(&t, &tmp);
+	gmtime_s(&tmp, &t);
 	unsigned int frac100 = ((uint64_t)(le->timestamp * 1000.0)) % 1000;
 
 	fprintf(f, 
-		"%04d-%02d-%02dT%02d:%02d:%02d.%03uZ %s[%5d]! %s: %s%.*s\n",
+		"%04d-%02d-%02dT%02d:%02d:%02d.%03uZ %s[%5ld]! %s: %s%.*s\n",
 		1900+tmp.tm_year, 1+tmp.tm_mon, tmp.tm_mday,
 		tmp.tm_hour, tmp.tm_min, tmp.tm_sec, frac100,
-		le->appname, le->pid,
+		le->appname, (long int)le->pid,
 		ft_log_levelname(le->level),
 		ft_logrecord_expand_sd(le),
 		le_message_length, le->message

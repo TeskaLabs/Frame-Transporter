@@ -40,12 +40,12 @@ const char * ft_sockaddr_hostport_str(const struct sockaddr * client_addr, sockl
 			break;
 		}
 
-		case AF_LOCAL:
-		{
-			const struct sockaddr_un * uaddr = (const struct sockaddr_un *)client_addr;
-			snprintf(addrbuf, sizeof(addrbuf)-1, "%s", uaddr->sun_path);
-			break;
-		}
+		// case AF_LOCAL:
+		// {
+		// 	const struct sockaddr_un * uaddr = (const struct sockaddr_un *)client_addr;
+		// 	snprintf(addrbuf, sizeof(addrbuf)-1, "%s", uaddr->sun_path);
+		// 	break;
+		// }
 
 		default:
 			snprintf(addrbuf, sizeof(addrbuf)-1, "(family:%d)", client_addr->sa_family);

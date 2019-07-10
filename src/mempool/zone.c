@@ -43,7 +43,7 @@ bool ft_poolzone_init(struct ft_poolzone * this, struct ft_pool * pool, uint8_t 
 		this->frames[i-1].next = &this->frames[i];
 	this->high_frame->next = NULL;
 
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "Allocated frame pool zone of %zu bytes, %d frames", this->alloc_size, this->frames_total);
+	FT_TRACE(FT_TRACE_ID_MEMPOOL, "Allocated frame pool zone of %lu bytes, %d frames", (unsigned long)this->alloc_size, this->frames_total);
 
 	return true;
 }
@@ -68,10 +68,11 @@ void _ft_poolzone_del(struct ft_poolzone * this)
 
 	this->frames_total -= this->frames_total;
 
-	FT_DEBUG("Deallocating frame pool zone of %zu bytes", this->alloc_size);
+	FT_DEBUG("Deallocating frame pool zone of %lu bytes", (unsigned long)this->alloc_size);
 
 	//TODO: configure actual free() call; rename _ft_poolzone_del to frame_pool_zone_fini and implement virtual frame_pool_zone_fini
-	munmap(this, this->alloc_size);
+	//munmap(this, this->alloc_size);
+	free(this);
 }
 
 
@@ -86,11 +87,12 @@ struct ft_poolzone * ft_poolzone_new_mmap(struct ft_pool * pool, size_t frame_co
 	size_t alloc_size = mmap_size_frames + mmap_size_zone + mmap_size_fill;
 	assert((alloc_size % MEMPAGE_SIZE) == 0);
 	
-
-	void * p = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, mmap_flags, -1, 0);
-	if (p == MAP_FAILED)
+	void * p = malloc(alloc_size);
+	//void * p = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, mmap_flags, -1, 0);
+	//if (p == MAP_FAILED)
+	if (p == NULL)
 	{
-		FT_ERROR_ERRNO(errno, "Failed to allocate frame pool memory (%zu bytes)", alloc_size);
+		FT_ERROR_ERRNO(errno, "Failed to allocate frame pool memory (%ld bytes)", (long)alloc_size);
 		return NULL;
 	}
 
@@ -100,7 +102,8 @@ struct ft_poolzone * ft_poolzone_new_mmap(struct ft_pool * pool, size_t frame_co
 	bool ok = ft_poolzone_init(this, pool, data, alloc_size, frame_count, freeable);
 	if (!ok)
 	{
-		munmap(p, alloc_size);
+		//munmap(p, alloc_size);
+		free(p);
 		return NULL;
 	}
 
@@ -138,14 +141,16 @@ struct ft_frame * _ft_poolzone_borrow(struct ft_poolzone * this, uint64_t frame_
 	// Lock the frame the memory
 	if (frame->zone->flags.mlock_when_used)
 	{
-		rc = mlock(frame->data, frame->capacity);
+		rc = 0;
+		//rc = mlock(frame->data, frame->capacity);
 		if (rc != 0) FT_WARN_ERRNO(errno, "mlock in frame pool borrow");
 	}
 
 	// Advise that we will use it
 	if (frame->zone->flags.madvice_when_used)
 	{
-		rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
+		rc = 0;
+		//rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_WILLNEED);
 		if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool borrow");
 	}
 

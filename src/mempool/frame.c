@@ -3,7 +3,7 @@
 void _ft_frame_init(struct ft_frame * this, uint8_t * data, size_t capacity, struct ft_poolzone * zone)
 {
 	assert(this != NULL);
-	assert(((long)data % MEMPAGE_SIZE) == 0);
+	//assert(((unsigned long)data % MEMPAGE_SIZE) == 0); ... applies only for mmapped pools
 
 	this->type = FT_FRAME_TYPE_FREE;
 	this->zone = zone;
@@ -128,6 +128,7 @@ struct ft_vec * ft_frame_append_vec(struct ft_frame * this, size_t capacity)
 struct ft_vec * ft_frame_append_max_vec(struct ft_frame * this)
 {
 	struct ft_vec * vec = ft_frame_append_vec(this, 0);
+	if (vec == NULL) return NULL;
 	vec->limit = vec->capacity = ((uint8_t *)vec - this->data) - vec->offset;
 	return vec;
 }

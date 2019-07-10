@@ -60,12 +60,12 @@ struct ft_stream
 	} error;
 
 	// Input
-	struct ev_io read_watcher;
+//	struct ev_io read_watcher;
 	struct ft_frame * read_frame;
 	unsigned int read_events;
 
 	// Output
-	struct ev_io write_watcher;
+//	struct ev_io write_watcher;
 	struct ft_frame * write_frames; // Queue of write frames 
 	struct ft_frame ** write_frame_last;
 	unsigned int write_events;

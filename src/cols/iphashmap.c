@@ -1,5 +1,5 @@
 #include "../_ft_internal.h"
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 static struct ft_iphashmap_entry ** ft_iphashmap_alloc(size_t size);
 
@@ -123,7 +123,7 @@ static struct ft_iphashmap_entry * ft_iphashmap_add_int_(struct ft_iphashmap * t
 	struct ft_iphashmap_entry * entry = malloc(sizeof(struct ft_iphashmap_entry));
 	if (entry == NULL)
 	{
-		FT_ERROR_ERRNO(errno, "malloc(sizeof(struct ft_iphashmap_entry)=%zu)", sizeof(struct ft_iphashmap_entry));
+		FT_ERROR_ERRNO(errno, "malloc(sizeof(struct ft_iphashmap_entry)=%lu)", (unsigned long)sizeof(struct ft_iphashmap_entry));
 		return NULL;
 	}
 

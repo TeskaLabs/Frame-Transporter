@@ -1,3 +1,6 @@
+ROOTDIR=..
+include $(ROOTDIR)/config.make
+
 LIB=libft.a
 
 OBJS=\
@@ -8,20 +11,25 @@ OBJS=\
 	config.o \
 	log.o \
 	log_file.o \
-	log_syslog.o \
 	pubsub.o \
-	daemon.o \
 	sockaddr.o \
-	sock/listener.o \
-	sock/stream.o \
-	sock/dgram.o \
 	mempool/frame.o \
 	mempool/pool.o \
 	mempool/zone.o \
-	context.o \
 	cols/list.o \
 	cols/iphashmap.o \
-	proto/socks.o \
+	context.o \
+	time-windows.o \
+	watchers/timer-windows.o \
+	winpipes/named_dgram.o \
+
+#	sock/listener.o \
+#	sock/stream.o \
+#	sock/dgram.o \
+#	proto/socks.o \
+
+#	log_syslog.o \
+#	daemon.o \
 
 all: $(LIB)
 
@@ -31,5 +39,5 @@ coverage:
 	gcov -o mempool mempool/*.c 
 	gcov -o sock sock/*.c 
 
-ROOTDIR=..
+
 include $(ROOTDIR)/rules.make

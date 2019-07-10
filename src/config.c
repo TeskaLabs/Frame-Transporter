@@ -61,7 +61,7 @@ void ft_initialise(void)
 	SSL_library_init();
 
 	// Ignore SIGPIPE
-	signal(SIGPIPE, SIG_IGN);
+	// signal(SIGPIPE, SIG_IGN);
 
 	ft_config.initialized = true;
 
@@ -73,11 +73,11 @@ void ft_initialise(void)
 	}
 
 	// Print and check versions
-	if ((ev_version_major() != EV_VERSION_MAJOR) || (ev_version_minor() < EV_VERSION_MINOR))
-	{
-		FT_ERROR("Incompatible version of libev used (%d.%d != %d.%d)", ev_version_major(), ev_version_minor(), EV_VERSION_MAJOR, EV_VERSION_MINOR);
-		exit(EXIT_FAILURE);
-	}
+	// if ((ev_version_major() != EV_VERSION_MAJOR) || (ev_version_minor() < EV_VERSION_MINOR))
+	// {
+	// 	FT_ERROR("Incompatible version of libev used (%d.%d != %d.%d)", ev_version_major(), ev_version_minor(), EV_VERSION_MAJOR, EV_VERSION_MINOR);
+	// 	exit(EXIT_FAILURE);
+	// }
 
 	if ((SSLeay() ^ OPENSSL_VERSION_NUMBER) & ~0xff0L)
 	{

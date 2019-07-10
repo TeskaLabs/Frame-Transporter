@@ -40,60 +40,6 @@ struct ft_frame * ft_pool_borrow_real_(struct ft_pool *, uint64_t frame_type, co
 
 // Following function requires access to pool object internals
 // and for this reason it is here and not with ft_frame object
-static inline void ft_frame_return(struct ft_frame * frame)
-{
-	int rc;
-
-	assert(frame != NULL);
-
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN f:%p ft:%x fls:%s:%u", frame, frame->type, frame->last_seen_by_file, frame->last_seen_by_line);
-
-	assert(frame->type != FT_FRAME_TYPE_FREE);
-	assert(frame->last_seen_by_file != NULL);
-	assert(frame->last_seen_by_line > 0);
-
-	struct ft_poolzone * zone = frame->zone;
-	frame->type = FT_FRAME_TYPE_FREE;
-
-	frame->next = zone->available_frames;
-	zone->available_frames = frame;
-
-	frame->last_seen_by_file = NULL;
-	frame->last_seen_by_line = 0;
-
-	zone->frames_used -= 1;
-	zone->flags.free_on_hb = (frame->zone->frames_used == 0);
-
-	// Erase a page
-	if (zone->flags.erase_on_return)
-		memset(frame->data, '\0', frame->capacity);
-
-	// Unlock pages from the memory
-	if (zone->flags.mlock_when_used)
-	{
-		rc = munlock(frame->data, frame->capacity);
-		if (rc != 0) FT_WARN_ERRNO(errno, "munlock in frame pool return");
-	}
-
-	// Advise that we will use it
-	if (zone->flags.madvice_when_used)
-	{
-		rc = posix_madvise(frame->data, frame->capacity, POSIX_MADV_DONTNEED);
-		if (rc != 0) FT_WARN_ERRNO(errno, "posix_madvise in frame pool return");
-	}
-
-	struct ft_pool * pool = zone->pool;
-	if (pool != NULL)
-	{
-		pool->frames_used -= 1;
-		if (pool->flags.last_zone)
-		{
-			int frames_available = pool->frames_total - pool->frames_used;
-			if (frames_available < FT_POOL_LOWMEM_LIMIT) ft_pool_lowmem_pubsub_msg_(pool, frames_available, true);
-		}
-	}
-
-	FT_TRACE(FT_TRACE_ID_MEMPOOL, "END");
-}
+void ft_frame_return(struct ft_frame * frame);
 
 #endif // FT_MEMPOOL_POOL_H_
