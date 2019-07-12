@@ -23,7 +23,7 @@ struct ft_poolzone
 	int frames_total;
 	int frames_used;
 
-	ev_tstamp free_at;	
+	double free_at;	
 
 	struct ft_frame * available_frames;
 	struct ft_frame * low_frame;

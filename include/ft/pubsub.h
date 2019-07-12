@@ -23,7 +23,7 @@ extern const char * FT_PUBSUB_TOPIC_HEARTBEAT;
 
 struct ft_pubsub_message_heartbeat
 {
-	ev_tstamp now;
+	struct ft_context * context;
 };
 
 extern const char * FT_PUBSUB_TOPIC_POOL_LOWMEM;

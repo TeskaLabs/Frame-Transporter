@@ -21,29 +21,29 @@ struct ft_wnp_dgram_delegate
 enum ft_wnp_state {
 	ft_wnp_state_INIT = 0,
 	ft_wnp_state_CONNECTING = 1,
-	ft_wnp_state_READY = 2,
-	ft_wnp_state_CLOSED = 3,
+	ft_wnp_state_STOPPED = 2,
+	ft_wnp_state_STARTED = 3,
+	ft_wnp_state_CLOSED = 4,
 }; 
 
 struct ft_wnp_dgram {
 	const struct ft_wnp_dgram_delegate * delegate;
+	struct ft_context * context;
 
 	HANDLE pipe;
 
 	// Read part
-	struct ft_watcher read_watcher;
-	OVERLAPPED read_overlap;
+	struct ft_iocp_watcher read_watcher;
+	struct ft_frame * read_frame;
 
 	// Write part
-	struct ft_watcher write_watcher;
-	OVERLAPPED write_overlap;
+	struct ft_iocp_watcher write_watcher;
 
 	struct
 	{
-		unsigned int read_state : 2; // one of `enum ft_wnp_state`		
+		unsigned int read_state : 3; // one of `enum ft_wnp_state`		
 	} flags;
 
-	struct ft_frame * read_frame;
 
 	// User data
 	void * data;
@@ -52,9 +52,9 @@ struct ft_wnp_dgram {
 bool ft_wnp_dgram_init(struct ft_wnp_dgram *, struct ft_wnp_dgram_delegate * delegate, struct ft_context * context, const char * pipename);
 void ft_wnp_dgram_fini(struct ft_wnp_dgram *);
 
+// These methods control read state (ft_wnp_state_INIT/ft_wnp_state_STOPPED <-> ft_wnp_state_CONNECTING/ft_wnp_state_STARTED)
 bool ft_wnp_dgram_start(struct ft_wnp_dgram *);
 bool ft_wnp_dgram_stop(struct ft_wnp_dgram *);
-bool ft_wnp_dgram_is_started(struct ft_wnp_dgram *);
 
 bool ft_wnp_dgram_write(struct ft_wnp_dgram *, struct ft_frame * frame);
 

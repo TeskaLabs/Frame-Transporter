@@ -22,11 +22,23 @@ bool ft_context_init(struct ft_context * this)
 
 	// this->ev_loop = ev_default_loop(ft_config.libev_loop_flags);
 	// if (this->ev_loop == NULL) return false;
+	
+	this->iocp_handle = CreateIoCompletionPort(
+		INVALID_HANDLE_VALUE,  // create an I/O completion port without association
+		NULL,                  // create a new I/O completion port
+		0,                     // ignored in this case
+		1                      // one concurent thread (a main thread)
+	);
+	if (this->iocp_handle == NULL) {
+		FT_ERROR_WINERROR_P("CreateIoCompletionPort failed");
+		return false;
+	}
+
 
 	this->flags.running = true;
 	this->shutdown_counter = 0;
 
-	this->active_watchers = NULL;
+	this->active_timers = NULL;
 	this->now = ft_time();
 	this->refs = 0;
 
@@ -104,10 +116,30 @@ void ft_context_fini(struct ft_context * this)
 	ft_pubsub_fini(&this->pubsub);
 	//TODO: Uninstall signal handlers
 
+	// Stop all timers
+	while (this->active_timers != NULL) {
+		ft_timer_stop(this->active_timers);
+	}
+
 	if (ft_context_default == this) ft_context_default = NULL;
+
+	if (this->iocp_handle != NULL) {
+		BOOL ok = CloseHandle(this->iocp_handle);
+		if (!ok) FT_WARN_WINERROR_P("CloseHandle(iocp_handle) failed");
+		this->iocp_handle = NULL;
+	}
 
 	// ev_loop_destroy(this->ev_loop);
 	// this->ev_loop = NULL;
+}
+
+
+static void ft_context_event_loop_publish(struct ft_context * this, char type) {
+	struct ft_pubsub_message_event_loop message = {
+		.context = this,
+		.type = type,
+	};
+	ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EVENT_LOOP, &message);
 }
 
 
@@ -115,93 +147,75 @@ void ft_context_run(struct ft_context * this)
 {
 	assert(this != NULL);
 
+	BOOL ok;
+
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "event loop start");
 
-
 	for (;;) {
-
-		// Publish 'prepare' message
-		struct ft_pubsub_message_event_loop prepare_msg = {
-			.context = this,
-			.type = 'P', // For prepare
-		};
-		ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EVENT_LOOP, &prepare_msg);
-
-		// How many active watchers we have?
-		int active_watchers_count = 0;
-		for (struct ft_watcher * i = this->active_watchers; i != NULL; i = i->next) {
-			active_watchers_count += 1;
-		}
-
-		// That's a limitation of  WaitForMultipleObjectsEx
-		assert(active_watchers_count < MAXIMUM_WAIT_OBJECTS);
-
-		// No active watchers, exit thet event loop
-		if ((active_watchers_count + this->refs) <= 0)
-			break;
-
-		HANDLE handles[active_watchers_count];
-		struct ft_watcher * watchers[active_watchers_count];
-
-		int pos = 0;
-		for (struct ft_watcher * w = this->active_watchers; w != NULL; w = w->next, pos += 1) {
-			assert(pos < active_watchers_count);
-			handles[pos] = w->handle;
-			watchers[pos] = w;
-		}
-
-		DWORD ret = WaitForMultipleObjectsEx(
-			active_watchers_count,
-			handles,
-			FALSE,
-			INFINITE, // the time-out interval, in milliseconds
-			FALSE // bAlertable
-		);
-		this->now = ft_time();
-
-		// Publish 'check' message
-		struct ft_pubsub_message_event_loop check_msg = {
-			.context = this,
-			.type = 'C', // For prepare
-		};
-		ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EVENT_LOOP, &check_msg);
-
-		if (ret < active_watchers_count) {
-			struct ft_watcher * w = watchers[ret];
-			w->callback(this, w);
-		} else if (ret == -1) {
-			FT_WARN_WINERROR_P("WaitForMultipleObjectsEx failed.");
-			break;
-		} else {
-			FT_WARN("WaitForMultipleObjectsEx invalid/unknown return code:%ld", ret);
-			break;
-		}
-		//TODO following 
-		/*
-		else if (ret == TIMEOUT_RETURN) {
-			struct ft_pubsub_message_event_loop idle_msg = {
-			.context = this,
-			.type = 'I', // For idle
-		};
-		ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_EVENT_LOOP, &check_msg);
-
-		}
-		*/
-
 		fflush(stdout);
 		fflush(stderr);
-	}
 
-// #if ((EV_VERSION_MINOR > 11) && (EV_VERSION_MAJOR >= 4))
-// 	bool run=true;
-// 	while (run)
-// 	{
-// 		run = ev_run(this->ev_loop, 0);
-// 		if (run) FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "event loop continue");
-// 	}
-// #else
-// 	ev_run(this->ev_loop, 0);
-// #endif
+		this->now = ft_time();
+		double delta_time = ft_timers_process(this, NULL);
+		if (delta_time > 3.0) { // That's an idle time
+			delta_time = 3.0;
+		}
+
+		// Publish 'prepare' message
+		ft_context_event_loop_publish(this, 'P'); // For prepare
+
+		DWORD n_bytes = -1;
+		ULONG_PTR completion_key = 0;
+		OVERLAPPED * overlapped = NULL;
+
+		ok = GetQueuedCompletionStatus(
+			this->iocp_handle,
+			&n_bytes,
+			(PULONG_PTR)&completion_key,
+			&overlapped,
+			delta_time * 1000 // miliseconds
+		);
+
+		if (!ok) {
+			DWORD error = GetLastError();
+			
+			ft_context_event_loop_publish(this, 'C'); // For check
+
+			switch (error) {
+
+				case WAIT_TIMEOUT:
+					this->now = ft_time();
+
+					unsigned int trigger_counter = 0;
+					ft_timers_process(this, &trigger_counter);
+					if (trigger_counter == 0) {
+						// We waited for event and nothing come, so let's signalize the idle state
+						ft_context_event_loop_publish(this, 'I'); // For idle
+					}
+
+					continue;
+
+
+				default:
+					if (overlapped != NULL) {
+						struct ft_iocp_watcher * watcher = (struct ft_iocp_watcher *)overlapped;
+						assert(watcher != NULL);
+						watcher->delegate->error(this, watcher, error, n_bytes, completion_key);
+					} else {
+						FT_WARN_WINERROR_P("GetQueuedCompletionStatus failed");
+					}
+					break;
+			}
+		}
+
+		ft_context_event_loop_publish(this, 'C'); // For check
+
+		// This is possible because overlapped is the first field in the struct ft_iocp_watcher;
+		struct ft_iocp_watcher * watcher = (struct ft_iocp_watcher *)overlapped;
+		assert(watcher != NULL);
+		watcher->delegate->completed(this, watcher, n_bytes, completion_key);
+
+	}
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "event loop stop");
 }
@@ -247,7 +261,7 @@ static void _ft_context_on_shutdown_timer(struct ft_timer * timer)
 {
 	assert(timer != NULL);
 
-	struct ft_context * this = timer->watcher.context;
+	struct ft_context * this = timer->context;
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_on_shutdown_timer");
@@ -291,26 +305,17 @@ static void _ft_context_on_heartbeat_timer(struct ft_timer * timer)
 {
 	assert(timer != NULL);
 
-	struct ft_context * this = timer->watcher.context;
+	struct ft_context * this = timer->context;
 	assert(this != NULL);
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "BEGIN _ft_context_on_heartbeat_timer");
 
-	struct ft_pubsub_message_heartbeat msg = {
-		.now = ft_now(this)
+	this->heartbeat_at = ft_now(this);
+	struct ft_pubsub_message_heartbeat message = {
+		.context = this,
 	};
-	ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT, &msg);
+	ft_pubsub_publish(&this->pubsub, FT_PUBSUB_TOPIC_HEARTBEAT, &message);
 
-	//Lag detector
-	if (this->heartbeat_at > 0.0)
-	{
-		double delta = (msg.now - this->heartbeat_at) - timer->repeat;
-		if (delta > ft_config.lag_detector_sensitivity)
-		{
-			FT_WARN("Lag (~ %.2lf sec.) detected", delta);
-		}
-	}
-	this->heartbeat_at = msg.now;
 
 	FT_TRACE(FT_TRACE_ID_EVENT_LOOP, "END _ft_context_on_heartbeat_timer");
 }
@@ -350,47 +355,3 @@ static struct ft_timer_delegate _ft_context_heartbeat_timer_delegate =
 
 // }
 
-
-void ft_context_watcher_add(struct ft_context * this, struct ft_watcher * watcher) {
-	assert(this != NULL);
-	assert(watcher != NULL);
-	assert(watcher->next == NULL);
-
-	if (ft_context_watcher_is_added(this, watcher)) {
-		FT_WARN("Watcher is alreadt added");
-		return;
-	}
-
-	watcher->next = this->active_watchers;
-	this->active_watchers = watcher;
-}
-
-void ft_context_watcher_remove(struct ft_context * this, struct ft_watcher * watcher) {
-	assert(this != NULL);
-	assert(watcher != NULL);
-	assert(watcher->next != NULL);
-
-	struct ft_watcher ** prev = &this->active_watchers;
-
-	while (*prev != NULL) {
-		if (*prev == watcher) {
-			*prev = watcher->next;
-			return;
-		}
-
-		prev = &(*prev)->next;
-	}
-
-	FT_WARN("Cannot find watcher in active watchers");
-}
-
-bool ft_context_watcher_is_added(struct ft_context * this, struct ft_watcher * watcher) {
-	assert(this != NULL);
-	assert(watcher != NULL);
-
-	for (struct ft_watcher * i = this->active_watchers; i != NULL; i = i->next) {
-		if (i == watcher) return true;
-	}
-	
-	return false;
-}

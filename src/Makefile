@@ -20,7 +20,8 @@ OBJS=\
 	cols/iphashmap.o \
 	context.o \
 	time-windows.o \
-	watchers/timer-windows.o \
+	timer-windows.o \
+	iocp.o \
 	winpipes/named_dgram.o \
 
 #	sock/listener.o \

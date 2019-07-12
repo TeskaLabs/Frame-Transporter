@@ -11,6 +11,7 @@
 
 ## In-depth
 
+* [Naming conventions](/doc/naming_convention.md)
 * [Object-oriented programming](/doc/oop.md)
 * [Architecture](/doc/architecture.md)
 

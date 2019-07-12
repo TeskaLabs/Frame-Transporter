@@ -1,7 +1,14 @@
+ROOTDIR=.
+include $(ROOTDIR)/config.make
+
 SUBDIRS=src
 CLEANSUBDIRS=test examples
 
-all: subdirs
+BIN=wintest.exe
+OBJS=wintest.o
+LDLIBS+=-L$(ROOTDIR)/src -lft
+
+all: subdirs ${BIN}
 
 test:
 	@${MAKE} -C test 
@@ -12,5 +19,5 @@ examples:
 coverage:
 	@${MAKE} -C src coverage
 
-ROOTDIR=.
+
 include $(ROOTDIR)/rules.make

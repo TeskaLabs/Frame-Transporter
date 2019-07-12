@@ -1,10 +1,10 @@
 #include "../_ft_internal.h"
 
-static void ft_wnp_dgram_read_watcher_cb(struct ft_context * context, struct ft_watcher * watcher);
-static void ft_wnp_dgram_write_watcher_cb(struct ft_context * context, struct ft_watcher * watcher);
-
 static void ft_wnp_dgram_complete_connected(struct ft_wnp_dgram * this);
-static void ft_wnp_dgram_complete_read(struct ft_wnp_dgram * this, DWORD size);
+extern struct ft_iocp_watcher_delegate ft_wnp_dgram_read_delegate;
+extern struct ft_iocp_watcher_delegate ft_wnp_dgram_write_delegate;
+
+///
 
 bool ft_wnp_dgram_init(struct ft_wnp_dgram * this, struct ft_wnp_dgram_delegate * delegate, struct ft_context * context, const char * pipename)
 {
@@ -13,6 +13,7 @@ bool ft_wnp_dgram_init(struct ft_wnp_dgram * this, struct ft_wnp_dgram_delegate 
 	assert(delegate->read != NULL);
 
 	this->delegate = delegate;
+	this->context = context;
 
 	this->pipe = CreateNamedPipe(
 		pipename,                 // pipe name 
@@ -34,52 +35,29 @@ bool ft_wnp_dgram_init(struct ft_wnp_dgram * this, struct ft_wnp_dgram_delegate 
 		return false;
 	}
 
+	HANDLE iocp_handle = CreateIoCompletionPort(
+		this->pipe,
+		context->iocp_handle,
+		(ULONG_PTR) this,
+		0 // Ignored in this case
+	);
+
+	if (iocp_handle == NULL) {
+		FT_ERROR_WINERROR_P("CreateIoCompletionPort() failed");
+		CloseHandle(this->pipe);
+		this->pipe = INVALID_HANDLE_VALUE;
+		return false;
+	}
+
+	assert(iocp_handle == context->iocp_handle);
 
 	// Read setup
-
 	this->read_frame = NULL;
 	this->flags.read_state = ft_wnp_state_INIT;
-	this->read_watcher.next = NULL;
-	this->read_watcher.data = this;
-	this->read_watcher.callback = ft_wnp_dgram_read_watcher_cb;
-	this->read_watcher.context = context;
-	this->read_watcher.handle = CreateEvent( 
-		NULL,    // default security attribute 
-		TRUE,    // manual-reset event 
-		TRUE,    // initial state = signaled 
-		NULL     // unnamed event object 
-	);
-	if (this->read_watcher.handle == NULL)
-	{
-		FT_ERROR_WINERROR_P("CreateEvent()/read_watcher failed");
-		CloseHandle(this->pipe);
-		this->pipe = INVALID_HANDLE_VALUE;
-		return false;
-	}
-	this->read_overlap.hEvent = this->read_watcher.handle;
-
+	ft_iocp_watcher_init(&this->read_watcher, &ft_wnp_dgram_read_delegate, this);
 
 	// Write setup
-	this->write_watcher.next = NULL;
-	this->write_watcher.data = this;
-	this->write_watcher.callback = ft_wnp_dgram_write_watcher_cb;
-	this->write_watcher.context = context;
-	this->write_watcher.handle = CreateEvent( 
-		NULL,    // default security attribute 
-		TRUE,    // manual-reset event 
-		TRUE,    // initial state = signaled 
-		NULL     // unnamed event object 
-	);
-	if (this->write_watcher.handle == NULL)
-	{
-		FT_ERROR_WINERROR_P("CreateEvent()/write_watcher failed");
-		CloseHandle(this->pipe);
-		this->pipe = INVALID_HANDLE_VALUE;
-		CloseHandle(this->read_watcher.handle);
-		this->read_watcher.handle = NULL;
-		return false;
-	}
-	this->write_overlap.hEvent = this->write_watcher.handle;
+	ft_iocp_watcher_init(&this->write_watcher, &ft_wnp_dgram_write_delegate, this);
 
 	return true;
 }
@@ -89,26 +67,12 @@ void ft_wnp_dgram_fini(struct ft_wnp_dgram * this)
 {
 	assert(this != NULL);
 
-	if (ft_wnp_dgram_is_started(this)) {
+	if ((this->flags.read_state == ft_wnp_state_CONNECTING) || (this->flags.read_state == ft_wnp_state_STARTED)) {
 		ft_wnp_dgram_stop(this);
 	}
 
 	if (this->delegate->fini != NULL) {
 		this->delegate->fini(this);
-	}
-
-	if (this->write_watcher.handle != NULL) {
-		BOOL ok = CloseHandle(this->write_watcher.handle);
-		if (!ok) FT_WARN_WINERROR_P("CloseHandle(write_watcher) failed");
-		this->write_watcher.handle = NULL;
-		this->write_overlap.hEvent = NULL;
-	}
-
-	if (this->read_watcher.handle != NULL) {
-		BOOL ok = CloseHandle(this->read_watcher.handle);
-		if (!ok) FT_WARN_WINERROR_P("CloseHandle(read_watcher) failed");
-		this->read_watcher.handle = NULL;
-		this->read_overlap.hEvent = NULL;
 	}
 	
 	if (this->pipe != INVALID_HANDLE_VALUE) {
@@ -124,48 +88,63 @@ void ft_wnp_dgram_fini(struct ft_wnp_dgram * this)
 }
 
 
-bool ft_wnp_dgram_start(struct ft_wnp_dgram * this)
-{
+static bool ft_wnp_dgram_connect(struct ft_wnp_dgram * this) {
+	assert(this != NULL);
+	assert(this->flags.read_state == ft_wnp_state_INIT);
+
+	BOOL ok = ConnectNamedPipe(this->pipe, &this->read_watcher.overlapped);
+	if (!ok) {
+		switch (GetLastError()) {
+			// The overlapped connection in progress. 
+			case ERROR_IO_PENDING: 
+				break; 
+ 
+			// Client is already connected, so signal an event. 
+			case ERROR_PIPE_CONNECTED: 
+				ft_wnp_dgram_complete_connected(this);
+				break;
+
+			default:
+				FT_ERROR_WINERROR_P("ConnectNamedPipe() failed");
+				return false;
+		}
+	} else {
+		ft_wnp_dgram_complete_connected(this);
+	}
+
+	// Switching to connecting ...
+	this->flags.read_state = ft_wnp_state_CONNECTING;
+	return true;	
+}
+
+
+bool ft_wnp_dgram_start(struct ft_wnp_dgram * this){
 	assert(this != NULL);
 
+
 	switch (this->flags.read_state) {
-		case ft_wnp_state_INIT: {
-			BOOL ok = ConnectNamedPipe(this->pipe, &this->read_overlap);
-			if (!ok) {
-				switch (GetLastError()) {
-					// The overlapped connection in progress. 
-					case ERROR_IO_PENDING: 
-						break; 
-		 
-					// Client is already connected, so signal an event. 
-					case ERROR_PIPE_CONNECTED: 
-						ok = SetEvent(this->read_watcher.handle);
-						if (!ok) {
-							FT_ERROR_WINERROR_P("SetEvent() failed");
-							return false;
-						}
-						ft_wnp_dgram_complete_connected(this);
-						break;
 
-					default:
-						FT_ERROR_WINERROR_P("ConnectNamedPipe() failed");
-						return false;
-				}
-			}
+		case ft_wnp_state_INIT:
+			ft_wnp_dgram_connect(this);
+			ft_ref(this->context);
+			break;
 
-			// Switching to connecting ...
-			this->flags.read_state = ft_wnp_state_CONNECTING;
-		}
+		case ft_wnp_state_STOPPED:
+			ft_wnp_dgram_connect(this);
+			ft_ref(this->context);
+			break;
 
 		case ft_wnp_state_CONNECTING:
-		case ft_wnp_state_READY:
-			ft_context_watcher_add(this->read_watcher.context, &this->read_watcher);
-			return true;
-
-		case ft_wnp_state_CLOSED:
+		case ft_wnp_state_STARTED:
+			FT_WARN("Windows pipe is already started, cannot start");
 			return false;
 
+		case ft_wnp_state_CLOSED:
+			FT_WARN("Windows pipe is already closed, cannot start");
+			return false;
 	}
+
+	return true;
 }
 
 
@@ -173,15 +152,29 @@ bool ft_wnp_dgram_stop(struct ft_wnp_dgram * this)
 {
 	assert(this != NULL);
 
-	ft_context_watcher_remove(this->read_watcher.context, &this->read_watcher);
+	switch (this->flags.read_state) {
+
+		case ft_wnp_state_INIT:
+			FT_WARN("Windows pipe is only initialized, cannot stop");
+			break;
+
+		case ft_wnp_state_STOPPED:
+			FT_WARN("Windows pipe is already stopped, cannot stop");
+			break;
+
+		case ft_wnp_state_CLOSED:
+			FT_WARN("Windows pipe is already closed, cannot stop");
+			return false;
+
+		case ft_wnp_state_CONNECTING:
+		case ft_wnp_state_STARTED:
+			//TODO: This ...
+			ft_unref(this->context);
+			return false;
+	}
+
 
 	return true;
-}
-
-
-bool ft_wnp_dgram_is_started(struct ft_wnp_dgram * this) {
-	assert(this != NULL);
-	return ft_context_watcher_is_added(this->read_watcher.context, &this->read_watcher);
 }
 
 
@@ -192,7 +185,16 @@ static void ft_wnp_dgram_complete_connected(struct ft_wnp_dgram * this) {
 		this->delegate->connected(this);
 	}
 
-	this->flags.read_state = ft_wnp_state_READY;
+	this->flags.read_state = ft_wnp_state_STARTED;
+}
+
+
+static void ft_wnp_dgram_on_error(struct ft_context * context, struct ft_iocp_watcher * watcher, DWORD error, DWORD n_bytes, ULONG_PTR completion_key) {
+	assert(watcher != NULL);
+	struct ft_wnp_dgram * this = (struct ft_wnp_dgram *) watcher->data;
+	assert(this != NULL);
+
+	fprintf(stderr, "ft_wnp_dgram_on_error: %d\n", error);
 }
 
 
@@ -216,30 +218,12 @@ static void ft_wnp_dgram_complete_read(struct ft_wnp_dgram * this, DWORD size) {
 }
 
 
-void ft_wnp_dgram_read_watcher_cb(struct ft_context * context, struct ft_watcher * watcher)
-{
+static void ft_wnp_dgram_on_read(struct ft_context * context, struct ft_iocp_watcher * watcher, DWORD n_bytes, ULONG_PTR completion_key) {
 	BOOL ok;
-	DWORD cbRet;
 
+	assert(watcher != NULL);
 	struct ft_wnp_dgram * this = (struct ft_wnp_dgram *) watcher->data;
-	
-	ok = GetOverlappedResult( 
-		this->pipe,          // handle to pipe 
-		&this->read_overlap, // OVERLAPPED structure 
-		&cbRet,              // bytes transferred 
-		FALSE                // do not wait 
- 	);
-	if (!ok) switch (GetLastError()) {
-		case ERROR_BROKEN_PIPE: 
-			// Peer closed a connection, normal situation
-			ft_context_watcher_remove(this->read_watcher.context, &this->read_watcher);
-			this->flags.read_state = ft_wnp_state_CLOSED;
-			return; 
-
-		default:
-			FT_ERROR_WINERROR_P("ConnectNamedPipe() failed");
-			return;
-	}
+	assert(this != NULL);
 
 	switch (this->flags.read_state) {
 		case ft_wnp_state_CONNECTING:
@@ -247,7 +231,7 @@ void ft_wnp_dgram_read_watcher_cb(struct ft_context * context, struct ft_watcher
 			break;
 
 		case ft_wnp_state_READY:
-			ft_wnp_dgram_complete_read(this, cbRet);
+			ft_wnp_dgram_complete_read(this, n_bytes);
 			break;
 
 		default:
@@ -260,7 +244,7 @@ void ft_wnp_dgram_read_watcher_cb(struct ft_context * context, struct ft_watcher
 			if (this->delegate->get_read_frame != NULL) {
 				this->read_frame = this->delegate->get_read_frame(this);
 			} else {
-				this->read_frame = ft_pool_borrow(&this->read_watcher.context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
+				this->read_frame = ft_pool_borrow(&context->frame_pool, FT_FRAME_TYPE_RAW_DATA);
 			}
 			if (this->read_frame == NULL) {
 				FT_WARN("Cannot borrow a frame");
@@ -281,12 +265,12 @@ void ft_wnp_dgram_read_watcher_cb(struct ft_context * context, struct ft_watcher
 		ok = ReadFile( 
 			this->pipe,
 			ft_vec_ptr(vec), ft_vec_remaining(vec), 
-			&cbRet, 
-			&this->read_overlap
+			&n_bytes, 
+			&this->read_watcher.overlapped
 		);
 
 		if (ok == TRUE) {
-			ft_wnp_dgram_complete_read(this, cbRet);
+			ft_wnp_dgram_complete_read(this, n_bytes);
 			continue; // new round of the reading
 		}
 		
@@ -301,6 +285,11 @@ void ft_wnp_dgram_read_watcher_cb(struct ft_context * context, struct ft_watcher
 		}
 	}
 }
+
+struct ft_iocp_watcher_delegate ft_wnp_dgram_read_delegate = {
+	.completed = ft_wnp_dgram_on_read,
+	.error = ft_wnp_dgram_on_error,
+};
 
 
 bool ft_wnp_dgram_write(struct ft_wnp_dgram * this, struct ft_frame * frame) {
@@ -317,7 +306,7 @@ bool ft_wnp_dgram_write(struct ft_wnp_dgram * this, struct ft_frame * frame) {
 		this->pipe,
 		ft_vec_ptr(vec), ft_vec_remaining(vec), 
 		&cbRet, 
-		&this->write_overlap
+		&this->write_watcher.overlapped
 	);
 
 	if (ok) {
@@ -331,9 +320,12 @@ bool ft_wnp_dgram_write(struct ft_wnp_dgram * this, struct ft_frame * frame) {
 	return true;
 }
 
-static void ft_wnp_dgram_write_watcher_cb(struct ft_context * context, struct ft_watcher * watcher)
-{
 
+static void ft_wnp_dgram_on_write(struct ft_context * context, struct ft_iocp_watcher * watcher, DWORD n_bytes, ULONG_PTR completion_key) {
+	fprintf(stderr, "ft_wnp_dgram_on_write !!!\n");
 }
 
-
+struct ft_iocp_watcher_delegate ft_wnp_dgram_write_delegate = {
+	.completed = ft_wnp_dgram_on_write,
+	.error = ft_wnp_dgram_on_error,
+};

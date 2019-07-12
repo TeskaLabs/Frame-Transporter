@@ -1,5 +1,7 @@
 #include "../_ft_internal.h"
 
+// TODO: Reintroduce use of mmap where available
+
 ///
 
 static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pubsub * pubsub, const char * topic, void * data);
@@ -203,6 +205,8 @@ static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pu
 	struct ft_pubsub_message_heartbeat * msg = data;
 	assert(msg != NULL);
 
+	double now = ft_now(msg->context);
+
 	FT_TRACE(FT_TRACE_ID_MEMPOOL, "BEGIN fa:%ld zc:%ld", (long int)ft_pool_count_available_frames(this), (long int)ft_pool_count_zones(this));
 
 	// Iterate via zones and find free-able ones with no used frames ...
@@ -219,7 +223,7 @@ static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pu
 
 		if (zone->flags.free_on_hb)
 		{
-			zone->free_at = msg->now + ft_config.fpool_zone_free_timeout;
+			zone->free_at = now + ft_config.fpool_zone_free_timeout;
 			zone->flags.free_on_hb = false;
 
 			last_zone_next = &zone->next;
@@ -227,7 +231,7 @@ static void ft_pool_on_heartbeat(struct ft_subscriber * subscriber, struct ft_pu
 			continue;
 		}
 
-		if (zone->free_at >= msg->now)
+		if (zone->free_at >= now)
 		{
 			last_zone_next = &zone->next;
 			zone = zone->next;

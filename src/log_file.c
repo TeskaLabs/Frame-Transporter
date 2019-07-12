@@ -162,7 +162,7 @@ static void ft_log_file_backend_logrecord_process(struct ft_logrecord * le, int 
 	ft_config.log_file.flush_counter += 1;
 }
 
-static void ft_log_file_flush(ev_tstamp now)
+static void ft_log_file_flush(double now)
 {
 	bool do_flush = false;
 
@@ -182,7 +182,7 @@ static void ft_log_file_flush(ev_tstamp now)
 	ft_config.log_file.flush_last = now;
 }
 
-static void ft_log_file_backend_on_prepare(struct ft_context * context, ev_tstamp now)
+static void ft_log_file_backend_on_prepare(struct ft_context * context, double now)
 {
 	ft_log_file_flush(now);
 }

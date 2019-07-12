@@ -192,7 +192,7 @@ static inline void _ft_log_winerror_err(char const level, const char * format, .
 // It is not meant to be queued etc. - if needed, serialize the data etc.
 struct ft_logrecord
 {
-	ev_tstamp timestamp;
+	double timestamp;
 	pid_t pid;
 	char level;
 	const char * appname; // https://tools.ietf.org/html/rfc5424#section-6.2.5
@@ -215,8 +215,8 @@ struct ft_log_backend
 {
 	void (*fini)(void);
 	void (*process)(struct ft_logrecord * le, int le_message_length);
-	void (*flush)(ev_tstamp now);
-	void (*on_prepare)(struct ft_context * context, ev_tstamp now);
+	void (*flush)(double now);
+	void (*on_prepare)(struct ft_context * context, double now);
 	void (*on_sighup)(void);
 };
 

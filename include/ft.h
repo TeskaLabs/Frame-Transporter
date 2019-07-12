@@ -56,8 +56,8 @@ struct ft_context;
 
 #include <ft/cols/list.h>
 #include <ft/cols/iphashmap.h>
-#include <ft/watchers/watcher.h>
-#include <ft/watchers/timer.h>
+#include <ft/iocp.h>
+#include <ft/timer.h>
 #include <ft/config.h>
 #include <ft/log.h>
 #include <ft/ini.h>
@@ -96,11 +96,11 @@ bool ft_fd_nonblock(int fd, bool nonblock);
 bool ft_socket_keepalive(int fd);
 bool ft_fd_cloexec(int fd);
 
-ev_tstamp ft_time(void);
-ev_tstamp ft_now(struct ft_context *);
+double ft_time(void);
+double ft_now(struct ft_context *);
 
 // Can be safely called with NULL in the context
-ev_tstamp ft_safe_now(struct ft_context *);
+double ft_safe_now(struct ft_context *);
 
 
 // Boolean parser

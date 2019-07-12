@@ -83,7 +83,8 @@ struct ft_class
 };
 ```
 
-## Constructors
+
+## Constructors and Initializers
 
 ```
 bool ft_class_init(struct ft_class * this);
@@ -94,18 +95,36 @@ bool ok = ft_class_init(&my_instance);
 if (!ok) handle_error();
 ```
 
-A constructor is a method of a given class that is responsible for initialization of the object instance in a given memory space.
+A **initializer** is a class method of a given class that is responsible for initialization of the object instance in a given memory space.
+A initializer **doesn't** handle a memory allocation for a object instance.
+It may however handle a memory allocations for internal members.
 
-A constructor **doesn't** handle a memory allocation for a object instance. It may however handle a memory allocations for internal members.
+A initializer must return `bool` value `true` for successful initialization or `false` for any errors.
 
-A constructor must return `bool` value `true` for successful initialization and `false` for any errors.
+The name of the initializer shall contain `_init` at the end of the name (e.g. `ft_class_init()`).
 
-The name of the constructor shall contain `init` (e.g. `ft_class_init()`).
+There can be more than one initializer for a given class, a name postfix is used to clarify a difference.
+Examples `bool ft_class_init_connect()` and `bool ft_class_init_accept()`.
 
-There can be more than one constructor for a class, a name postfix is used to clarify a difference. Examples `bool ft_class_init_connect()` and `bool ft_class_init_accept()`.
+
+A constructor is a class method that is responsible for a memory allocation on the heap.
+A constructor allocates a memory for a class instance and the calls initializer.
+
+A constructor must return a pointer to a newly allocated and initialized instance for successful initialization or `NULL` for any errors.
+
+The name of the constructor shall end with `_new` (e.g. `ft_class_new()`).
+
+```
+struct ft_class * ft_class_new();
+
+struct ft_class * my_instance;
+
+my_instance = ft_class_new();
+if (my_instance == NULL) handle_error();
+```
 
 
-## Destructor
+## Destructors and Finalizers
 
 ```
 void ft_class_fini(struct ft_class * this);
@@ -115,15 +134,30 @@ struct ft_class my_instance;
 ft_class_fini(&my_instance);
 ```
 
-A destructor is a method of a given class that is responsible for a final clean-up at the end of the lifecycle of a object instance.
+A **finalizer** is a method of a given class that is responsible for a final clean-up at the end of the lifecycle of a object instance.
+A finalizer **doesn't** handle a memory deallocation for a object instance. It may however handle a memory deallocations for internal members.
+There has to be a single finalizer.
 
-A destructor **doesn't** handle a memory deallocation for a object instance. It may however handle a memory deallocations for internal members.
-
-There has to be a single destructor.
-
-The name of the destructor shall be `fini` (e.g. `ft_class_fini()`).
+The name of the finalizer shall end with `_fini` (e.g. `ft_class_fini()`).
 
 The destructor return value must be defined as `void`.
+
+
+A **destructor** is a class method that is responsible for a deallocation of a memory allocated by a class constructor.
+A destructor implicitly executes a class finalizer prior memory deallocation.
+
+The name of the destructor shall end with `_del` (e.g. `ft_class_del()`).
+
+The destructor return value must be defined as `void`.
+
+
+```
+void ft_class_del(struct ft_class *);
+
+struct ft_class * my_instance;
+
+ft_class_del(my_instance);
+```
 
 
 ## Getters
@@ -149,6 +183,7 @@ The name of the getter is `get` with a postfix that specify an attribute in ques
 The value is returned via return type.
 
 It is recommended to implement getter methods as `static inline` for the compiler can optimize them out.
+
 
 ## Setters
 
@@ -177,6 +212,5 @@ It is recommended to implement setter methods as `static inline` for the compile
 
 ##TODO:
 
-- allocators, deallocators
 - delegates
 - strings (char * vs const char *)

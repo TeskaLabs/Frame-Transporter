@@ -176,6 +176,15 @@ void ft_log_initialise_()
 	const char * appname = getprogname();
 #elif defined(_GNU_SOURCE)
 	const char * appname = program_invocation_name;
+#elif defined(_WIN32)
+	char full_appname[MAX_PATH];
+	GetModuleFileName(NULL, full_appname, sizeof(full_appname));
+	const char * appname = strrchr(full_appname, '\\');
+	if (appname == NULL) {
+		appname = full_appname;
+	} else {
+		appname += 1;
+	}
 #else
 	const char * appname = "?";
 #endif
